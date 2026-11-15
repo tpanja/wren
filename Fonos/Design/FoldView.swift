@@ -18,10 +18,9 @@ private struct LiveVisibility: ViewModifier {
     private func update() { visible = onScreen && phase == .active }
 }
 
-/// The signature view. The contact-mic waveform runs along the midline; the
-/// left piezo's vibration envelope rises above it and the right piezo's falls
-/// below it, so left/right throat symmetry reads as a shape: a mirror image
-/// when balanced, lopsided when one side vibrates less.
+/// The throat strip. The mic waveform runs along the midline; the left
+/// accelerometer's vibration envelope rises above it and the right one's falls
+/// below it, so left/right balance reads as a shape. It doubles as a live fit check.
 struct FoldView: View {
     let streams: StreamStore
     var showsLabels = true
@@ -29,17 +28,26 @@ struct FoldView: View {
     @State private var visible = false
 
     var body: some View {
-        TimelineView(.animation(minimumInterval: reduceMotion ? 1.0 / 10 : 1.0 / 30, paused: !visible)) { timeline in
-            // One snapshot per tick feeds both the drawing and VoiceOver.
-            let s = streams.fold()
-            let _ = timeline.date
-            Canvas { ctx, size in draw(s, in: &ctx, size: size) }
-                .accessibilityElement()
-                .accessibilityLabel("Live throat signal")
-                .accessibilityValue(summary(s))
+        HStack(spacing: 8) {
+            if showsLabels {
+                // Labels live in a gutter so they never sit on the trace.
+                VStack(alignment: .leading) {
+                    sideLabel("Left", Theme.left)
+                    Spacer(minLength: 0)
+                    sideLabel("Right", Theme.right)
+                }
+                .frame(width: 46, alignment: .leading)
+            }
+            TimelineView(.animation(minimumInterval: reduceMotion ? 1.0 / 10 : 1.0 / 30, paused: !visible)) { timeline in
+                // One snapshot per tick feeds both the drawing and VoiceOver.
+                let s = streams.fold()
+                let _ = timeline.date
+                Canvas { ctx, size in draw(s, in: &ctx, size: size) }
+                    .accessibilityElement()
+                    .accessibilityLabel("Live throat vibration")
+                    .accessibilityValue(summary(s))
+            }
         }
-        .overlay(alignment: .topLeading) { if showsLabels { sideLabel("Left", Theme.left) } }
-        .overlay(alignment: .bottomLeading) { if showsLabels { sideLabel("Right", Theme.right) } }
         .modifier(LiveVisibility(visible: $visible))
     }
 
@@ -49,8 +57,7 @@ struct FoldView: View {
             .textCase(.uppercase)
             .tracking(1.2)
             .foregroundStyle(color)
-            .dynamicTypeSize(...DynamicTypeSize.xxLarge)
-            .padding(4)
+            .dynamicTypeSize(...DynamicTypeSize.xLarge)
             .accessibilityHidden(true)
     }
 
@@ -58,7 +65,7 @@ struct FoldView: View {
         let l = s.leftLevel.suffix(50).reduce(0, +), r = s.rightLevel.suffix(50).reduce(0, +)
         guard l + r > 0.01 else { return "Quiet" }
         let balance = 1 - abs(l - r) / (l + r)
-        return "Voice detected. Left and right are \(Int(balance * 100)) percent balanced."
+        return "Voice detected. Left and right are \(Int(balance * 100)) percent even."
     }
 
     private func draw(_ s: StreamStore.Fold, in ctx: inout GraphicsContext, size: CGSize) {
@@ -126,7 +133,7 @@ struct FoldView: View {
     }
 }
 
-/// A single stream drawn as an oscilloscope trace, for the Band screen.
+/// One raw stream as an oscilloscope trace, for the Band screen.
 struct StreamTrace: View {
     let streams: StreamStore
     let channel: StreamStore.Channel
