@@ -6,3 +6,4 @@ build/
 .impeccable/config.local.json
 .impeccable/review/
 build-release/
+firmware/backup/
