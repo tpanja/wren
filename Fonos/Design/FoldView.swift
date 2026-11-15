@@ -10,8 +10,10 @@ struct FoldView: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
-        TimelineView(.animation(minimumInterval: reduceMotion ? 1.0 / 10 : 1.0 / 30)) { _ in
+        TimelineView(.animation(minimumInterval: reduceMotion ? 1.0 / 10 : 1.0 / 30)) { timeline in
             Canvas { ctx, size in
+                // Reading the date ties each redraw to the timeline tick.
+                _ = timeline.date
                 draw(streams.snapshot(), in: &ctx, size: size)
             }
         }
@@ -111,8 +113,9 @@ struct StreamTrace: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
-        TimelineView(.animation(minimumInterval: reduceMotion ? 1.0 / 10 : 1.0 / 30)) { _ in
+        TimelineView(.animation(minimumInterval: reduceMotion ? 1.0 / 10 : 1.0 / 30)) { timeline in
             Canvas { ctx, size in
+                _ = timeline.date
                 let s = streams.snapshot()
                 let raw: [Float] = switch channel {
                 case .mic: s.micWave
