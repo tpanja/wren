@@ -15,7 +15,7 @@ enum Metric: String, CaseIterable, Identifiable, Codable {
         case .strength: "Strength"
         case .pace: "Pace"
         case .symmetry: "Symmetry"
-        case .steadiness: "Pitch steadiness"
+        case .steadiness: "Pitch variation"
         case .pauses: "Pauses"
         }
     }
