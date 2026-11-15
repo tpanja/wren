@@ -168,6 +168,9 @@ final class FonosEngine {
         let wasStreaming = isStreaming
         if wasStreaming { stopStreaming() }
         bandMode = mode
+        // Old signal from the other band must not look live.
+        streams.reset()
+        analyzer.reset()
         if mode == .simulated { bluetooth.disconnect(forget: false) } else { bluetooth.reconnect() }
         if wasStreaming { startStreaming() }
     }

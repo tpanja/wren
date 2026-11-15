@@ -83,7 +83,8 @@ struct SpeakScreen: View {
             }
             FoldView(streams: engine.streams)
                 .frame(height: 150)
-            Text("Sample signal from a simulated band")
+            Text(engine.bandMode == .simulated ? "Sample signal from a simulated band"
+                 : engine.bandConnected ? "Live signal from your band" : "Band not connected. Connect it on the Band tab.")
                 .font(.ui(.caption))
                 .foregroundStyle(Theme.inkTertiary)
         }
