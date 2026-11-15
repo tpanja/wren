@@ -9,7 +9,7 @@ enum Icon: String {
     case clarity, strength, pace, symmetry, variation, pauses
     case replay, stop, chevron, info, check, warning, plus
     case mic, piezoLeft, piezoRight, slow, fast, report
-    case breath, ddk, checklist, bluetooth
+    case breath, ddk, checklist, bluetooth, share
 
     var image: Image { Image("Icons/\(rawValue)") }
 }

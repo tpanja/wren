@@ -95,6 +95,36 @@ struct SettingsScreen: View {
                 .listRowBackground(Theme.card)
 
                 Section {
+                    ForEach(DemoClip.bundled) { clip in
+                        if let file = clip.shareURL {
+                            ShareLink(item: file) {
+                                HStack(spacing: 12) {
+                                    VStack(alignment: .leading, spacing: 2) {
+                                        Text(clip.text).foregroundStyle(Theme.ink)
+                                        Text("Clip \(clip.id.filter(\.isNumber)) · \(clip.severity), \(clip.gender)")
+                                            .font(.ui(.footnote))
+                                            .foregroundStyle(Theme.inkSecondary)
+                                    }
+                                    Spacer()
+                                    FonosIcon(.share, size: 20)
+                                        .foregroundStyle(Theme.actionInk)
+                                }
+                            }
+                            .accessibilityHint("Share or save this recording")
+                        }
+                    }
+                    ShareLink(items: DemoClip.bundled.compactMap(\.shareURL)) {
+                        Label { Text("Share all \(DemoClip.bundled.count) recordings") } icon: { FonosIcon(.share, size: 20) }
+                            .foregroundStyle(Theme.actionInk)
+                    }
+                } header: {
+                    Text("Demo recordings").cardTitle()
+                } footer: {
+                    Text("Save them to Files or AirDrop them to another device, then play one near this iPhone while Fonos listens. They're also in Files under On My iPhone › Fonos.")
+                }
+                .listRowBackground(Theme.card)
+
+                Section {
                     Picker("Appearance", selection: $appearance) {
                         ForEach(Appearance.allCases) { Text($0.title).tag($0) }
                     }

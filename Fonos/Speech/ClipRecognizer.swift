@@ -38,14 +38,25 @@ struct DemoClip: Codable, Identifiable, Sendable {
     /// AirDropped to another device for the demo. Leaves existing copies alone.
     static func copyToFiles() {
         let fm = FileManager.default
-        guard let docs = fm.urls(for: .documentDirectory, in: .userDomainMask).first else { return }
-        let folder = docs.appendingPathComponent("Demo recordings", isDirectory: true)
+        guard let folder = filesFolder else { return }
         try? fm.createDirectory(at: folder, withIntermediateDirectories: true)
         for clip in bundled {
             let target = folder.appendingPathComponent(clip.shareName)
             guard let source = clip.url, !fm.fileExists(atPath: target.path) else { continue }
             try? fm.copyItem(at: source, to: target)
         }
+    }
+
+    static var filesFolder: URL? {
+        FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first?
+            .appendingPathComponent("Demo recordings", isDirectory: true)
+    }
+
+    /// The copy named by its sentence when there is one, for sharing.
+    var shareURL: URL? {
+        if let copy = Self.filesFolder?.appendingPathComponent(shareName),
+           FileManager.default.fileExists(atPath: copy.path) { return copy }
+        return url
     }
 }
 
