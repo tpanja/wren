@@ -1,3 +1,4 @@
+import AVFoundation
 import Foundation
 import Observation
 import os
@@ -13,6 +14,14 @@ final class FonosEngine {
     /// Which band feeds the app. Simulated until the user connects a real band.
     enum BandMode: String {
         case simulated, bluetooth
+    }
+
+    /// Which microphone the Speak flow listens with.
+    enum MicSource: Equatable, Sendable {
+        /// The band's throat mic, when a real band is connected.
+        case band
+        /// The iPhone mic, otherwise (for example for the demo recordings).
+        case phone
     }
 
     enum SpeakState: Equatable {
@@ -42,6 +51,8 @@ final class FonosEngine {
     private(set) var isStreaming = false
     private(set) var speakState: SpeakState = .idle
     private(set) var partialText = ""
+    /// The microphone in use while listening, nil otherwise.
+    private(set) var listeningSource: MicSource?
     private(set) var utterances: [Utterance] = []
     private(set) var live = SpeechAnalyzer.Live()
     private(set) var bandStatus = BandStatus()
@@ -83,8 +94,13 @@ final class FonosEngine {
     @ObservationIgnored private var scanStarted = Date.distantPast
     @ObservationIgnored private var listenVoiceSeen = false
     @ObservationIgnored private var listenLastVoice = Date.distantPast
-    @ObservationIgnored private let translator: SpeechTranslator = ToyTranslator()
-    @ObservationIgnored private let listening = OSAllocatedUnfairLock(initialState: false)
+    @ObservationIgnored private let clips = ClipTranslator()
+    private var translator: SpeechTranslator { clips }
+    @ObservationIgnored private let phoneMic = PhoneMic()
+    /// Where listening audio comes from right now; nil when not listening.
+    @ObservationIgnored private let listening = OSAllocatedUnfairLock<MicSource?>(initialState: nil)
+    /// Phone-mic loudness during this listen, 10 per second, for the noise floor.
+    @ObservationIgnored private var phoneLevels: [Float] = []
     @ObservationIgnored private var pollTimer: Timer?
     @ObservationIgnored private var listenStarted = Date.distantPast
     @ObservationIgnored private var phrasesThisSession = 0
@@ -107,8 +123,11 @@ final class FonosEngine {
         speakAutomatically = d.object(forKey: "fonos.autospeak") as? Bool ?? true
         bandMode = d.string(forKey: "fonos.band.mode").flatMap(BandMode.init(rawValue:)) ?? .simulated
 
-        let streams = streams, analyzer = analyzer, listening = listening, translator = translator, taskFrames = taskFrames
+        let streams = streams, analyzer = analyzer, listening = listening, clips = clips, taskFrames = taskFrames
         let route: @Sendable (SensorFrame) -> Void = { frame in
+            let source = listening.withLock { $0 }
+            // While the phone mic listens, it alone feeds the throat signal.
+            if source == .phone { return }
             streams.append(frame)
             // Task speech stays out of the conversation session measures.
             let inTask = taskFrames.withLock { buf -> Bool in
@@ -117,11 +136,14 @@ final class FonosEngine {
                 return true
             }
             if !inTask { analyzer.ingest(frame) }
-            if listening.withLock({ $0 }) {
-                DispatchQueue.main.async { translator.append(mic: frame.mic) }
-            }
+            if source == .band { clips.append(mic: frame.mic) }
         }
         toy.onFrame = route
+        phoneMic.onSamples = { samples in
+            guard listening.withLock({ $0 }) == .phone else { return }
+            streams.append(SensorFrame(mic: samples, left: [], right: []))
+            clips.append(mic: samples)
+        }
         bluetooth.onFrame = route
         // A band connected before reconnects on its own.
         if bandMode == .bluetooth { bluetooth.activate() }
@@ -218,16 +240,27 @@ final class FonosEngine {
         if case .recording(let task) = taskState { pollTask(task) }
 
         guard speakState == .listening, autoStopSeconds > 0 else { return }
-        if bandMode == .simulated {
-            // The toy wearer "speaks" for a few seconds, then listening ends
-            // on its own, the way silence ends it with a real band.
-            if Date.now.timeIntervalSince(listenStarted) > autoStopSeconds { Task { await finishListening() } }
+        // Stop after `autoStopSeconds` of quiet once speech has started, or
+        // after a short pause once the words are already clear.
+        let voicing: Bool
+        if listeningSource == .phone {
+            // Voice is 10 dB above the room's usual noise (its 20th percentile
+            // so far), so steady background noise doesn't keep listening open.
+            let db = phoneMic.levelDb
+            phoneLevels.append(db)
+            let floor = phoneLevels.sorted()[phoneLevels.count / 5]
+            voicing = phoneLevels.count > 5 && db > max(floor + 10, -65)
         } else {
-            // Real band: stop after `autoStopSeconds` of quiet once speech has started.
-            if l.isVoicing { listenVoiceSeen = true; listenLastVoice = .now }
-            if listenVoiceSeen, Date.now.timeIntervalSince(listenLastVoice) > autoStopSeconds {
-                Task { await finishListening() }
-            }
+            voicing = l.isVoicing
+        }
+        if voicing { listenVoiceSeen = true; listenLastVoice = .now }
+        let quiet = Date.now.timeIntervalSince(listenLastVoice)
+        let elapsed = Date.now.timeIntervalSince(listenStarted)
+        let confident = translator.isConfident
+        let limit = confident ? min(1.2, autoStopSeconds) : autoStopSeconds
+        // The demo clips are at most 10 s, so a recognized one is over by 14 s.
+        if (listenVoiceSeen && quiet > limit) || (confident && elapsed > 14) || elapsed > 25 {
+            Task { await finishListening() }
         }
     }
 
@@ -237,40 +270,53 @@ final class FonosEngine {
     /// Speaking → stop speaking.
     func primaryAction() {
         switch speakState {
-        case .idle: startListening()
+        case .idle: Task { await startListening() }
         case .listening: Task { await finishListening() }
         case .translating: break
         case .speaking: voice.stop(); speakState = .idle
         }
     }
 
-    func startListening() {
+    func startListening() async {
+        guard speakState == .idle else { return }
         if !isStreaming { startStreaming() }
+        // A connected band listens through its throat mic; otherwise the iPhone mic.
+        let source: MicSource = bandMode == .bluetooth && bandConnected ? .band : .phone
         do {
             try translator.begin()
+            if source == .phone {
+                guard await PhoneMic.requestPermission() else { throw PhoneMic.MicError.notAllowed }
+                voice.stop()
+                // Claim the throat signal before clearing it, so no simulated frame slips in.
+                listening.withLock { $0 = .phone }
+                streams.reset()
+                try phoneMic.start()
+            }
         } catch {
+            listening.withLock { $0 = nil }
             message = error.localizedDescription
             return
         }
         translator.onPartial = { [weak self] text in self?.partialText = text }
         partialText = ""
         listenStarted = .now
+        listenLastVoice = .now
         listenVoiceSeen = false
-        toy.setTalking(true)
-        listening.withLock { $0 = true }
+        phoneLevels = []
+        listeningSource = source
+        listening.withLock { $0 = source }
         speakState = .listening
         UIAccessibility.post(notification: .announcement, argument: "Listening")
     }
 
     func finishListening() async {
         guard speakState == .listening else { return }
-        listening.withLock { $0 = false }
-        toy.setTalking(false)
+        stopMic()
         speakState = .translating
         guard let result = await translator.finish() else {
             speakState = .idle
             partialText = ""
-            message = "Fonos couldn't make out the words. Try a shorter phrase."
+            message = "Fonos didn't recognize that. Play one of the \(clips.clipCount) demo recordings close to the microphone."
             return
         }
         analyzer.addClarity(result.confidence)
@@ -281,11 +327,19 @@ final class FonosEngine {
     }
 
     func cancelListening() {
-        listening.withLock { $0 = false }
-        toy.setTalking(false)
+        stopMic()
         translator.cancel()
         partialText = ""
         speakState = .idle
+    }
+
+    private func stopMic() {
+        listening.withLock { $0 = nil }
+        if listeningSource == .phone {
+            phoneMic.stop()
+            streams.reset()
+        }
+        listeningSource = nil
     }
 
     func say(_ text: String, asPhrase: Bool = false) {

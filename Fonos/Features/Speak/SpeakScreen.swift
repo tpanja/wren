@@ -73,8 +73,12 @@ struct SpeakScreen: View {
             Text("Throat signal").cardTitle()
             FoldView(streams: engine.streams)
                 .frame(height: 150)
-            if engine.bandMode == .bluetooth {
-                Text(engine.bandConnected ? "Live signal from your band" : "Band not connected. Connect it on the Band tab.")
+            if engine.listeningSource == .phone {
+                Text("Listening through the iPhone microphone")
+                    .font(.ui(.caption))
+                    .foregroundStyle(Theme.inkTertiary)
+            } else if engine.bandMode == .bluetooth {
+                Text(engine.bandConnected ? "Live signal from your band" : "Band not connected. Speak uses the iPhone microphone.")
                     .font(.ui(.caption))
                     .foregroundStyle(Theme.inkTertiary)
             }

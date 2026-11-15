@@ -1,0 +1,95 @@
+{
+  "source": "TORGO database (University of Toronto), via huggingface.co/datasets/abnerh/TORGO-database. Speakers with dysarthria from cerebral palsy or ALS. Free for academic (non-profit) use; cite Rudzicz, Namasivayam & Wolff (2012), Language Resources and Evaluation 46(4).",
+  "clips": [
+    {
+      "id": "clip01",
+      "file": "clip01.wav",
+      "text": "It was a good win for us.",
+      "severity": "moderate-severe",
+      "gender": "male",
+      "torgoRow": 11018,
+      "prompt": "It was a good win for us"
+    },
+    {
+      "id": "clip02",
+      "file": "clip02.wav",
+      "text": "I just try to do my best.",
+      "severity": "moderate-severe",
+      "gender": "male",
+      "torgoRow": 11001,
+      "prompt": "I just try to do my best"
+    },
+    {
+      "id": "clip03",
+      "file": "clip03.wav",
+      "text": "I was conscious all the time.",
+      "severity": "moderate-severe",
+      "gender": "male",
+      "torgoRow": 11029,
+      "prompt": "I was conscious all the time"
+    },
+    {
+      "id": "clip04",
+      "file": "clip04.wav",
+      "text": "We bought a brown chair.",
+      "severity": "moderate-severe",
+      "gender": "male",
+      "torgoRow": 11056,
+      "prompt": "We bought a brown chair"
+    },
+    {
+      "id": "clip05",
+      "file": "clip05.wav",
+      "text": "We have an excellent team.",
+      "severity": "moderate-severe",
+      "gender": "male",
+      "torgoRow": 11071,
+      "prompt": "We have an excellent team"
+    },
+    {
+      "id": "clip06",
+      "file": "clip06.wav",
+      "text": "Are your grades higher or lower than Nancy's?",
+      "severity": "severe",
+      "gender": "male",
+      "torgoRow": 11918,
+      "prompt": "Are your grades higher or lower than Nancy's"
+    },
+    {
+      "id": "clip07",
+      "file": "clip07.wav",
+      "text": "We have often urged him to walk more and smoke less.",
+      "severity": "severe",
+      "gender": "male",
+      "torgoRow": 11980,
+      "prompt": "We have often urged him to walk more and smoke less"
+    },
+    {
+      "id": "clip08",
+      "file": "clip08.wav",
+      "text": "Tear up that paper.",
+      "severity": "severe",
+      "gender": "male",
+      "torgoRow": 12362,
+      "prompt": "tear up that paper"
+    },
+    {
+      "id": "clip09",
+      "file": "clip09.wav",
+      "text": "I will lead you.",
+      "severity": "severe",
+      "gender": "male",
+      "torgoRow": 13576,
+      "prompt": "I will lead you"
+    },
+    {
+      "id": "clip10",
+      "file": "clip10.wav",
+      "text": "Well, he is nearly ninety-three years old.",
+      "severity": "severe",
+      "gender": "female",
+      "torgoRow": 13764,
+      "prompt": "Well he is nearly ninety three years old"
+    }
+  ]
+}

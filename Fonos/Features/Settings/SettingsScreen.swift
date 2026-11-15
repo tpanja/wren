@@ -107,7 +107,7 @@ struct SettingsScreen: View {
 
                 Section {
                     LabeledContent("Band", value: engine.bandMode == .simulated ? "Simulated" : "Fonos band over Bluetooth")
-                    LabeledContent("Translator", value: "Toy translator")
+                    LabeledContent("Translator", value: "Demo recordings (\(DemoClip.bundled.count))")
                     LabeledContent("Version", value: Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "–")
                 } header: {
                     Text("About").cardTitle()
