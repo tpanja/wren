@@ -3,15 +3,22 @@ import SwiftUI
 struct SpeakScreen: View {
     @Environment(FonosEngine.self) private var engine
     @Binding var showSettings: Bool
+    @Environment(\.dynamicTypeSize) private var typeSize
 
     var body: some View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: Theme.stack) {
-                    foldCard
-                    transcriptCard
-                    SpeakButton()
-                        .padding(.top, 8)
+                    if typeSize.isAccessibilitySize {
+                        // At the largest text sizes, keep Speak in the first viewport.
+                        SpeakButton().padding(.vertical, 8)
+                        transcriptCard
+                        foldCard
+                    } else {
+                        foldCard
+                        transcriptCard
+                        SpeakButton().padding(.top, 8)
+                    }
                     phrases
                     if !engine.utterances.isEmpty { history }
                 }
@@ -62,10 +69,16 @@ struct SpeakScreen: View {
 
     private var foldCard: some View {
         VStack(alignment: .leading, spacing: 10) {
-            HStack {
-                Text("Throat signal").cardTitle()
-                Spacer()
-                Legend(items: [("Left", Theme.left), ("Mic", Theme.mic), ("Right", Theme.right)])
+            ViewThatFits(in: .horizontal) {
+                HStack {
+                    Text("Throat signal").cardTitle()
+                    Spacer()
+                    Legend(items: [("Left", Theme.left), ("Mic", Theme.mic), ("Right", Theme.right)])
+                }
+                VStack(alignment: .leading, spacing: 6) {
+                    Text("Throat signal").cardTitle()
+                    Legend(items: [("Left", Theme.left), ("Mic", Theme.mic), ("Right", Theme.right)])
+                }
             }
             FoldView(streams: engine.streams)
                 .frame(height: 150)
@@ -271,6 +284,7 @@ struct Legend: View {
                 HStack(spacing: 4) {
                     Circle().fill(item.1).frame(width: 7, height: 7)
                     Text(item.0).font(.caption.weight(.medium)).foregroundStyle(Theme.inkSecondary)
+                        .fixedSize()
                 }
             }
         }

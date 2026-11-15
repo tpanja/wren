@@ -30,6 +30,7 @@ struct FoldView: View {
             .textCase(.uppercase)
             .tracking(1)
             .foregroundStyle(color)
+            .dynamicTypeSize(...DynamicTypeSize.xxLarge)
             .padding(4)
     }
 
