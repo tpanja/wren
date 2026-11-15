@@ -138,7 +138,7 @@ firmware/       ESP32 band firmware (Arduino) and its flashing and wiring guide
 
 ## Voice
 
-Wren speaks with [Kokoro](https://huggingface.co/hexgrad/Kokoro-82M) v1.0, an open neural text-to-speech model, run on the iPhone by sherpa-onnx (`Speech/NeuralVoice.swift`). Six English voices are offered in Settings (Heart is the default). Each sentence is spoken phrase by phrase with real silences: about 220 ms after a comma, 320 ms after a semicolon, colon or dash, 480 ms between sentences, and a 140 ms breath before a new clause in a long sentence. The next phrase renders while the current one plays. The patient's Personal Voice takes priority when they allow it; Apple's voices are the fallback.
+Wren speaks with [Kokoro](https://huggingface.co/hexgrad/Kokoro-82M) v1.0, an open neural text-to-speech model, run on the iPhone by sherpa-onnx (`Speech/NeuralVoice.swift`). Six English voices are offered in Settings (Heart is the default). Sentences are spoken one at a time with short silences: about 250 ms between sentences and 150 ms after a semicolon, colon or dash; commas get Kokoro's own brief pause. The next sentence renders while the current one plays. The patient's Personal Voice takes priority when they allow it; Apple's voices are the fallback.
 
 ## Known limitations
 

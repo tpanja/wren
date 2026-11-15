@@ -3,20 +3,18 @@ import XCTest
 
 final class NeuralVoiceTests: XCTestCase {
 
-    func testSplitsAtCommasAndSentencesWithPauses() {
+    func testSplitsAtSentencesWithShortPauses() {
         let p = NeuralVoice.phrases(in: "Well, he is nearly ninety-three years old. Thank you.")
         XCTAssertEqual(p, [
-            .init(text: "Well,", pauseMs: 220),
-            .init(text: "he is nearly ninety-three years old.", pauseMs: 480),
-            .init(text: "Thank you.", pauseMs: 480),
+            .init(text: "Well, he is nearly ninety-three years old.", pauseMs: 250),
+            .init(text: "Thank you.", pauseMs: 250),
         ])
     }
 
-    func testBreathBeforeAClauseInLongSentencesOnly() {
-        let long = NeuralVoice.phrases(in: "We have often urged him to walk more and smoke less.")
-        XCTAssertEqual(long.map(\.text), ["We have often urged him to walk more", "and smoke less."])
-        XCTAssertEqual(long.first?.pauseMs, 140)
-        XCTAssertEqual(NeuralVoice.phrases(in: "Salt and pepper, please.").map(\.text), ["Salt and pepper,", "please."])
+    func testCommasAndConjunctionsStayInOnePhrase() {
+        XCTAssertEqual(NeuralVoice.phrases(in: "We have often urged him to walk more and smoke less.").count, 1)
+        XCTAssertEqual(NeuralVoice.phrases(in: "Salt and pepper, please.").map(\.text), ["Salt and pepper, please."])
+        XCTAssertEqual(NeuralVoice.phrases(in: "One thing: water.").map(\.pauseMs), [150, 250])
     }
 
     func testTrimKeepsSpeechAndDropsSilence() {

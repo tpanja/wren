@@ -8,10 +8,9 @@ import SherpaOnnx
 /// (BundledModels/Kokoro, from tools/fetch-tts-model.sh), so it sounds the
 /// same on every phone with no download in Settings.
 ///
-/// Sentences are spoken phrase by phrase with real silences between them,
-/// the way people pause: after commas, between sentences, and before a new
-/// clause in a long one. The next phrase is rendered while the current one
-/// plays, so the gaps are only the intended pauses.
+/// Sentences are spoken one at a time with short silences between them; the
+/// next one is rendered while the current one plays, so the gaps are only the
+/// intended pauses.
 @MainActor
 final class NeuralVoice {
 
@@ -157,11 +156,11 @@ final class NeuralVoice {
         let pauseMs: Int
     }
 
-    /// Splits text where a speaker would pause: commas (~220 ms), semicolons,
-    /// colons and dashes (~320 ms), sentence ends (~480 ms), and before a new
-    /// clause ("and", "but", "because"…) once a long phrase has run 6+ words.
+    /// Splits text into sentences (and at semicolons, colons and dashes) with
+    /// short silences between them: ~250 ms after a sentence, ~150 ms after
+    /// ; : or a dash. Commas stay inside a phrase, where Kokoro already makes
+    /// a brief, natural pause; cutting there sounds choppy.
     nonisolated static func phrases(in text: String) -> [Phrase] {
-        let conjunctions: Set<String> = ["and", "but", "because", "so", "or", "then", "when", "while", "although", "unless"]
         let words = text.split(whereSeparator: \.isWhitespace).map(String.init)
         var out: [Phrase] = []
         var current: [String] = []
@@ -170,14 +169,11 @@ final class NeuralVoice {
             out.append(Phrase(text: current.joined(separator: " "), pauseMs: pause))
             current = []
         }
-        for (i, word) in words.enumerated() {
-            let bare = word.lowercased().trimmingCharacters(in: .punctuationCharacters)
-            if current.count >= 6, conjunctions.contains(bare), words.count - i >= 3 { flush(140) }
+        for word in words {
             current.append(word)
             switch word.last {
-            case ",": flush(220)
-            case ";", ":", "—", "–": flush(320)
-            case ".", "?", "!": flush(480)
+            case ";", ":", "—", "–": flush(150)
+            case ".", "?", "!": flush(250)
             default: break
             }
         }

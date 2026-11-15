@@ -170,35 +170,22 @@ final class VoiceOutput: NSObject, AVSpeechSynthesizerDelegate {
 
     // MARK: Natural pauses
 
-    /// The sentence as SSML with pauses where a person would take them:
-    /// after commas, at clause breaks in longer sentences, and between
+    /// The sentence as SSML with short pauses where a person would take them:
+    /// ~120 ms after commas, ~180 ms after ; : or a dash, ~280 ms between
     /// sentences. `rate` is the speaking-speed setting (0.5 is normal).
     static func ssml(for text: String, rate: Double) -> String {
         let words = text.split(whereSeparator: \.isWhitespace).map(String.init)
-        let conjunctions: Set<String> = ["and", "but", "because", "so", "or", "then", "when", "while", "if", "although", "unless"]
         var out = ""
-        var sinceBreak = 0
         for (i, word) in words.enumerated() {
-            let isLast = i == words.count - 1
-            let bare = word.lowercased().trimmingCharacters(in: .punctuationCharacters)
-            // A breath before a new clause once the current one has run a while.
-            if !out.isEmpty, conjunctions.contains(bare), sinceBreak >= 5, words.count - i >= 3 {
-                out += "<break time=\"150ms\"/> "
-                sinceBreak = 0
-            }
             out += escape(word)
-            sinceBreak += 1
-            guard !isLast, let mark = word.last else { out += " "; continue }
+            guard i < words.count - 1, let mark = word.last else { out += " "; continue }
             let pause: Int? = switch mark {
-            case ",": 250
-            case ";", ":", "—", "–": 350
-            case ".", "?", "!": 550
+            case ",": 120
+            case ";", ":", "—", "–": 180
+            case ".", "?", "!": 280
             default: nil
             }
-            if let pause {
-                out += "<break time=\"\(pause)ms\"/>"
-                sinceBreak = 0
-            }
+            if let pause { out += "<break time=\"\(pause)ms\"/>" }
             out += " "
         }
         let percent = Int((rate / 0.5 * 100).rounded())

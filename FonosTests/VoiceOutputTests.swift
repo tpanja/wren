@@ -5,18 +5,16 @@ final class VoiceOutputTests: XCTestCase {
 
     func testPausesAtCommasAndBetweenSentences() {
         let s = VoiceOutput.ssml(for: "Well, he is nearly ninety-three years old. Thank you.", rate: 0.5)
-        XCTAssertTrue(s.contains("Well,<break time=\"250ms\"/>"))
-        XCTAssertTrue(s.contains("old.<break time=\"550ms\"/>"))
+        XCTAssertTrue(s.contains("Well,<break time=\"120ms\"/>"))
+        XCTAssertTrue(s.contains("old.<break time=\"280ms\"/>"))
         // No pause after the last word.
         XCTAssertTrue(s.hasSuffix("Thank you.</prosody></speak>"))
         XCTAssertTrue(s.contains("<prosody rate=\"100%\">"))
     }
 
-    func testBreathBeforeAClauseOnlyInLongerSentences() {
-        let long = VoiceOutput.ssml(for: "We have often urged him to walk more and smoke less.", rate: 0.5)
-        XCTAssertTrue(long.contains("<break time=\"150ms\"/> and smoke"))
-        let short = VoiceOutput.ssml(for: "Salt and pepper, please.", rate: 0.5)
-        XCTAssertFalse(short.contains("150ms"))
+    func testNoExtraBreathBeforeConjunctions() {
+        let s = VoiceOutput.ssml(for: "We have often urged him to walk more and smoke less.", rate: 0.5)
+        XCTAssertFalse(s.contains("<break"))
     }
 
     func testEscapesMarkupAndFollowsSpeed() {
