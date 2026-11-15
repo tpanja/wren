@@ -26,6 +26,7 @@ struct FoldView: View {
     let streams: StreamStore
     var showsLabels = true
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.colorScheme) private var scheme
     @State private var visible = false
 
     var body: some View {
@@ -33,7 +34,8 @@ struct FoldView: View {
             // One snapshot per tick feeds both the drawing and VoiceOver.
             let s = streams.fold()
             let _ = timeline.date
-            Canvas { ctx, size in draw(s, in: &ctx, size: size) }
+            let light = scheme == .light
+            Canvas { ctx, size in draw(s, in: &ctx, size: size, light: light) }
                 .accessibilityElement()
                 .accessibilityLabel("Live throat signal")
                 .accessibilityValue(summary(s))
@@ -50,7 +52,9 @@ struct FoldView: View {
             .tracking(1.2)
             .foregroundStyle(color)
             .dynamicTypeSize(...DynamicTypeSize.xxLarge)
-            .padding(4)
+            .padding(.horizontal, 7)
+            .padding(.vertical, 3)
+            .background(Theme.card.opacity(0.88), in: Capsule())
             .accessibilityHidden(true)
     }
 
@@ -61,13 +65,13 @@ struct FoldView: View {
         return "Voice detected. Left and right are \(Int(balance * 100)) percent balanced."
     }
 
-    private func draw(_ s: StreamStore.Fold, in ctx: inout GraphicsContext, size: CGSize) {
+    private func draw(_ s: StreamStore.Fold, in ctx: inout GraphicsContext, size: CGSize, light: Bool) {
         let mid = size.height / 2
         let half = size.height / 2 - 2
 
         var line = Path()
         line.move(to: CGPoint(x: 0, y: mid)); line.addLine(to: CGPoint(x: size.width, y: mid))
-        ctx.stroke(line, with: .color(Theme.hairline), lineWidth: 1)
+        ctx.stroke(line, with: .color(Theme.hairline), style: StrokeStyle(lineWidth: 1, dash: [2, 4]))
 
         // Shared gain so left and right are directly comparable.
         let peak = max(s.leftLevel.max() ?? 0, s.rightLevel.max() ?? 0, 0.08)
@@ -94,14 +98,17 @@ struct FoldView: View {
         if s.hasPiezo {
             let top = envelope(s.leftLevel, up: true)
             let bottom = envelope(s.rightLevel, up: false)
+            // Softer washes on white so the outline carries the shape.
+            let outer = light ? 0.30 : 0.55, inner = light ? 0.03 : 0.12
+            let edge = StrokeStyle(lineWidth: 1.6, lineCap: .round, lineJoin: .round)
             ctx.fill(top, with: .linearGradient(
-                Gradient(colors: [Theme.left.opacity(0.55), Theme.left.opacity(0.12)]),
+                Gradient(colors: [Theme.left.opacity(outer), Theme.left.opacity(inner)]),
                 startPoint: CGPoint(x: 0, y: 0), endPoint: CGPoint(x: 0, y: mid)))
             ctx.fill(bottom, with: .linearGradient(
-                Gradient(colors: [Theme.right.opacity(0.12), Theme.right.opacity(0.55)]),
+                Gradient(colors: [Theme.right.opacity(inner), Theme.right.opacity(outer)]),
                 startPoint: CGPoint(x: 0, y: mid), endPoint: CGPoint(x: 0, y: size.height)))
-            ctx.stroke(top, with: .color(Theme.left), lineWidth: 1.5)
-            ctx.stroke(bottom, with: .color(Theme.right), lineWidth: 1.5)
+            ctx.stroke(top, with: .color(Theme.left), style: edge)
+            ctx.stroke(bottom, with: .color(Theme.right), style: edge)
         }
 
         // Mic waveform: one min/max bar per 3 pt column, on top of the fold.
@@ -122,7 +129,7 @@ struct FoldView: View {
             bars.move(to: CGPoint(x: x, y: mid - CGFloat(Double(hi) * micGain)))
             bars.addLine(to: CGPoint(x: x, y: mid - CGFloat(Double(lo) * micGain) + 0.5))
         }
-        ctx.stroke(bars, with: .color(Theme.mic), style: StrokeStyle(lineWidth: 1.4, lineCap: .round))
+        ctx.stroke(bars, with: .color(Theme.mic.opacity(light ? 0.9 : 1)), style: StrokeStyle(lineWidth: 1.5, lineCap: .round))
     }
 }
 
@@ -152,7 +159,7 @@ struct StreamTrace: View {
                     let pt = CGPoint(x: size.width * CGFloat(i) / CGFloat(data.count - 1), y: mid - CGFloat(data[i]) * gain)
                     i == 0 ? p.move(to: pt) : p.addLine(to: pt)
                 }
-                ctx.stroke(p, with: .color(color), lineWidth: 1.2)
+                ctx.stroke(p, with: .color(color), style: StrokeStyle(lineWidth: 1.4, lineCap: .round, lineJoin: .round))
             }
         }
         .accessibilityHidden(true)

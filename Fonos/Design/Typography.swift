@@ -61,8 +61,15 @@ enum FonosType {
     /// Navigation titles, tab labels, and segmented controls in the brand faces.
     static func applyAppearance() {
         let nav = UINavigationBar.appearance()
-        nav.largeTitleTextAttributes = [.font: uiFont(displayBase, size: 32, weight: 700, style: .largeTitle)]
-        nav.titleTextAttributes = [.font: uiFont(displayBase, size: 17, weight: 600, style: .headline)]
+        nav.largeTitleTextAttributes = [
+            .font: uiFont(displayBase, size: 32, weight: 700, style: .largeTitle),
+            .foregroundColor: Theme.inkUI,
+            .kern: -0.4,
+        ]
+        nav.titleTextAttributes = [
+            .font: uiFont(displayBase, size: 17, weight: 600, style: .headline),
+            .foregroundColor: Theme.inkUI,
+        ]
         UITabBarItem.appearance().setTitleTextAttributes(
             [.font: uiFont(textBase, size: 11, weight: 600, style: .caption2)], for: .normal)
         let seg = UISegmentedControl.appearance()

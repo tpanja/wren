@@ -3,7 +3,7 @@ import SwiftUI
 @main
 struct FonosApp: App {
     @State private var engine = FonosEngine()
-    @AppStorage("fonos.appearance") private var appearance: Appearance = .dark
+    @AppStorage("fonos.appearance") private var appearance: Appearance = .light
     @Environment(\.scenePhase) private var phase
 
     init() {
@@ -30,12 +30,12 @@ struct FonosApp: App {
 }
 
 enum Appearance: String, CaseIterable, Identifiable {
-    case dark, light, system
+    case light, dark, system
     var id: String { rawValue }
     var title: String {
         switch self {
-        case .dark: "Dark"
         case .light: "Light"
+        case .dark: "Dark"
         case .system: "Match iPhone"
         }
     }

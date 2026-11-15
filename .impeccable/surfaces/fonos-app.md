@@ -15,7 +15,7 @@ Audience and job: the person with ALS wearing the band, operating the phone alon
 
 THESIS: The throat is the instrument. The app reads like a recovery tracker (WHOOP shell, Apple Health detail cards) but every number comes from three throat signals, and the Speak action is never more than one big tap away. Refuses the default medical-app look of a white list of vitals with a blue accent.
 
-OWN-WORLD: Dark slate ground (#0F1316 to #1A2025 cards), warm off-white text. Stream colors fixed app-wide: Mic = amber #F2B33D, Left piezo = teal #3CC8B4, Right piezo = violet #8E7CF0. Metric rings: Clarity teal, Strength amber, Pace sky #5AA9E6. SF Pro Rounded for numerals, SF Pro for UI. Tracked small caps for card titles like the WHOOP references.
+OWN-WORLD: Light by default: warm porcelain ground (#F5F3EF) with white cards lifted by a warm hairline edge and soft warm shadow; near-black ink. Dark slate (#0F1316 / #1A2025) remains as an option. Stream colors fixed app-wide (light / dark): Mic = ochre #B0740A / amber #F2B33D, Left piezo = jade #0C7F70 / teal #3CC8B4, Right piezo = violet #5A49C8 / #8E7CF0. Metric rings: Clarity jade, Strength ochre, Pace sky. Sora for numerals and titles, Atkinson Hyperlegible Next for UI. Tracked small caps for card titles like the WHOOP references.
 
 STORY: Open the app, see you are connected and ready, press Speak, talk, hear the clear voice. Later, Progress shows three rings for this week and how each is trending since baseline, in plain language.
 

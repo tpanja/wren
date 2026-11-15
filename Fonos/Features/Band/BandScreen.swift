@@ -18,6 +18,7 @@ struct BandScreen: View {
 
                     Text("Sensors")
                         .font(.metric(.title2, weight: .bold))
+                        .tracking(-0.3)
                         .foregroundStyle(Theme.ink)
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .padding(.top, 16)
@@ -40,11 +41,10 @@ struct BandScreen: View {
                     BalanceCard()
                 }
                 .padding(.horizontal, Theme.gutter)
-                .padding(.bottom, 24)
+                .padding(.bottom, 28)
             }
-            .background(Theme.ground)
+            .fonosScreen()
             .navigationTitle("Band")
-            .toolbarBackground(Theme.ground, for: .navigationBar)
         }
     }
 
@@ -52,14 +52,19 @@ struct BandScreen: View {
         VStack(alignment: .leading, spacing: 16) {
             HStack(spacing: 14) {
                 ZStack {
-                    Circle().fill(engine.isStreaming ? Theme.action : Theme.well)
+                    if engine.isStreaming {
+                        Orb(color: Theme.action, glow: false)
+                    } else {
+                        Circle().fill(Theme.well)
+                    }
                     FonosIcon(.band, size: 28, relativeTo: .title3)
                         .foregroundStyle(engine.isStreaming ? Theme.onAction : Theme.inkTertiary)
                 }
-                .frame(width: 52, height: 52)
+                .frame(width: 56, height: 56)
+                .animation(.smooth(duration: 0.3), value: engine.isStreaming)
                 .accessibilityHidden(true)
                 VStack(alignment: .leading, spacing: 2) {
-                    Text("Fonos band").font(.metric(.title3, weight: .semibold)).foregroundStyle(Theme.ink)
+                    Text("Fonos band").font(.metric(.title3, weight: .semibold)).tracking(-0.2).foregroundStyle(Theme.ink)
                     Text(engine.isStreaming ? "Streaming sample data" : "Paused")
                         .font(.ui(.subheadline, .medium))
                         .foregroundStyle(engine.isStreaming ? Theme.good : Theme.inkSecondary)
@@ -99,14 +104,13 @@ private struct BalanceCard: View {
         VStack(alignment: .leading, spacing: 12) {
             CardHeader(title: "Left / right balance", icon: .symmetry, color: Theme.symmetry)
             GeometryReader { geo in
-                HStack(spacing: 2) {
-                    Rectangle().fill(Theme.left).frame(width: max(0, geo.size.width * leftShare - 1))
-                    Rectangle().fill(Theme.right)
+                HStack(spacing: 3) {
+                    Capsule().fill(Theme.left).frame(width: max(0, geo.size.width * leftShare - 1.5))
+                    Capsule().fill(Theme.right)
                 }
-                .clipShape(Capsule())
-                .animation(.easeOut(duration: 0.2), value: leftShare)
+                .animation(.smooth(duration: 0.25), value: leftShare)
             }
-            .frame(height: 14)
+            .frame(height: 12)
             HStack {
                 Text("Left \(leftPct)%").foregroundStyle(Theme.left)
                 Spacer()
@@ -134,7 +138,10 @@ struct SensorCard<Trace: View, Trailing: View>: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             CardHeader(title: title, icon: icon, color: color, detail: rate)
-            trace.frame(height: 64)
+            trace
+                .frame(height: 64)
+                .padding(.vertical, 4)
+                .background(color.opacity(0.05), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
             HStack(spacing: 8) {
                 if contact {
                     CheckDisc(color: Theme.good, size: 20)

@@ -38,10 +38,7 @@ struct MetricDetailScreen: View {
 
         ScrollView {
             VStack(alignment: .leading, spacing: Theme.stack) {
-                Picker("Range", selection: $range) {
-                    ForEach(TrendRange.allCases) { Text($0.title).tag($0) }
-                }
-                .pickerStyle(.segmented)
+                SegmentedPicker(options: TrendRange.allCases, selection: $range, title: \.title)
 
                 VStack(alignment: .leading, spacing: 4) {
                     Text(shown == nil ? "Average" : shown!.day.formatted(date: .abbreviated, time: .omitted))
@@ -49,6 +46,7 @@ struct MetricDetailScreen: View {
                     HStack(alignment: .firstTextBaseline, spacing: 4) {
                         Text((shown?.value ?? avg).map(metric.format) ?? "–")
                             .font(.metric(.largeTitle, weight: .bold))
+                            .tracking(-0.8)
                             .foregroundStyle(Theme.ink)
                             .contentTransition(.numericText())
                         Text(metric.unit).font(.ui(.headline)).foregroundStyle(Theme.inkSecondary)
@@ -82,12 +80,11 @@ struct MetricDetailScreen: View {
                     .foregroundStyle(Theme.inkTertiary)
             }
             .padding(.horizontal, Theme.gutter)
-            .padding(.bottom, 24)
+            .padding(.bottom, 28)
         }
-        .background(Theme.ground)
+        .fonosScreen()
         .navigationTitle(metric.title)
         .navigationBarTitleDisplayMode(.inline)
-        .toolbarBackground(Theme.ground, for: .navigationBar)
     }
 
     /// Y range fitted to the data and baseline with 15% headroom, so a real

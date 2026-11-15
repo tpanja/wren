@@ -4,7 +4,7 @@ import SwiftUI
 struct SettingsScreen: View {
     @Environment(FonosEngine.self) private var engine
     @Environment(\.dismiss) private var dismiss
-    @AppStorage("fonos.appearance") private var appearance: Appearance = .dark
+    @AppStorage("fonos.appearance") private var appearance: Appearance = .light
     @State private var newPhrase = ""
 
     var body: some View {
@@ -42,13 +42,13 @@ struct SettingsScreen: View {
 
                     Button("Test voice") { engine.say("This is how Fonos will sound.") }
                 } header: {
-                    Text("Voice")
+                    Text("Voice").cardTitle()
                 } footer: {
                     Text("A Personal Voice you've created in iPhone Settings sounds like you. Fonos uses it when you allow it.")
                 }
                 .listRowBackground(Theme.card)
 
-                Section("Listening") {
+                Section {
                     Picker("Stop listening after", selection: $engine.autoStopSeconds) {
                         Text("I tap Done").tag(0.0)
                         Text("2 seconds").tag(2.0)
@@ -56,6 +56,8 @@ struct SettingsScreen: View {
                         Text("5 seconds").tag(5.0)
                     }
                     Toggle("Speak translation automatically", isOn: $engine.speakAutomatically)
+                } header: {
+                    Text("Listening").cardTitle()
                 }
                 .listRowBackground(Theme.card)
 
@@ -72,18 +74,20 @@ struct SettingsScreen: View {
                     }
                     Button("Restore default phrases") { engine.quickPhrases = FonosEngine.defaultPhrases }
                 } header: {
-                    Text("Quick phrases")
+                    Text("Quick phrases").cardTitle()
                 } footer: {
                     Text("Swipe left to remove a phrase. Use Edit to reorder.")
                 }
                 .listRowBackground(Theme.card)
 
-                Section("Appearance") {
+                Section {
                     Picker("Appearance", selection: $appearance) {
                         ForEach(Appearance.allCases) { Text($0.title).tag($0) }
                     }
                     .pickerStyle(.inline)
                     .labelsHidden()
+                } header: {
+                    Text("Appearance").cardTitle()
                 }
                 .listRowBackground(Theme.card)
 
@@ -92,14 +96,14 @@ struct SettingsScreen: View {
                     LabeledContent("Translator", value: "Toy translator")
                     LabeledContent("Version", value: Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "–")
                 } header: {
-                    Text("About")
+                    Text("About").cardTitle()
                 } footer: {
                     Text("Fonos is not a medical device and does not diagnose. All data shown is sample data from a simulated band.")
                 }
                 .listRowBackground(Theme.card)
             }
             .scrollContentBackground(.hidden)
-            .background(Theme.ground)
+            .fonosScreen()
             .navigationTitle("Settings")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

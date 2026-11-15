@@ -8,7 +8,7 @@ The person living with ALS who wears the band and holds the phone. Their speech 
 
 The screenshots supplied for inspiration set the look:
 
-- **From WHOOP:** a dark slate ground, three headline rings with rounded numerals, tracked uppercase card titles, a plain-language insight card, and the weekday check row.
+- **From WHOOP:** three headline rings with rounded numerals, tracked uppercase card titles, a plain-language insight card, and the weekday check row.
 - **From Apple Health:** summary cards with a colored symbol and title, a large value with its unit, and a small trailing bar chart whose last bar carries the color.
 
 **Signature: the Fold view.** On the Speak screen, the contact-mic waveform runs along the midline. The left piezo's vibration rises above it in teal and the right piezo's falls below it in violet, both at the same scale. When both sides vibrate equally the shape is a mirror image; when one side weakens the shape goes lopsided. Symmetry, one of the measures, can be seen without reading a number.
@@ -17,17 +17,21 @@ The screenshots supplied for inspiration set the look:
 
 Each stream and measure keeps its color everywhere it appears.
 
-| Role | Dark | Light |
+| Role | Light | Dark |
 |---|---|---|
-| Ground | `#0F1316` | `#F2F3F5` |
-| Card | `#1A2025` | `#FFFFFF` |
-| Mic / Strength | `#F2B33D` amber | `#B87700` |
-| Left piezo / Clarity / Speak | `#3CC8B4` teal | `#0A8A7A` |
-| Right piezo / Symmetry | `#8E7CF0` violet | `#5B48C9` |
-| Pace | `#5AA9E6` sky | `#1F6FB2` |
-| Listening | `#FF6B5E` | `#C0342B` |
+| Ground | `#F5F3EF` warm porcelain, brightening to `#FBFAF8` at the top | `#0F1316` |
+| Card | `#FFFFFF` with a `#EAE6DF` edge | `#1A2025` |
+| Mic / Strength | `#B0740A` ochre | `#F2B33D` amber |
+| Left piezo / Clarity / Speak | `#0C7F70` jade | `#3CC8B4` teal |
+| Right piezo / Symmetry | `#5A49C8` violet | `#8E7CF0` |
+| Pace | `#1F6AAB` | `#5AA9E6` sky |
+| Listening | `#C4372E` | `#FF6B5E` |
 
-Dark is the default. Settings offers Light and Match iPhone, and every token has a light variant (`Fonos/Design/Theme.swift`).
+Light is the default. Settings offers Dark and Match iPhone, and every token has a dark variant (`Fonos/Design/Theme.swift`).
+
+**Surfaces.** Every card is a `Surface`: white, a 1 pt warm edge, a tight contact shadow, and a wide soft lift, all tinted warm brown rather than black. In dark, surfaces separate by tone and cast no shadow. Radii are 22 pt for cards and 18 pt for tiles, always continuous corners.
+
+**Signature details.** The Speak button is an `Orb`: the state color with a top-left sheen, a bright upper rim, a soft colored glow, and a quiet halo ring at rest. Range pickers are Fonos's own `SegmentedPicker`, a warm well with a white thumb that glides between options. Rings sit on a tinted track of their own color, and Apple Health–style mini bars show history in a 18% tint of the measure's color with the latest bar solid.
 
 ## Type
 

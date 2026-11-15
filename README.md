@@ -33,7 +33,7 @@ xcodebuild -project Fonos.xcodeproj -scheme Fonos -destination 'platform=iOS Sim
 | **Speak** | The live throat signal (the Fold view), a 132 pt Speak button, the translated phrase with a replay button and its clarity score, quick-phrase buttons, and phrases said today. |
 | **Progress** | Clarity, Strength, and Pace rings for the selected range (week, month, or 3 months), a plain-language insight against the user's own baseline, and a card for each of the six measures. Each card opens a detail chart. |
 | **Band** | Band status and battery, a live trace and skin-contact state for each sensor, and the live left/right balance. |
-| **Settings** (sliders icon) | Voice and Personal Voice, speaking speed, when listening stops, whether to speak automatically, quick phrases, and appearance (Dark by default, Light, or match iPhone). |
+| **Settings** (sliders icon) | Voice and Personal Voice, speaking speed, when listening stops, whether to speak automatically, quick phrases, and appearance (Light by default, Dark, or match iPhone). |
 
 The **Fold view** is the app's signature. The mic waveform runs along a midline, the left piezo's vibration rises above it, and the right piezo's falls below, at one shared scale. Balanced vibration draws a mirror image. A weaker side draws a visibly shorter half.
 
@@ -54,7 +54,7 @@ A change under 5% from baseline is reported as steady. The full derivation of ev
 
 ## Design
 
-- **Look.** Dark slate ground with WHOOP-style rings and Apple Health–style summary cards. Each stream keeps one color everywhere: mic amber, left piezo teal, right piezo violet.
+- **Look.** Warm porcelain ground with soft-shadowed white cards, WHOOP-style rings, and Apple Health–style summary cards. Each stream keeps one color everywhere: mic amber, left piezo teal, right piezo violet.
 - **Type.** Atkinson Hyperlegible Next (Braille Institute) for all reading text, chosen for low-vision legibility. Sora for numerals, titles, and tracked caps. Both are in `Fonos/Resources/Fonts` with their licenses and scale with Dynamic Type.
 - **Icons.** A custom SVG set in `Assets.xcassets/Icons` on a 24 pt grid with a 1.8 pt rounded stroke. No SF Symbols.
 - **Accessibility.** Targets of 60 pt or larger for primary actions, full VoiceOver labels, Dynamic Type through accessibility sizes (the Speak button moves to the top at the largest sizes), Reduce Motion respected, and no gesture-only or timed actions.

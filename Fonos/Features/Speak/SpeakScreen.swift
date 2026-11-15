@@ -11,22 +11,22 @@ struct SpeakScreen: View {
                 VStack(spacing: Theme.stack) {
                     if typeSize.isAccessibilitySize {
                         // At the largest text sizes, keep Speak in the first viewport.
-                        SpeakButton().padding(.vertical, 8)
+                        SpeakButton().padding(.vertical, 20)
                         transcriptCard
                         foldCard
                     } else {
                         foldCard
                         transcriptCard
-                        SpeakButton().padding(.top, 8)
+                        SpeakButton().padding(.top, 22).padding(.bottom, 6)
                     }
                     phrases
                     if !engine.utterances.isEmpty { history }
                 }
                 .padding(.horizontal, Theme.gutter)
-                .padding(.bottom, 24)
+                .padding(.top, 4)
+                .padding(.bottom, 28)
             }
-            .background(Theme.ground)
-            .scrollContentBackground(.hidden)
+            .fonosScreen()
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
                     Button { showSettings = true } label: {
@@ -42,7 +42,6 @@ struct SpeakScreen: View {
                     BatteryBadge(percent: engine.bandStatus.battery, charging: engine.bandStatus.isCharging)
                 }
             }
-            .toolbarBackground(Theme.ground, for: .navigationBar)
             .navigationBarTitleDisplayMode(.inline)
         }
     }
@@ -137,19 +136,21 @@ struct SpeakScreen: View {
 
     private var phrases: some View {
         VStack(alignment: .leading, spacing: 10) {
-            Text("Quick phrases").cardTitle().padding(.top, 12)
-            LazyVGrid(columns: [GridItem(.flexible(), spacing: 10), GridItem(.flexible(), spacing: 10)], spacing: 10) {
+            Text("Quick phrases").cardTitle().padding(.top, 14).padding(.leading, 4)
+            LazyVGrid(columns: [GridItem(.flexible(), spacing: 12), GridItem(.flexible(), spacing: 12)], spacing: 12) {
                 ForEach(engine.quickPhrases, id: \.self) { phrase in
                     Button { engine.say(phrase, asPhrase: true) } label: {
                         Text(phrase)
-                            .font(.ui(.body, .medium))
+                            .font(.ui(.body, .semibold))
                             .foregroundStyle(Theme.ink)
                             .multilineTextAlignment(.leading)
-                            .frame(maxWidth: .infinity, minHeight: 60, alignment: .leading)
-                            .padding(.horizontal, 14)
-                            .background(Theme.card, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                            .padding(.vertical, 12)
+                            .frame(maxWidth: .infinity, minHeight: 64, alignment: .leading)
+                            .padding(.horizontal, 16)
+                            .background { Surface(radius: Theme.tileRadius, lift: 0.6) }
+                            .contentShape(RoundedRectangle(cornerRadius: Theme.tileRadius, style: .continuous))
                     }
-                    .buttonStyle(.plain)
+                    .buttonStyle(.tile)
                     .accessibilityHint("Speaks this phrase")
                 }
             }
@@ -158,7 +159,7 @@ struct SpeakScreen: View {
 
     private var history: some View {
         VStack(alignment: .leading, spacing: 0) {
-            Text("Said today").cardTitle().padding(.bottom, 8)
+            Text("Said today").cardTitle().padding(.bottom, 6)
             ForEach(engine.utterances.dropFirst().prefix(8)) { u in
                 Button { engine.say(u.text) } label: {
                     HStack {
@@ -193,16 +194,26 @@ struct SpeakButton: View {
                 ZStack {
                     if state == .listening && !reduceMotion {
                         Circle()
-                            .stroke(Theme.alert.opacity(0.5), lineWidth: 3)
-                            .scaleEffect(breathe ? 1.18 : 1)
+                            .stroke(Theme.alert.opacity(0.45), lineWidth: 2)
+                            .scaleEffect(breathe ? 1.24 : 1)
                             .opacity(breathe ? 0 : 1)
-                            .animation(.easeOut(duration: 1.4).repeatForever(autoreverses: false), value: breathe)
+                            .animation(.easeOut(duration: 1.5).repeatForever(autoreverses: false), value: breathe)
                     }
-                    Circle().fill(fill(state))
+                    Orb(color: fill(state))
                     icon(state)
                         .foregroundStyle(state == .listening ? .white : Theme.onAction)
+                        .transition(.scale(scale: 0.7).combined(with: .opacity))
+                        .id(state)
                 }
                 .frame(width: 132, height: 132)
+                .background {
+                    // A quiet halo that frames the orb at rest.
+                    Circle()
+                        .fill(fill(state).opacity(0.07))
+                        .overlay(Circle().strokeBorder(fill(state).opacity(0.16), lineWidth: 1))
+                        .frame(width: 164, height: 164)
+                }
+                .animation(reduceMotion ? nil : .smooth(duration: 0.35), value: state)
                 .contentShape(Circle())
             }
             .buttonStyle(PressScale())
@@ -212,8 +223,12 @@ struct SpeakButton: View {
             .onChange(of: state) { _, s in breathe = s == .listening }
 
             Text(caption(state))
-                .font(.ui(.headline))
+                .font(.metric(.headline, weight: .semibold))
+                .tracking(0.2)
                 .foregroundStyle(Theme.ink)
+                .contentTransition(.opacity)
+                .animation(.smooth(duration: 0.25), value: state)
+                .padding(.top, 8)
                 .accessibilityHidden(true)
         }
         .frame(maxWidth: .infinity)
@@ -267,18 +282,18 @@ struct SpeakButton: View {
 struct PressScale: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .scaleEffect(configuration.isPressed ? 0.96 : 1)
-            .animation(.easeOut(duration: 0.12), value: configuration.isPressed)
+            .scaleEffect(configuration.isPressed ? 0.95 : 1)
+            .animation(.spring(response: 0.28, dampingFraction: 0.62), value: configuration.isPressed)
     }
 }
 
 struct Legend: View {
     let items: [(String, Color)]
     var body: some View {
-        HStack(spacing: 10) {
+        HStack(spacing: 12) {
             ForEach(items, id: \.0) { item in
-                HStack(spacing: 4) {
-                    Circle().fill(item.1).frame(width: 7, height: 7)
+                HStack(spacing: 5) {
+                    Capsule().fill(item.1).frame(width: 10, height: 4)
                     Text(item.0).font(.ui(.caption, .medium)).foregroundStyle(Theme.inkSecondary)
                         .fixedSize()
                 }
