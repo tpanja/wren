@@ -9,3 +9,6 @@ build-release/
 firmware/backup/
 build-mac/
 build-device/
+
+# Voice model (large; tools/fetch-tts-model.sh downloads it)
+BundledModels/

@@ -57,7 +57,7 @@ struct SettingsScreen: View {
                 } header: {
                     Text("Voice").cardTitle()
                 } footer: {
-                    Text("Wren reads with short pauses, the way people speak, and uses the most natural voice on this iPhone: your Personal Voice if you allow it, otherwise a Premium voice.")
+                    Text("Wren reads with short pauses, the way people speak. Its own voices run on this iPhone, with nothing sent anywhere; your Personal Voice is used first if you allow it.")
                 }
                 .listRowBackground(Theme.card)
 

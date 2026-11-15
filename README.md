@@ -10,11 +10,17 @@ The person with ALS operates the app themselves, often with declining hand contr
 
 ## Run it
 
-Requirements: Xcode 15 or later, iOS 17 or later. There are no third-party packages. The two bundled fonts are OFL-licensed assets, not code dependencies.
+Requirements: Xcode 15 or later, iOS 17 or later. One Swift package, [sherpa-onnx](https://github.com/k2-fsa/sherpa-onnx) 1.13.8, runs Wren's voice on the device; Xcode fetches it. The voice model itself is too large for git, so download it once (about 130 MB, Kokoro v1.0 int8, Apache-2.0):
+
+```bash
+tools/fetch-tts-model.sh
+```
 
 ```bash
 open Fonos.xcodeproj
 ```
+
+Without the model the app still runs and falls back to Apple's voices. The two bundled fonts are OFL-licensed assets, not code dependencies.
 
 Pick an iPhone simulator and press Run. The project is generated from `project.yml` with [XcodeGen](https://github.com/yonaskolb/XcodeGen). After adding or moving files, regenerate it:
 
@@ -129,6 +135,10 @@ firmware/       ESP32 band firmware (Arduino) and its flashing and wiring guide
 **Anything else** (ordinary English) is transcribed by Apple's Speech framework, on the device when the iPhone supports it. Listening ends after `autoStopSeconds` (3 s by default) with no new words or no voice. If neither the recordings nor Apple's recognizer make anything out, Wren says "Wren couldn't make out the words. Try again."
 
 **How it recognizes them** (`Speech/ClipRecognizer.swift`): audio fingerprinting, not speech recognition. Each clip's strongest time-frequency peaks are paired into hashes. A recording matches when many of its hashes line up at one time offset, and when it beats the runner-up by 2.5 times. Played from a MacBook speaker into its microphone, the right clip scored 34 to 407 votes, other clips at most 11, and room noise or other speech at most 6. Anything that isn't one of the ten clips goes to Apple's recognizer instead.
+
+## Voice
+
+Wren speaks with [Kokoro](https://huggingface.co/hexgrad/Kokoro-82M) v1.0, an open neural text-to-speech model, run on the iPhone by sherpa-onnx (`Speech/NeuralVoice.swift`). Six English voices are offered in Settings (Heart is the default). Each sentence is spoken phrase by phrase with real silences: about 220 ms after a comma, 320 ms after a semicolon, colon or dash, 480 ms between sentences, and a 140 ms breath before a new clause in a long sentence. The next phrase renders while the current one plays. The patient's Personal Voice takes priority when they allow it; Apple's voices are the fallback.
 
 ## Known limitations
 

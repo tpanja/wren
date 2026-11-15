@@ -2,10 +2,11 @@ import AVFoundation
 import Foundation
 import Observation
 
-/// Speaks translated text aloud in the most natural voice on the iPhone: the
-/// patient's Personal Voice when they allow it, otherwise one of Apple's
-/// neural Premium voices, then Enhanced. Sentences are read with short pauses
-/// at commas, clause breaks and sentence ends, the way people speak.
+/// Speaks translated text aloud in the most natural voice available: the
+/// patient's Personal Voice when they allow it, otherwise Wren's own neural
+/// voice (Kokoro, bundled in the app, see `NeuralVoice`), then Apple's Premium
+/// and Enhanced voices. Sentences are read with short pauses at commas, clause
+/// breaks and sentence ends, the way people speak.
 @Observable
 final class VoiceOutput: NSObject, AVSpeechSynthesizerDelegate {
 
@@ -28,7 +29,7 @@ final class VoiceOutput: NSObject, AVSpeechSynthesizerDelegate {
         didSet {
             UserDefaults.standard.set(selectedVoiceID, forKey: "fonos.voice")
             // Picking a voice by hand stops Wren from switching it later.
-            if !autoPicking { UserDefaults.standard.set(true, forKey: "fonos.voice.chosen") }
+            if !autoPicking { UserDefaults.standard.set(true, forKey: Self.chosenKey) }
         }
     }
     /// 0...1, maps onto the system's speech rate range.
@@ -40,17 +41,27 @@ final class VoiceOutput: NSObject, AVSpeechSynthesizerDelegate {
     var hasNaturalVoice: Bool { selectedVoice?.isNatural ?? false }
 
     @ObservationIgnored private let synth = AVSpeechSynthesizer()
+    /// Created on first use, on the main thread (the model itself preloads in the background).
+    @ObservationIgnored private var neuralVoice: NeuralVoice?
+    private static let neuralPrefix = "kokoro:"
+    /// Set when the user picks a voice by hand. (v2: the first version was also
+    /// set by restoring the saved voice at launch, so it can't be trusted.)
+    private static let chosenKey = "fonos.voice.chosen.v2"
     @ObservationIgnored private var autoPicking = false
     @ObservationIgnored private var voicesObserver: NSObjectProtocol?
 
     override init() {
         super.init()
         synth.delegate = self
+        // Restoring the saved voice isn't a choice made by hand.
+        autoPicking = true
         selectedVoiceID = UserDefaults.standard.string(forKey: "fonos.voice")
+        autoPicking = false
         if UserDefaults.standard.object(forKey: "fonos.rate") != nil {
             rate = UserDefaults.standard.double(forKey: "fonos.rate")
         }
         personalVoiceStatus = AVSpeechSynthesizer.personalVoiceAuthorizationStatus
+        if NeuralVoice.isAvailable { NeuralVoice.preload() }
         reloadVoices()
         // A voice downloaded in iPhone Settings shows up without a relaunch.
         voicesObserver = NotificationCenter.default.addObserver(
@@ -86,7 +97,11 @@ final class VoiceOutput: NSObject, AVSpeechSynthesizerDelegate {
         .sorted { ($0.name == "Samantha" ? 0 : 1, $0.name) < ($1.name == "Samantha" ? 0 : 1, $1.name) }
         .prefix(4)
 
+        let neural = NeuralVoice.isAvailable ? NeuralVoice.speakers.map {
+            Voice(id: Self.neuralPrefix + String($0.id), name: $0.name, detail: "Wren voice · \($0.accent)", isPersonal: false, isNatural: true)
+        } : []
         voices = personal.map { Voice(id: $0.identifier, name: $0.name, detail: "Personal Voice", isPersonal: true, isNatural: true) }
+            + neural
             + (natural + fallback).map {
                 Voice(id: $0.identifier, name: $0.name,
                       detail: [$0.quality == .premium ? "Premium" : $0.quality == .enhanced ? "Enhanced" : "Basic",
@@ -95,7 +110,7 @@ final class VoiceOutput: NSObject, AVSpeechSynthesizerDelegate {
             }
         // Until the user picks one, always use the best voice available, so a
         // Premium voice downloaded later is picked up on its own.
-        let chosen = UserDefaults.standard.bool(forKey: "fonos.voice.chosen")
+        let chosen = UserDefaults.standard.bool(forKey: Self.chosenKey)
         if !chosen || selectedVoiceID == nil || !voices.contains(where: { $0.id == selectedVoiceID }) {
             autoPicking = true
             selectedVoiceID = voices.first?.id
@@ -113,6 +128,11 @@ final class VoiceOutput: NSObject, AVSpeechSynthesizerDelegate {
         try? session.setActive(true)
 
         if synth.isSpeaking { synth.stopSpeaking(at: .immediate) }
+        if let id = selectedVoiceID, id.hasPrefix(Self.neuralPrefix), let sid = Int32(id.dropFirst(Self.neuralPrefix.count)) {
+            speakNeural(text, speaker: sid)
+            return
+        }
+        MainActor.assumeIsolated { neuralVoice?.stop() }
         let voice = selectedVoiceID.flatMap(AVSpeechSynthesisVoice.init(identifier:))
         let u = AVSpeechUtterance(ssmlRepresentation: Self.ssml(for: text, rate: rate)) ?? {
             // Plain text if the SSML is ever rejected: same words, no added pauses.
@@ -130,6 +150,22 @@ final class VoiceOutput: NSObject, AVSpeechSynthesizerDelegate {
 
     func stop() {
         synth.stopSpeaking(at: .word)
+        MainActor.assumeIsolated { neuralVoice?.stop() }
+    }
+
+    /// Wren's bundled neural voice. Speed follows the speaking-speed setting (0.5 is normal).
+    private func speakNeural(_ text: String, speaker: Int32) {
+        MainActor.assumeIsolated {
+            let voice = neuralVoice ?? NeuralVoice()
+            if neuralVoice == nil {
+                voice.onSpeakingChanged = { [weak self] speaking in
+                    self?.isSpeaking = speaking
+                    if !speaking { self?.spokenRange = nil }
+                }
+                neuralVoice = voice
+            }
+            voice.speak(text, speaker: speaker, speed: Float(min(max(rate / 0.5, 0.6), 1.5)))
+        }
     }
 
     // MARK: Natural pauses
