@@ -126,12 +126,8 @@ struct TuningNeedle: View {
                 ArcShape(center: center, radius: r, from: -40, to: 40)
                     .stroke(Theme.tune.opacity(inTune ? 0.9 : 0.3), style: StrokeStyle(lineWidth: 10, lineCap: .round))
                 if cents != nil {
-                    Capsule()
-                        .fill(Theme.ink)
-                        .frame(width: 4, height: r - 8)
-                        .offset(y: -(r - 8) / 2)
-                        .rotationEffect(angle, anchor: .bottom)
-                        .position(x: center.x, y: center.y - (r - 8) / 2)
+                    NeedleShape(center: center, length: r - 8, degrees: angle.degrees)
+                        .stroke(Theme.ink, style: StrokeStyle(lineWidth: 4, lineCap: .round))
                         .animation(reduceMotion ? nil : .interpolatingSpring(stiffness: 140, damping: 18), value: angle)
                 }
                 Circle().fill(Theme.ink).frame(width: 12, height: 12).position(center)
@@ -152,6 +148,25 @@ struct TuningNeedle: View {
         guard let cents else { return "Not singing" }
         if inTune { return "In tune" }
         return "\(Int(abs(cents))) cents \(cents < 0 ? "low" : "high")"
+    }
+}
+
+struct NeedleShape: Shape {
+    let center: CGPoint
+    let length: CGFloat
+    var degrees: Double
+
+    var animatableData: Double {
+        get { degrees }
+        set { degrees = newValue }
+    }
+
+    func path(in rect: CGRect) -> Path {
+        let a = (degrees - 90) * .pi / 180
+        var p = Path()
+        p.move(to: center)
+        p.addLine(to: CGPoint(x: center.x + length * cos(a), y: center.y + length * sin(a)))
+        return p
     }
 }
 
