@@ -8,3 +8,4 @@ build/
 build-release/
 firmware/backup/
 build-mac/
+build-device/
