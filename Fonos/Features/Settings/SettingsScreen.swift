@@ -24,6 +24,19 @@ struct SettingsScreen: View {
                     }
                     .pickerStyle(.navigationLink)
 
+                    if !voice.hasNaturalVoice {
+                        VStack(alignment: .leading, spacing: 6) {
+                            Label { Text("Get a more natural voice").font(.ui(.body, .semibold)) } icon: {
+                                FonosIcon(.info, size: 20).foregroundStyle(Theme.actionInk)
+                            }
+                            Text("This iPhone only has basic voices. In the iPhone Settings app, go to Accessibility › Read & Speak › Voices › English, and download a Premium voice such as Zoe or Ava. Wren switches to it on its own.")
+                                .font(.ui(.footnote))
+                                .foregroundStyle(Theme.inkSecondary)
+                                .fixedSize(horizontal: false, vertical: true)
+                        }
+                        .padding(.vertical, 4)
+                    }
+
                     if voice.personalVoiceStatus != .authorized {
                         Button("Use my Personal Voice") { voice.requestPersonalVoice() }
                     }
@@ -44,7 +57,7 @@ struct SettingsScreen: View {
                 } header: {
                     Text("Voice").cardTitle()
                 } footer: {
-                    Text("A Personal Voice you've created in iPhone Settings sounds like you. Wren uses it when you allow it.")
+                    Text("Wren reads with short pauses, the way people speak, and uses the most natural voice on this iPhone: your Personal Voice if you allow it, otherwise a Premium voice.")
                 }
                 .listRowBackground(Theme.card)
 
