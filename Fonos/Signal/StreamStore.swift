@@ -1,14 +1,15 @@
 import Foundation
 import os
 
-/// Rolling display buffers for the three streams. Written from the frame
+/// Rolling display buffers for the three streams (mic and both accelerometers). Written from the frame
 /// queue (100 Hz), read by `TimelineView`/`Canvas` at display rate, so it is
 /// lock-protected and never published through Observation.
 final class StreamStore: @unchecked Sendable {
 
     static let seconds = 5.0
     private let frameCapacity = Int(seconds * 100)
-    private let micDecimation = 10 // 8 kHz → 800 Hz
+    private let micDecimation = 20 // 16 kHz → 800 Hz
+    private let accelDecimation = 4 // 4 kHz → 1 kHz
 
     private let lock = OSAllocatedUnfairLock()
     private var micWave: Ring
@@ -42,8 +43,8 @@ final class StreamStore: @unchecked Sendable {
             micLevel.append(m)
             if !frame.left.isEmpty {
                 hasPiezo = true
-                leftWave.append(contentsOf: frame.left)
-                rightWave.append(contentsOf: frame.right)
+                leftWave.append(contentsOf: stride(from: 0, to: frame.left.count, by: accelDecimation).map { frame.left[$0] })
+                rightWave.append(contentsOf: stride(from: 0, to: frame.right.count, by: accelDecimation).map { frame.right[$0] })
                 leftLevel.append(l)
                 rightLevel.append(r)
             }
