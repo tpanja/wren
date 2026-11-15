@@ -18,14 +18,18 @@ struct SpeechCheckFlow: View {
     @State private var draft = SpeechCheckRecord(date: .now, isSample: true)
     @State private var answers: [BulbarSelfReport.Item: Int] = [:]
     @State private var confirmQuit = false
+    /// When the step last changed. Taps in the first moments after a change
+    /// are ignored, so a double tap or a tremor can't skip a task or answer
+    /// the next question with the button that took the previous one's place.
+    @State private var stepChanged = Date.distantPast
 
     var body: some View {
         NavigationStack {
             Group {
                 switch step {
                 case .intro: CheckIntro(start: { go(.task(.breath)) })
-                case .task(let t): TaskStep(task: t, onResult: { record($0) }, onNext: { next(after: t) })
-                case .question(let q): QuestionStep(item: q, selected: answers[q]) { answer(q, $0) } skipAll: { go(.results) }
+                case .task(let t): TaskStep(task: t, settled: settled, onResult: { record($0) }, onNext: { next(after: t) })
+                case .question(let q): QuestionStep(item: q, selected: answers[q]) { answer(q, $0) } skipAll: { if settled() { go(.results) } }
                 case .results: CheckResults(draft: draftWithAnswers, previous: engine.checks.latest, save: save)
                 }
             }
@@ -77,15 +81,20 @@ struct SpeechCheckFlow: View {
     private func go(_ s: Step) {
         engine.clearTask()
         step = s
+        stepChanged = .now
     }
+
+    private func settled() -> Bool { Date.now.timeIntervalSince(stepChanged) > 0.8 }
 
     private func record(_ r: TaskResult) { draft.apply(r) }
 
     private func next(after t: CheckTask) {
+        guard settled() else { return }
         if let n = CheckTask(rawValue: t.rawValue + 1) { go(.task(n)) } else { go(.question(.speech)) }
     }
 
     private func answer(_ q: BulbarSelfReport.Item, _ score: Int) {
+        guard settled() else { return }
         answers[q] = score
         let items = BulbarSelfReport.Item.allCases
         if let i = items.firstIndex(of: q), i + 1 < items.count { go(.question(items[i + 1])) } else { go(.results) }
@@ -166,6 +175,7 @@ private struct CheckIntro: View {
 
 private struct TaskStep: View {
     let task: CheckTask
+    let settled: () -> Bool
     let onResult: (TaskResult) -> Void
     let onNext: () -> Void
     @Environment(FonosEngine.self) private var engine
@@ -243,6 +253,7 @@ private struct TaskStep: View {
         default:
             VStack(spacing: 8) {
                 PrimaryBar(title: "Start", icon: .speak) {
+                    guard settled() else { return }
                     engine.voice.stop()
                     engine.startTask(task)
                 }

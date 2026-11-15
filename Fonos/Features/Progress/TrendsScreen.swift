@@ -296,8 +296,11 @@ struct MiniBars: View {
     var highlightLast = true
 
     var body: some View {
-        let lo = (values.min() ?? 0) * 0.85
-        let hi = max(values.max() ?? 1, lo + 0.0001)
+        // Floor below the smallest value by 15% of its size or 30% of the
+        // spread, so negative values (dB) draw as well as positive ones.
+        let mn = values.min() ?? 0, mx = values.max() ?? 1
+        let lo = mn - max(abs(mn) * 0.15, (mx - mn) * 0.3, 0.0001)
+        let hi = max(mx, lo + 0.0001)
         HStack(alignment: .bottom, spacing: 5) {
             ForEach(Array(values.enumerated()), id: \.offset) { i, v in
                 let isLast = i == values.count - 1
