@@ -24,7 +24,7 @@ struct WeeklyCheckCard: View {
                         .font(.ui(.headline))
                         .foregroundStyle(Theme.onAction)
                         .frame(maxWidth: .infinity, minHeight: 54)
-                        .background(Theme.actionInk, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                        .background(Theme.actionInk, in: RoundedRectangle(cornerRadius: Theme.controlRadius, style: .continuous))
                 }
                 .buttonStyle(PressScale())
             } else {

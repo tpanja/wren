@@ -97,9 +97,9 @@ struct ClinicSummaryView: View {
                 .textContentType(.name)
                 .submitLabel(.done)
                 .focused($nameFocused)
-                .padding(.horizontal, 14)
+                .padding(.horizontal, 16)
                 .frame(minHeight: 56)
-                .background(Theme.well, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+                .background(Theme.well, in: RoundedRectangle(cornerRadius: Theme.controlRadius, style: .continuous))
             Toggle(isOn: Binding(
                 get: { dobStamp != 0 },
                 set: { dobStamp = $0 ? (dob ?? defaultDOB).timeIntervalSince1970 : 0 }
@@ -134,9 +134,9 @@ struct ClinicSummaryView: View {
         } icon: {
             CheckDisc(color: Theme.good, size: 20)
         }
-        .padding(14)
+        .padding(16)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Theme.well, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+        .background(Theme.well, in: RoundedRectangle(cornerRadius: Theme.controlRadius, style: .continuous))
     }
 
     private func shareBar(_ r: ClinicReport) -> some View {
@@ -157,7 +157,7 @@ struct ClinicSummaryView: View {
                 .font(.ui(.headline))
                 .foregroundStyle(Theme.onAction)
                 .frame(maxWidth: .infinity, minHeight: 60)
-                .background(Theme.actionInk, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+                .background(Theme.actionInk, in: RoundedRectangle(cornerRadius: Theme.controlRadius, style: .continuous))
         }
         .buttonStyle(PressScale())
         .accessibilityHint("Creates a PDF and opens sharing options such as Mail, Messages, Files, and Print")

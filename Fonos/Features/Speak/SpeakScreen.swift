@@ -17,14 +17,14 @@ struct SpeakScreen: View {
                     } else {
                         foldCard
                         transcriptCard
-                        SpeakButton().padding(.top, 22).padding(.bottom, 6)
+                        SpeakButton().padding(.top, 24).padding(.bottom, 8)
                     }
                     phrases
                     if !engine.utterances.isEmpty { history }
                 }
                 .padding(.horizontal, Theme.gutter)
                 .padding(.top, 4)
-                .padding(.bottom, 28)
+                .padding(.bottom, 32)
             }
             .fonosScreen()
             .toolbar {
@@ -140,7 +140,7 @@ struct SpeakScreen: View {
 
     private var phrases: some View {
         VStack(alignment: .leading, spacing: 10) {
-            Text("Quick phrases").cardTitle().padding(.top, 14).padding(.leading, 4)
+            Text("Quick phrases").cardTitle().padding(.top, 16).padding(.leading, 4)
             LazyVGrid(columns: [GridItem(.flexible(), spacing: 12), GridItem(.flexible(), spacing: 12)], spacing: 12) {
                 ForEach(engine.quickPhrases, id: \.self) { phrase in
                     Button { engine.say(phrase, asPhrase: true) } label: {
@@ -210,13 +210,6 @@ struct SpeakButton: View {
                         .id(state)
                 }
                 .frame(width: 132, height: 132)
-                .background {
-                    // A quiet halo that frames the orb at rest.
-                    Circle()
-                        .fill(fill(state).opacity(0.07))
-                        .overlay(Circle().strokeBorder(fill(state).opacity(0.16), lineWidth: 1))
-                        .frame(width: 164, height: 164)
-                }
                 .animation(reduceMotion ? nil : .smooth(duration: 0.35), value: state)
                 .contentShape(Circle())
             }
@@ -284,10 +277,12 @@ struct SpeakButton: View {
 }
 
 struct PressScale: ButtonStyle {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .scaleEffect(configuration.isPressed ? 0.95 : 1)
-            .animation(.spring(response: 0.28, dampingFraction: 0.62), value: configuration.isPressed)
+            .scaleEffect(configuration.isPressed && !reduceMotion ? 0.95 : 1)
+            .opacity(configuration.isPressed && reduceMotion ? 0.8 : 1)
+            .animation(reduceMotion ? nil : .spring(response: 0.28, dampingFraction: 0.62), value: configuration.isPressed)
     }
 }
 

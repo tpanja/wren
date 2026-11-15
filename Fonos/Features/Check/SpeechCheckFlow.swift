@@ -431,7 +431,7 @@ struct PrimaryBar: View {
                 .font(.ui(.headline))
                 .foregroundStyle(tint == Theme.alert ? Color.white : Theme.onAction)
                 .frame(maxWidth: .infinity, minHeight: 60)
-                .background(disabled ? fill.opacity(0.55) : fill, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+                .background(disabled ? fill.opacity(0.55) : fill, in: RoundedRectangle(cornerRadius: Theme.controlRadius, style: .continuous))
         }
         .buttonStyle(PressScale())
         .disabled(disabled)

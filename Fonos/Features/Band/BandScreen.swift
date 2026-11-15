@@ -33,7 +33,7 @@ struct BandScreen: View {
                     ModeFooter()
                 }
                 .padding(.horizontal, Theme.gutter)
-                .padding(.bottom, 28)
+                .padding(.bottom, 32)
             }
             .fonosScreen()
             .navigationTitle("Band")
@@ -133,9 +133,9 @@ private struct BandHero: View {
         ZStack {
             if b == .searching { SearchRings(color: Theme.action) }
             switch b {
-            case .live, .searching: Orb(color: Theme.action, glow: false)
+            case .live, .searching: Orb(color: Theme.action)
             case .idle: Circle().fill(Theme.well)
-            case .problem: Orb(color: Theme.caution, glow: false)
+            case .problem: Orb(color: Theme.caution)
             }
             FonosIcon(b == .problem ? .bluetooth : .band, size: 28, relativeTo: .title3)
                 .foregroundStyle(b == .idle ? Theme.inkTertiary : Theme.onAction)
@@ -290,9 +290,9 @@ private struct NearbyBands: View {
                             SignalBars(rssi: band.rssi)
                             FonosIcon(.chevron, size: 13, relativeTo: .footnote).foregroundStyle(Theme.inkTertiary)
                         }
-                        .padding(.horizontal, 14)
+                        .padding(.horizontal, 16)
                         .frame(maxWidth: .infinity, minHeight: 60, alignment: .leading)
-                        .background(Theme.well.opacity(0.6), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                        .background(Theme.well.opacity(0.6), in: RoundedRectangle(cornerRadius: Theme.controlRadius, style: .continuous))
                         .contentShape(Rectangle())
                     }
                     .buttonStyle(.tile)
@@ -367,7 +367,7 @@ private struct SetupGuide: View {
                     tip("If the light on the band isn't blinking, it isn't powered, or its firmware needs flashing.")
                     tip("Still stuck? Ask whoever set up your band to check it against the Fonos firmware guide.")
                 }
-                .padding(.top, 10)
+                .padding(.top, 12)
             } label: {
                 Text("Band not showing up?")
                     .font(.ui(.headline))
@@ -431,7 +431,7 @@ private struct PrimaryButton: View {
                 .font(.ui(.headline))
                 .foregroundStyle(Theme.onAction)
                 .frame(maxWidth: .infinity, minHeight: 60)
-                .background(Theme.actionInk, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+                .background(Theme.actionInk, in: RoundedRectangle(cornerRadius: Theme.controlRadius, style: .continuous))
         }
         .buttonStyle(PressScale())
     }
@@ -499,7 +499,7 @@ struct SensorCard<Trace: View, Trailing: View>: View {
             trace
                 .frame(height: 64)
                 .padding(.vertical, 4)
-                .background(color.opacity(0.05), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+                .background(color.opacity(0.05), in: RoundedRectangle(cornerRadius: Theme.controlRadius, style: .continuous))
             HStack(spacing: 8) {
                 switch contact {
                 case true?: CheckDisc(color: Theme.good, size: 20)

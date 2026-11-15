@@ -2,22 +2,21 @@ import SwiftUI
 
 // MARK: - Ground
 
-/// The app background: warm porcelain that brightens toward the top edge.
+/// The app background: one solid ground, no wash.
 struct GroundBackground: View {
     var body: some View {
-        LinearGradient(colors: [Theme.groundHigh, Theme.ground], startPoint: .top, endPoint: UnitPoint(x: 0.5, y: 0.45))
-            .ignoresSafeArea()
+        Theme.ground.ignoresSafeArea()
     }
 }
 
 extension View {
-    /// Screen chrome shared by every tab: the porcelain ground behind the
-    /// content and a matching navigation bar.
+    /// Screen chrome shared by every tab: the ground behind the content and a
+    /// matching navigation bar.
     func fonosScreen() -> some View {
         self
             .scrollContentBackground(.hidden)
             .background { GroundBackground() }
-            .toolbarBackground(Theme.groundHigh, for: .navigationBar)
+            .toolbarBackground(Theme.ground, for: .navigationBar)
     }
 }
 
@@ -41,7 +40,7 @@ struct Surface: View {
 }
 
 struct CardBackground: ViewModifier {
-    var padding: CGFloat = 18
+    var padding: CGFloat = 16
     func body(content: Content) -> some View {
         content
             .padding(padding)
@@ -51,7 +50,7 @@ struct CardBackground: ViewModifier {
 }
 
 extension View {
-    func card(padding: CGFloat = 18) -> some View { modifier(CardBackground(padding: padding)) }
+    func card(padding: CGFloat = 16) -> some View { modifier(CardBackground(padding: padding)) }
 }
 
 /// Apple Health–style card header: colored symbol and title, optional trailing detail and chevron.
@@ -69,7 +68,7 @@ struct CardHeader: View {
             Label { Text(title).foregroundStyle(ink ?? color) } icon: {
                 FonosIcon(icon, size: 16, relativeTo: .subheadline)
                     .foregroundStyle(color)
-                    .padding(5)
+                    .padding(4)
                     .background(color.opacity(0.14), in: Circle())
             }
             .font(.ui(.subheadline, .bold))
@@ -88,27 +87,13 @@ struct CardHeader: View {
 
 // MARK: - Orb
 
-/// A filled circle with a soft top-left sheen and a bright rim, the Fonos
-/// treatment for the Speak button and the band's device badge.
+/// A solid filled circle for the Speak button and the band's device badge.
+/// No sheen, rim, or glow: the state color alone carries the meaning.
 struct Orb: View {
     let color: Color
-    var glow: Bool = true
-    @Environment(\.colorScheme) private var scheme
 
     var body: some View {
-        Circle()
-            .fill(color)
-            .overlay(
-                Circle().fill(LinearGradient(
-                    colors: [.white.opacity(0.30), .white.opacity(0.0), .black.opacity(0.12)],
-                    startPoint: .topLeading, endPoint: .bottomTrailing))
-            )
-            .overlay(
-                Circle().strokeBorder(LinearGradient(
-                    colors: [.white.opacity(0.55), .white.opacity(0.0)],
-                    startPoint: .top, endPoint: .center), lineWidth: 1.2)
-            )
-            .shadow(color: color.opacity(glow ? (scheme == .dark ? 0.28 : 0.34) : 0), radius: 22, y: 12)
+        Circle().fill(color)
     }
 }
 
@@ -140,20 +125,20 @@ struct SegmentedPicker<Value: Hashable>: View {
                         .frame(maxWidth: .infinity, minHeight: 44)
                         .background {
                             if on {
-                                Capsule()
+                                RoundedRectangle(cornerRadius: Theme.controlRadius - 4, style: .continuous)
                                     .fill(Theme.thumb)
                                     .shadow(color: Theme.shadow.opacity(0.12), radius: 6, y: 2)
                                     .matchedGeometryEffect(id: "thumb", in: ns)
                             }
                         }
-                        .contentShape(Capsule())
+                        .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
                 .accessibilityAddTraits(on ? .isSelected : [])
             }
         }
         .padding(4)
-        .background(Theme.well, in: Capsule())
+        .background(Theme.well, in: RoundedRectangle(cornerRadius: Theme.controlRadius, style: .continuous))
         .dynamicTypeSize(...DynamicTypeSize.accessibility2)
         .sensoryFeedback(.selection, trigger: selection)
         .accessibilityElement(children: .contain)
@@ -248,8 +233,8 @@ struct StatusPill: View {
                 .lineLimit(1)
                 .contentTransition(.opacity)
         }
-        .padding(.leading, 10)
-        .padding(.trailing, 14)
+        .padding(.leading, 8)
+        .padding(.trailing, 12)
         .frame(minHeight: 34)
         .background {
             Capsule().fill(Theme.card)
@@ -315,7 +300,7 @@ struct WellButtonStyle: ButtonStyle {
             .tracking(1.2)
             .foregroundStyle(tint)
             .frame(maxWidth: .infinity, minHeight: 52)
-            .background(Theme.well, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+            .background(Theme.well, in: RoundedRectangle(cornerRadius: Theme.controlRadius, style: .continuous))
             .opacity(configuration.isPressed ? 0.7 : 1)
             .scaleEffect(configuration.isPressed ? 0.985 : 1)
             .animation(.smooth(duration: 0.18), value: configuration.isPressed)
@@ -331,11 +316,12 @@ extension ButtonStyle where Self == WellButtonStyle {
 /// A tappable surface (quick phrases, summary cards): settles in slightly
 /// when pressed, so every tap is acknowledged without needing precision.
 struct TileButtonStyle: ButtonStyle {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .scaleEffect(configuration.isPressed ? 0.975 : 1)
-            .brightness(configuration.isPressed ? -0.02 : 0)
-            .animation(.smooth(duration: 0.18), value: configuration.isPressed)
+            .scaleEffect(configuration.isPressed && !reduceMotion ? 0.975 : 1)
+            .brightness(configuration.isPressed ? -0.03 : 0)
+            .animation(reduceMotion ? nil : .smooth(duration: 0.18), value: configuration.isPressed)
     }
 }
 
@@ -352,6 +338,6 @@ struct SampleBanner: View {
             .foregroundStyle(Theme.inkSecondary)
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(.horizontal, 16).padding(.vertical, 12)
-            .background(Theme.well.opacity(0.7), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+            .background(Theme.well.opacity(0.7), in: RoundedRectangle(cornerRadius: Theme.controlRadius, style: .continuous))
     }
 }
