@@ -4,3 +4,4 @@ DerivedData/
 build/
 *.xcuserstate
 .impeccable/config.local.json
+.impeccable/review/
