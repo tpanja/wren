@@ -147,12 +147,11 @@ struct TrendsScreen: View {
         return ("Your speech is holding steady", "Your recent measures are close to your baseline across the board.")
     }
 
-    /// Offer voice banking once speech starts to change: the patient's own
-    /// rating drops, or articulation or rhythm measures trend lower. Hidden
-    /// once dismissed or once a Personal Voice exists.
+    /// Offer voice banking once speech starts to change: articulation or
+    /// rhythm measures trend lower. Hidden once dismissed or once a
+    /// Personal Voice exists.
     private var showVoiceBanking: Bool {
         guard !voiceBankDismissed, !engine.voice.voices.contains(where: \.isPersonal) else { return false }
-        if let s = checks.last(where: { $0.selfReport != nil })?.selfReport?.speech, s <= 3 { return true }
         return allTrends.contains { t in
             t.direction == .lower && [.articulation, .rhythm].contains(SpeechSystem.of(t.measure))
         }

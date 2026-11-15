@@ -205,7 +205,7 @@ struct ClinicReportPage: View {
                 }
             }
             Paper.rule(0.75)
-            Text("n counts sessions for conversation measures and weekly checks for check measures. Change is relative to baseline, except reading fatigue (dB) and self-ratings (points), which are absolute differences.")
+            Text("n counts sessions for conversation measures and weekly checks for check measures. Change is relative to baseline, except reading fatigue, which is an absolute difference in dB.")
                 .font(Paper.text(6.5)).foregroundStyle(Paper.ink3)
                 .fixedSize(horizontal: false, vertical: true)
                 .padding(.top, 4)
@@ -327,7 +327,7 @@ struct ClinicReportPage: View {
                             .foregroundStyle(Paper.ink2)
                             .fixedSize(horizontal: false, vertical: true)
                     }
-                    Text("Weekly check tasks: sustained /a/, /pa/ and /pataka/ repetition for 6 s, and a fixed reading passage (about 75 syllables). Baseline is the mean of the first 5 sessions, or of the first 3 weekly checks. Stable band: ±5% of baseline; 1 dB for reading fatigue; 0.5 points for self-ratings. Slope is an ordinary least-squares fit over time, scaled to 30 days, with a 95% confidence interval. Status needs 3 values in the period; slope needs 3 values spanning 7 days.")
+                    Text("Weekly check tasks: sustained /a/, /pa/ and /pataka/ repetition for 6 s, and a fixed reading passage (about 75 syllables). Baseline is the mean of the first 5 sessions, or of the first 3 weekly checks. Stable band: ±5% of baseline; 1 dB for reading fatigue. Slope is an ordinary least-squares fit over time, scaled to 30 days, with a 95% confidence interval. Status needs 3 values in the period; slope needs 3 values spanning 7 days.")
                         .font(Paper.text(6.5)).foregroundStyle(Paper.ink2)
                         .fixedSize(horizontal: false, vertical: true)
                         .padding(.top, 3)
@@ -350,7 +350,6 @@ struct ClinicReportPage: View {
             qrow("Translated speech", "\(q.translatedSessions) of \(q.sessions)")
             qrow("Weekly checks", "\(q.checks)")
             qrow("Check tasks recorded", "\(q.checkTasks) of \(q.checks * CheckTask.allCases.count)")
-            qrow("Self-ratings", "\(q.selfReports) of \(q.checks)")
             qrow("Translator", report.isSample ? "Toy (scripted)" : "On-device")
         }
     }
@@ -368,7 +367,7 @@ struct ClinicReportPage: View {
         VStack(alignment: .leading, spacing: 4) {
             Paper.rule(0.5)
             HStack(alignment: .firstTextBaseline) {
-                Text("Descriptive measures from a wearable throat sensor and patient self-report. Not diagnostic, and not validated against clinical scales. Interpret alongside clinical assessment.")
+                Text("Descriptive measures from a wearable throat sensor. Not diagnostic, and not validated against clinical scales. Interpret alongside clinical assessment.")
                     .font(Paper.text(7)).foregroundStyle(Paper.ink2)
                 Spacer(minLength: 12)
                 Text("Fonos \(Paper.appVersion) · Page \(page) of \(Self.pageCount)")
@@ -464,8 +463,6 @@ private struct MiniTrend: View {
     }
 
     private func domain(fit: [ClinicReport.Point]?) -> ClosedRange<Double> {
-        // Self-ratings use the whole 0–4 scale, so a flat 4 doesn't fill the chart.
-        if m.unit == "of 4" { return -0.2...4.2 }
         var v = row.points.map(\.value)
         if let b = row.baseline { v.append(b) }
         if let fit { v += fit.map(\.value) }
@@ -529,7 +526,7 @@ enum Paper {
 
     /// Relative change as a percentage, or an absolute difference with its unit.
     static func change(_ v: Double, _ m: Measure) -> String {
-        m.changeIsAbsolute ? signed(v, m) + (m.unit == "of 4" ? " pt" : " " + m.unit) : signedPercent(v)
+        m.changeIsAbsolute ? signed(v, m) + " " + m.unit : signedPercent(v)
     }
 
     static var appVersion: String {

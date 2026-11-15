@@ -72,7 +72,6 @@ struct ClinicReport: Equatable {
         var checks: Int = 0
         /// Tasks recorded across the checks, out of 4 per check.
         var checkTasks: Int = 0
-        var selfReports: Int = 0
     }
 
     var patient: Patient
@@ -91,7 +90,7 @@ struct ClinicReport: Equatable {
     var reportID: String
 
     /// Measures grouped by speech system: breathing, voice, articulation,
-    /// rhythm and intelligibility, then the patient's own rating.
+    /// rhythm and intelligibility.
     static let order: [Measure] = SpeechSystem.allCases.flatMap(\.measures)
 
     // MARK: Build
@@ -164,8 +163,7 @@ struct ClinicReport: Equatable {
             translatedSessions: inPeriod.filter { $0.clarity != nil }.count,
             longestGapDays: gap,
             checks: checksInPeriod.count,
-            checkTasks: checksInPeriod.map(\.completedTasks).reduce(0, +),
-            selfReports: checksInPeriod.filter { $0.selfReport != nil }.count
+            checkTasks: checksInPeriod.map(\.completedTasks).reduce(0, +)
         )
 
         return ClinicReport(
@@ -202,7 +200,7 @@ struct ClinicReport: Equatable {
     /// "12% lower" or "1.5 dB lower".
     static func changePhrase(_ c: Double, _ m: Measure) -> String {
         let dir = c > 0 ? "higher" : "lower"
-        if m.changeIsAbsolute { return "\(m.reportFormat(abs(c))) \(m.unit == "of 4" ? "points" : m.unit) \(dir)" }
+        if m.changeIsAbsolute { return "\(m.reportFormat(abs(c))) \(m.unit) \(dir)" }
         return "\(Int((abs(c) * 100).rounded()))% \(dir)"
     }
 

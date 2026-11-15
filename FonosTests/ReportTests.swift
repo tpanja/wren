@@ -87,7 +87,6 @@ final class ReportTests: XCTestCase {
         XCTAssertEqual(mpt.status, .unfavorable)
         XCTAssertEqual(r.quality.checks, 13)
         XCTAssertEqual(r.quality.checkTasks, 52)
-        XCTAssertEqual(r.quality.selfReports, 13)
         XCTAssertNotNil(r.checkBaselineEnd)
     }
 

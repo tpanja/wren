@@ -1,12 +1,11 @@
 import SwiftUI
 
-/// Measures that come from the weekly Speech check (tasks and self-report).
+/// Measures that come from the weekly Speech check tasks.
 enum CheckMetric: String, CaseIterable, Identifiable, Codable {
     case mpt, breathGroup, fatigue
     case hnr
     case amrRate, smrRate, ddkRegularity
     case readingRate
-    case selfSpeech, selfSalivation, selfSwallowing
 
     var id: String { rawValue }
 
@@ -20,9 +19,6 @@ enum CheckMetric: String, CaseIterable, Identifiable, Codable {
         case .smrRate: "“pa-ta-ka” speed"
         case .ddkRegularity: "“pa-ta-ka” timing variation"
         case .readingRate: "Reading rate"
-        case .selfSpeech: "Your speech rating"
-        case .selfSalivation: "Your saliva rating"
-        case .selfSwallowing: "Your swallowing rating"
         }
     }
 
@@ -37,9 +33,6 @@ enum CheckMetric: String, CaseIterable, Identifiable, Codable {
         case .smrRate: "SMR rate (pa-ta-ka)"
         case .ddkRegularity: "SMR irregularity"
         case .readingRate: "Reading rate"
-        case .selfSpeech: "Speech (self)"
-        case .selfSalivation: "Salivation (self)"
-        case .selfSwallowing: "Swallowing (self)"
         }
     }
 
@@ -51,7 +44,6 @@ enum CheckMetric: String, CaseIterable, Identifiable, Codable {
         case .hnr: "dB"
         case .amrRate, .smrRate, .readingRate: "syl/s"
         case .ddkRegularity: "% CV"
-        case .selfSpeech, .selfSalivation, .selfSwallowing: "of 4"
         }
     }
 
@@ -60,7 +52,6 @@ enum CheckMetric: String, CaseIterable, Identifiable, Codable {
         case .breathGroup: "syl/group"
         case .fatigue: "dB, last − first third"
         case .ddkRegularity: "% CV of intervals"
-        case .selfSpeech, .selfSalivation, .selfSwallowing: "0–4"
         default: unit
         }
     }
@@ -71,7 +62,6 @@ enum CheckMetric: String, CaseIterable, Identifiable, Codable {
         case .hnr: .variation
         case .amrRate, .smrRate, .ddkRegularity: .ddk
         case .readingRate: .pace
-        case .selfSpeech, .selfSalivation, .selfSwallowing: .checklist
         }
     }
 
@@ -95,8 +85,6 @@ enum CheckMetric: String, CaseIterable, Identifiable, Codable {
             "How much the timing between your “pa-ta-ka” syllables varies. Lower means more even timing."
         case .readingRate:
             "Syllables per second while reading the same passage each week, not counting pauses."
-        case .selfSpeech, .selfSalivation, .selfSwallowing:
-            "Your own rating from the weekly check, from 4 (normal) to 0. The questions are based on the bulbar items of the ALSFRS-R, a scale ALS clinics use."
         }
     }
 
@@ -109,7 +97,6 @@ enum CheckMetric: String, CaseIterable, Identifiable, Codable {
         case .amrRate, .smrRate: "Syllable peaks in 6 s of repetition"
         case .ddkRegularity: "Spread of the gaps between “pa-ta-ka” syllables"
         case .readingRate: "Syllable peaks over speaking time, pauses of 250 ms or more removed"
-        case .selfSpeech, .selfSalivation, .selfSwallowing: "Your answer in the weekly check"
         }
     }
 
@@ -123,7 +110,6 @@ enum CheckMetric: String, CaseIterable, Identifiable, Codable {
         case .smrRate: "Sequential motion rate: /pataka/ syllables per second over 6 s."
         case .ddkRegularity: "Coefficient of variation of /pataka/ syllable intervals."
         case .readingRate: "Syllables per second of speaking time in a fixed passage, pauses ≥ 250 ms removed."
-        case .selfSpeech, .selfSalivation, .selfSwallowing: "Patient self-rating, 0–4, modeled on ALSFRS-R bulbar items (paraphrased)."
         }
     }
 
@@ -137,15 +123,11 @@ enum CheckMetric: String, CaseIterable, Identifiable, Codable {
         case .smrRate: c.smrRate
         case .ddkRegularity: c.smrRegularity
         case .readingRate: c.readingRate
-        case .selfSpeech: c.selfReport.map { Double($0.speech) }
-        case .selfSalivation: c.selfReport.map { Double($0.salivation) }
-        case .selfSwallowing: c.selfReport.map { Double($0.swallowing) }
         }
     }
 
     func format(_ v: Double) -> String {
         switch self {
-        case .selfSpeech, .selfSalivation, .selfSwallowing: String(format: "%.0f", v)
         case .amrRate, .smrRate, .readingRate: String(format: "%.1f", v)
         default: String(format: "%.1f", v)
         }
@@ -153,7 +135,6 @@ enum CheckMetric: String, CaseIterable, Identifiable, Codable {
 
     func reportFormat(_ v: Double) -> String {
         switch self {
-        case .selfSpeech, .selfSalivation, .selfSwallowing: String(format: "%.1f", v)
         case .amrRate, .smrRate, .readingRate: String(format: "%.2f", v)
         default: String(format: "%.1f", v)
         }
@@ -208,28 +189,22 @@ enum Measure: Hashable, Identifiable {
 
     var isCheck: Bool { if case .check = self { true } else { false } }
 
-    /// Measures whose values sit near zero or on a short ordinal scale are
-    /// compared by absolute difference; a percentage of them means nothing
-    /// (−0.8 dB to −2.4 dB is not "down 200%").
+    /// Measures whose values sit near zero are compared by absolute
+    /// difference; a percentage of them means nothing (−0.8 dB to −2.4 dB
+    /// is not "down 200%").
     var changeIsAbsolute: Bool {
-        if case .check(let c) = self { return [.fatigue, .selfSpeech, .selfSalivation, .selfSwallowing].contains(c) }
+        if case .check(let c) = self { return c == .fatigue }
         return false
     }
 
     /// Change treated as day-to-day variation: ±5% for relative measures,
-    /// 1 dB for reading stamina, half a point for the 0–4 ratings.
-    var steadyBand: Double {
-        guard changeIsAbsolute, case .check(let c) = self else { return 0.05 }
-        return c == .fatigue ? 1 : 0.5
-    }
+    /// 1 dB for reading stamina.
+    var steadyBand: Double { changeIsAbsolute ? 1 : 0.05 }
 
     /// Scale that puts an absolute change on roughly the same footing as a
     /// relative one when ranking which change to headline: 2 dB of stamina
-    /// or half a rating point counts like 20% or 12.5%.
-    var severityScale: Double {
-        guard changeIsAbsolute, case .check(let c) = self else { return 1 }
-        return c == .fatigue ? 10 : 4
-    }
+    /// counts like 20%.
+    var severityScale: Double { changeIsAbsolute ? 10 : 1 }
 
     var color: Color {
         switch self {
@@ -242,7 +217,7 @@ enum Measure: Hashable, Identifiable {
     var sourceLabel: String {
         switch self {
         case .session: "From conversation"
-        case .check(let c): [.selfSpeech, .selfSalivation, .selfSwallowing].contains(c) ? "Your weekly rating" : "From the weekly check"
+        case .check: "From the weekly check"
         }
     }
 
@@ -294,15 +269,14 @@ enum Measure: Hashable, Identifiable {
             case .hnr: "Your held “ahh” sounds less clear than at your baseline. This is worth mentioning at your next clinic visit."
             case .amrRate, .smrRate, .ddkRegularity: "Your syllable repetitions are slower or less even than at your baseline. Your speech therapist can tell you what this means for you."
             case .readingRate: "You're reading the weekly passage more slowly than at first. That's fine; speaking at a comfortable pace helps people understand you."
-            case .selfSpeech, .selfSalivation, .selfSwallowing: "Your own weekly rating has changed. Share this with your care team at your next visit."
             }
         }
     }
 }
 
-/// The five groups clinicians use to describe speech in ALS.
+/// The groups clinicians use to describe speech in ALS.
 enum SpeechSystem: String, CaseIterable, Identifiable {
-    case breathing, voice, articulation, rhythm, selfReport
+    case breathing, voice, articulation, rhythm
 
     var id: String { rawValue }
 
@@ -312,7 +286,6 @@ enum SpeechSystem: String, CaseIterable, Identifiable {
         case .voice: "Voice"
         case .articulation: "Articulation"
         case .rhythm: "Rhythm and intelligibility"
-        case .selfReport: "Your own rating"
         }
     }
 
@@ -322,12 +295,11 @@ enum SpeechSystem: String, CaseIterable, Identifiable {
         case .voice: "How the vocal folds vibrate."
         case .articulation: "How quickly and evenly lips and tongue move."
         case .rhythm: "Speaking rate, pauses, and how well Fonos understands you."
-        case .selfReport: "How you rate speech, saliva, and swallowing each week."
         }
     }
 
     /// Title in the clinic report, written for a clinician.
-    var reportTitle: String { self == .selfReport ? "Self-report" : title }
+    var reportTitle: String { title }
 
     /// Where the system's measures come from, for the report's group rows.
     var reportNote: String {
@@ -336,7 +308,6 @@ enum SpeechSystem: String, CaseIterable, Identifiable {
         case .voice: "Sustained /a/, conversation pitch, piezo balance"
         case .articulation: "Diadochokinetic tasks"
         case .rhythm: "Reading passage, conversation, translator"
-        case .selfReport: "Weekly self-rating, 4 = normal, 0 = most affected"
         }
     }
 
@@ -346,7 +317,6 @@ enum SpeechSystem: String, CaseIterable, Identifiable {
         case .voice: Theme.strength
         case .articulation: Theme.pace
         case .rhythm: Theme.clarity
-        case .selfReport: Theme.symmetry
         }
     }
 
@@ -356,7 +326,6 @@ enum SpeechSystem: String, CaseIterable, Identifiable {
         case .voice: [.check(.hnr), .session(.steadiness), .session(.symmetry)]
         case .articulation: [.check(.amrRate), .check(.smrRate), .check(.ddkRegularity)]
         case .rhythm: [.check(.readingRate), .session(.pace), .session(.pauses), .session(.clarity)]
-        case .selfReport: [.check(.selfSpeech), .check(.selfSalivation), .check(.selfSwallowing)]
         }
     }
 
@@ -385,7 +354,7 @@ struct MeasureTrend: Identifiable {
     var phrase: String {
         guard direction != .steady else { return "\(measure.title) is steady" }
         let amount = measure.changeIsAbsolute
-            ? "\(measure.format(abs(change))) \(measure.unit == "of 4" ? "point\(measure.format(abs(change)) == "1" ? "" : "s")" : measure.unit)"
+            ? "\(measure.format(abs(change))) \(measure.unit)"
             : "\(Int((abs(change) * 100).rounded()))%"
         return "\(measure.title) is \(change > 0 ? "up" : "down") \(amount)"
     }

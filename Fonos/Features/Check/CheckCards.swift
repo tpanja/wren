@@ -14,7 +14,7 @@ struct WeeklyCheckCard: View {
             Text(due ? "Your check is due" : "Next check \(nextText(next))")
                 .font(.metric(.title3, weight: .semibold))
                 .foregroundStyle(Theme.ink)
-            Text("Four short tasks and three questions, about 3 minutes. The same tasks each week make changes easier to see.")
+            Text("Four short tasks, about 3 minutes. The same tasks each week make changes easier to see.")
                 .font(.ui(.subheadline))
                 .foregroundStyle(Theme.inkSecondary)
                 .fixedSize(horizontal: false, vertical: true)

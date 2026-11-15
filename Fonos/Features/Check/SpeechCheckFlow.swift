@@ -1,7 +1,7 @@
 import SwiftUI
 
-/// The weekly Speech check: four short tasks, three optional questions,
-/// then a summary. About three minutes. Every step has one large primary
+/// The weekly Speech check: four short tasks, then a summary. About three
+/// minutes. Every step has one large primary
 /// action, and every task can be skipped.
 struct SpeechCheckFlow: View {
     @Environment(FonosEngine.self) private var engine
@@ -10,17 +10,15 @@ struct SpeechCheckFlow: View {
     enum Step: Hashable {
         case intro
         case task(CheckTask)
-        case question(BulbarSelfReport.Item)
         case results
     }
 
     @State private var step: Step = .intro
     @State private var draft = SpeechCheckRecord(date: .now, isSample: true)
-    @State private var answers: [BulbarSelfReport.Item: Int] = [:]
     @State private var confirmQuit = false
     /// When the step last changed. Taps in the first moments after a change
-    /// are ignored, so a double tap or a tremor can't skip a task or answer
-    /// the next question with the button that took the previous one's place.
+    /// are ignored, so a double tap or a tremor can't skip a task with the
+    /// button that took the previous one's place.
     @State private var stepChanged = Date.distantPast
     /// The last saved check when the flow opened. Captured once, so saving
     /// doesn't make the results compare this check with itself while dismissing.
@@ -33,8 +31,7 @@ struct SpeechCheckFlow: View {
                 switch step {
                 case .intro: CheckIntro(start: { go(.task(.breath)) })
                 case .task(let t): TaskStep(task: t, settled: settled, onResult: { record($0) }, onNext: { next(after: t) })
-                case .question(let q): QuestionStep(item: q, selected: answers[q]) { answer(q, $0) } skipAll: { if settled() { go(.results) } }
-                case .results: CheckResults(draft: draftWithAnswers, previous: previous, save: save)
+                case .results: CheckResults(draft: draft, previous: previous, save: save)
                 }
             }
             .animation(.easeInOut(duration: 0.25), value: step)
@@ -73,18 +70,8 @@ struct SpeechCheckFlow: View {
     private var progress: String? {
         switch step {
         case .task(let t): "Task \(t.rawValue + 1) of \(CheckTask.allCases.count)"
-        case .question(let q): "Question \((BulbarSelfReport.Item.allCases.firstIndex(of: q) ?? 0) + 1) of 3"
         default: nil
         }
-    }
-
-    private var draftWithAnswers: SpeechCheckRecord {
-        var d = draft
-        let items = BulbarSelfReport.Item.allCases
-        if items.allSatisfy({ answers[$0] != nil }) {
-            d.selfReport = BulbarSelfReport(speech: answers[.speech]!, salivation: answers[.salivation]!, swallowing: answers[.swallowing]!)
-        }
-        return d
     }
 
     private func go(_ s: Step) {
@@ -99,18 +86,11 @@ struct SpeechCheckFlow: View {
 
     private func next(after t: CheckTask) {
         guard settled() else { return }
-        if let n = CheckTask(rawValue: t.rawValue + 1) { go(.task(n)) } else { go(.question(.speech)) }
-    }
-
-    private func answer(_ q: BulbarSelfReport.Item, _ score: Int) {
-        guard settled() else { return }
-        answers[q] = score
-        let items = BulbarSelfReport.Item.allCases
-        if let i = items.firstIndex(of: q), i + 1 < items.count { go(.question(items[i + 1])) } else { go(.results) }
+        if let n = CheckTask(rawValue: t.rawValue + 1) { go(.task(n)) } else { go(.results) }
     }
 
     private func save() {
-        var d = draftWithAnswers
+        var d = draft
         d.date = .now
         engine.saveCheck(d)
         dismiss()
@@ -129,7 +109,7 @@ private struct CheckIntro: View {
                     .font(.metric(.title2, weight: .bold))
                     .foregroundStyle(Theme.ink)
                     .padding(.top, 8)
-                Text("Four short tasks and three questions, about 3 minutes. Doing the same tasks each week shows changes that everyday conversation can hide.")
+                Text("Four short tasks, about 3 minutes. Doing the same tasks each week shows changes that everyday conversation can hide.")
                     .font(.ui(.body))
                     .foregroundStyle(Theme.inkSecondary)
                     .fixedSize(horizontal: false, vertical: true)
@@ -351,60 +331,6 @@ private struct ResultCard: View {
     }
 }
 
-// MARK: - Questions
-
-private struct QuestionStep: View {
-    let item: BulbarSelfReport.Item
-    let selected: Int?
-    let choose: (Int) -> Void
-    let skipAll: () -> Void
-
-    var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: Theme.stack) {
-                Text(item.question)
-                    .font(.metric(.title2, weight: .bold))
-                    .foregroundStyle(Theme.ink)
-                    .padding(.top, 8)
-                    .accessibilityAddTraits(.isHeader)
-                Text("Choose the one that fits best.")
-                    .font(.ui(.body)).foregroundStyle(Theme.inkSecondary)
-
-                ForEach(Array(item.options.enumerated()), id: \.offset) { i, text in
-                    let score = 4 - i
-                    Button { choose(score) } label: {
-                        HStack(spacing: 12) {
-                            Text(text).font(.ui(.body, .medium)).foregroundStyle(Theme.ink)
-                                .multilineTextAlignment(.leading)
-                                .fixedSize(horizontal: false, vertical: true)
-                            Spacer(minLength: 0)
-                            if selected == score { CheckDisc(color: Theme.action, size: 22) }
-                        }
-                        .padding(.horizontal, 16).padding(.vertical, 14)
-                        .frame(maxWidth: .infinity, minHeight: 60, alignment: .leading)
-                        .background(Theme.card, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
-                        .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous)
-                            .stroke(selected == score ? Theme.action : Color.clear, lineWidth: 2))
-                        .contentShape(Rectangle())
-                    }
-                    .buttonStyle(PressScale())
-                    .accessibilityAddTraits(selected == score ? .isSelected : [])
-                }
-
-                Button("Skip the questions") { skipAll() }
-                    .font(.ui(.headline))
-                    .frame(maxWidth: .infinity, minHeight: 48)
-                    .padding(.top, 4)
-                Text("Based on the speech, saliva, and swallowing questions ALS clinics use (ALSFRS-R), in plain words. Not the official form.")
-                    .font(.ui(.footnote)).foregroundStyle(Theme.inkTertiary)
-                    .fixedSize(horizontal: false, vertical: true)
-            }
-            .padding(.horizontal, Theme.gutter)
-            .padding(.bottom, 24)
-        }
-    }
-}
-
 // MARK: - Results
 
 private struct CheckResults: View {
@@ -455,7 +381,7 @@ private struct CheckResults: View {
             .padding(.bottom, 24)
         }
         .safeAreaInset(edge: .bottom) {
-            PrimaryBar(title: "Save check", icon: .check, disabled: draft.completedTasks == 0 && draft.selfReport == nil, action: save)
+            PrimaryBar(title: "Save check", icon: .check, disabled: draft.completedTasks == 0, action: save)
         }
     }
 }
