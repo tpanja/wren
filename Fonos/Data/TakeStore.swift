@@ -147,10 +147,10 @@ enum ToyHistory {
                 let date = cal.date(byAdding: .day, value: -d, to: cal.startOfDay(for: now))!
                     .addingTimeInterval(TimeInterval(18 * 3600 + k * 300 + Int.random(in: 0...1200, using: &rng)))
                 var m: [MetricID: Double] = [
-                    .throatVibration: 42 + r(5),
+                    .throatVibration: 215 + r(18),
                     .lrSymmetry: 92 + r(3),
                     .vibrationToSound: 1.05 - 0.08 * t + r(0.05),
-                    .larynxRise: 0.36 - 0.05 * t + r(0.03),
+                    .larynxRise: 0.32 - 0.05 * t + r(0.03),
                     .dynamicRange: 9 + 3 * t + r(1.5),
                     .phraseDuration: 5.5 + 3 * t + r(0.8),
                 ]
@@ -181,7 +181,7 @@ enum ToyHistory {
         }
         // One speaking check early on.
         out.append(TakeRecord(date: cal.date(byAdding: .day, value: -83, to: now)!, kind: .speakingCheck,
-                              metrics: [.speakingPitch: 49, .throatVibration: 38, .larynxRise: 0.3],
+                              metrics: [.speakingPitch: 49, .throatVibration: 160, .larynxRise: 0.2],
                               onsetType: nil, lowNote: nil, highNote: nil))
         return out
     }
