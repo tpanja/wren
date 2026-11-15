@@ -18,7 +18,7 @@ enum CheckMetric: String, CaseIterable, Identifiable, Codable {
         case .hnr: "Voice clarity"
         case .amrRate: "“pa-pa-pa” speed"
         case .smrRate: "“pa-ta-ka” speed"
-        case .ddkRegularity: "“pa-ta-ka” evenness"
+        case .ddkRegularity: "“pa-ta-ka” timing variation"
         case .readingRate: "Reading rate"
         case .selfSpeech: "Your speech rating"
         case .selfSalivation: "Your saliva rating"
@@ -92,7 +92,7 @@ enum CheckMetric: String, CaseIterable, Identifiable, Codable {
         case .smrRate:
             "How quickly you can repeat “pa-ta-ka”. It reflects how well your lips and tongue work together."
         case .ddkRegularity:
-            "How even the timing of your “pa-ta-ka” syllables is. Lower is more even."
+            "How much the timing between your “pa-ta-ka” syllables varies. Lower means more even timing."
         case .readingRate:
             "Syllables per second while reading the same passage each week, not counting pauses."
         case .selfSpeech, .selfSalivation, .selfSwallowing:
