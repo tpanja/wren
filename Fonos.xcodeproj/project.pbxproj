@@ -35,6 +35,7 @@
 		9F32E8809597C3F7323458F7 /* CheckStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7F780EC82CF37326734F1366 /* CheckStore.swift */; };
 		A1150F614DD2964CA71E32A3 /* TrendsScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 73CE3687206CA8D70E4A38AB /* TrendsScreen.swift */; };
 		AADDCE9C6E5190896BA5AA75 /* BandScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8825132E7B75E8F4C1961E7 /* BandScreen.swift */; };
+		AB3154CB38F7A38C0FEF37F1 /* BandProtocolTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 37F0155DD61918CCB3B6D565 /* BandProtocolTests.swift */; };
 		B3A3C37E8F01D1E723E6A26C /* Measure.swift in Sources */ = {isa = PBXBuildFile; fileRef = 574F1BA9694980A89B279779 /* Measure.swift */; };
 		B3D6579BD4B1A84B450DA90B /* SpeechCheckRecord.swift in Sources */ = {isa = PBXBuildFile; fileRef = 70E07860760A477894DE6F1C /* SpeechCheckRecord.swift */; };
 		B6A850A906E845FE234D2B3E /* ClinicReport.swift in Sources */ = {isa = PBXBuildFile; fileRef = 32E129B754930063AB9DC1D7 /* ClinicReport.swift */; };
@@ -75,6 +76,7 @@
 		32E129B754930063AB9DC1D7 /* ClinicReport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClinicReport.swift; sourceTree = "<group>"; };
 		3724F01C67526982452D57F7 /* Metric.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Metric.swift; sourceTree = "<group>"; };
 		37C824A983294C65CD9614B6 /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
+		37F0155DD61918CCB3B6D565 /* BandProtocolTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BandProtocolTests.swift; sourceTree = "<group>"; };
 		4116A13C0B88145790FF74ED /* ReportTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReportTests.swift; sourceTree = "<group>"; };
 		4268930F1EDCE9E41DBE5EC3 /* MeasureDetailScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeasureDetailScreen.swift; sourceTree = "<group>"; };
 		4DCC807936E73BD4A804C417 /* Components.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Components.swift; sourceTree = "<group>"; };
@@ -253,6 +255,7 @@
 		A42D0F3919C28FF874D2D88C /* FonosTests */ = {
 			isa = PBXGroup;
 			children = (
+				37F0155DD61918CCB3B6D565 /* BandProtocolTests.swift */,
 				4116A13C0B88145790FF74ED /* ReportTests.swift */,
 				EDFBDAFDD82A726815A6CB00 /* SignalTests.swift */,
 				BD5DAC9D4730FC1EB6C9483C /* TaskAnalysisTests.swift */,
@@ -413,6 +416,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				AB3154CB38F7A38C0FEF37F1 /* BandProtocolTests.swift in Sources */,
 				D4DD48AE294E7AC146664826 /* ReportTests.swift in Sources */,
 				CD14665E92C0012B56FB509A /* SignalTests.swift in Sources */,
 				643BA1EDFAC1C9AB194B2F4C /* TaskAnalysisTests.swift in Sources */,
