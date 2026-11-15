@@ -50,9 +50,14 @@ enum DSP {
     /// local peaks that rise at least `prominence` dB above the lowest point
     /// since the previous peak and are at least `minGap` frames apart.
     static func syllablePeaks(_ envelopeDb: [Float], floorDb: Float, prominence: Float = 4, minGap: Int = 10) -> Int {
-        guard envelopeDb.count > 2 else { return 0 }
-        let smooth = movingAverage(envelopeDb, width: 5)
-        var count = 0
+        peakIndices(envelopeDb, floorDb: floorDb, prominence: prominence, minGap: minGap, smoothing: 5).count
+    }
+
+    /// Frame indices of the nuclei counted by `syllablePeaks`.
+    static func peakIndices(_ envelopeDb: [Float], floorDb: Float, prominence: Float, minGap: Int, smoothing: Int) -> [Int] {
+        guard envelopeDb.count > 2 else { return [] }
+        let smooth = movingAverage(envelopeDb, width: smoothing)
+        var out: [Int] = []
         var valley = smooth[0]
         var lastPeak = -minGap
         for i in 1..<(smooth.count - 1) {
@@ -60,12 +65,31 @@ enum DSP {
             valley = min(valley, v)
             let isPeak = v >= smooth[i - 1] && v > smooth[i + 1]
             if isPeak, v > floorDb, v - valley >= prominence, i - lastPeak >= minGap {
-                count += 1
+                out.append(i)
                 lastPeak = i
                 valley = v
             }
         }
-        return count
+        return out
+    }
+
+    /// Strongest normalized autocorrelation in the 70–400 Hz lag range,
+    /// normalized by the overlap energy at each lag (Boersma-style), for
+    /// harmonics-to-noise estimates. 1 = perfectly periodic.
+    static func periodicity(_ x: [Float], sampleRate: Float, minHz: Float = 70, maxHz: Float = 400) -> Float? {
+        let n = x.count
+        let minLag = Int(sampleRate / maxHz), maxLag = min(Int(sampleRate / minHz), n / 2)
+        guard maxLag > minLag else { return nil }
+        var best: Float = 0
+        for lag in minLag...maxLag {
+            var s: Float = 0, e1: Float = 0, e2: Float = 0
+            for i in 0..<(n - lag) {
+                s += x[i] * x[i + lag]; e1 += x[i] * x[i]; e2 += x[i + lag] * x[i + lag]
+            }
+            let d = (e1 * e2).squareRoot()
+            if d > 1e-9 { best = max(best, s / d) }
+        }
+        return best > 0 ? best : nil
     }
 
     static func movingAverage(_ x: [Float], width: Int) -> [Float] {
