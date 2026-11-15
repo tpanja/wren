@@ -191,7 +191,7 @@ struct ClinicReport: Equatable {
         if let top = unfavorable.max(by: { Self.severity($0) < Self.severity($1) }), let c = top.change {
             let systems = SpeechSystem.allCases.filter { sys in unfavorable.contains { $0.system == sys } }
             return "\(unfavorable.count) of \(measured.count) measures moved beyond their stable band in the unfavorable direction"
-                + " (\(systems.map { $0.title.lowercased() }.joined(separator: ", "))). "
+                + " (\(systems.map { $0.reportTitle.lowercased() }.joined(separator: ", "))). "
                 + "The largest is \(top.measure.reportName), \(Self.changePhrase(c, top.measure)) than baseline."
         }
         return "All \(measured.count) measures with enough data are within their stable band of baseline or changed in the favorable direction."

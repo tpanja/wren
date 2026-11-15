@@ -104,4 +104,14 @@ final class ReportTests: XCTestCase {
         XCTAssertTrue(r.summary.contains("unfavorable direction"), r.summary)
         XCTAssertTrue(r.rows.filter { !$0.measure.isCheck }.allSatisfy { $0.status == .insufficient })
     }
+
+    @MainActor
+    func testPDFHasOnePagePerReportPage() throws {
+        let r = ClinicReport.make(sessions: ToyHistory.make(now: now), checks: ToyCheckHistory.make(now: now),
+                                  patient: .init(name: "Sample Patient"), lastExport: nil, now: now)
+        let url = try XCTUnwrap(ReportRenderer.pdf(r))
+        let doc = try XCTUnwrap(CGPDFDocument(url as CFURL))
+        XCTAssertEqual(doc.numberOfPages, ClinicReportPage.pageCount)
+        print("REPORT_PDF", url.path)
+    }
 }

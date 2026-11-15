@@ -326,6 +326,9 @@ enum SpeechSystem: String, CaseIterable, Identifiable {
         }
     }
 
+    /// Title in the clinic report, written for a clinician.
+    var reportTitle: String { self == .selfReport ? "Self-report" : title }
+
     /// Where the system's measures come from, for the report's group rows.
     var reportNote: String {
         switch self {

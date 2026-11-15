@@ -200,7 +200,7 @@ struct ClinicReportPage: View {
                     groupRow(sys)
                     ForEach(Array(rows.enumerated()), id: \.element.id) { i, row in
                         tableRow(row)
-                        if i < rows.count - 1 { Paper.rule(0.5) }
+                        if i < rows.count - 1 { Paper.rule(0.6) }
                     }
                 }
             }
@@ -214,7 +214,7 @@ struct ClinicReportPage: View {
 
     private func groupRow(_ sys: SpeechSystem) -> some View {
         HStack(alignment: .firstTextBaseline, spacing: 6) {
-            Text(sys.title.uppercased()).font(Paper.text(7, .bold)).tracking(0.9).foregroundStyle(Paper.accent)
+            Text(sys.reportTitle.uppercased()).font(Paper.text(7, .bold)).tracking(0.9).foregroundStyle(Paper.accent)
             Text(sys.reportNote).font(Paper.text(6.5)).foregroundStyle(Paper.ink3)
         }
         .padding(.top, 7).padding(.bottom, 2)
@@ -464,6 +464,8 @@ private struct MiniTrend: View {
     }
 
     private func domain(fit: [ClinicReport.Point]?) -> ClosedRange<Double> {
+        // Self-ratings use the whole 0–4 scale, so a flat 4 doesn't fill the chart.
+        if m.unit == "of 4" { return -0.2...4.2 }
         var v = row.points.map(\.value)
         if let b = row.baseline { v.append(b) }
         if let fit { v += fit.map(\.value) }
