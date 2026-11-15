@@ -3,9 +3,8 @@ import Observation
 import os
 import UIKit
 
-/// The app's coordinator: picks the frame source, fans frames out to the
-/// display buffers, the analyzer, and (while listening) the translator, and
-/// runs the Speak flow: listen → translate → speak.
+/// The app's coordinator. Streams toy band frames into the display buffers
+/// and the analyzer, and runs the Speak flow: listen → translate → speak.
 @MainActor
 @Observable
 final class FonosEngine {
@@ -27,12 +26,12 @@ final class FonosEngine {
 
     // MARK: Published state
 
-    private(set) var source: SourceKind
     private(set) var isStreaming = false
     private(set) var speakState: SpeakState = .idle
     private(set) var partialText = ""
     private(set) var utterances: [Utterance] = []
     private(set) var live = SpeechAnalyzer.Live()
+    private(set) var bandStatus = BandStatus()
     private(set) var sessionStart: Date?
     var message: String?
 
@@ -53,15 +52,12 @@ final class FonosEngine {
     let analyzer = SpeechAnalyzer()
     let store = SessionStore()
     let voice = VoiceOutput()
-    private(set) var band: BandConnection?
 
-    @ObservationIgnored private let demo = DemoBand()
-    @ObservationIgnored private let phoneMic = PhoneMicSource()
-    @ObservationIgnored private var translator: SpeechTranslator
+    @ObservationIgnored private let band = ToyBand()
+    @ObservationIgnored private let translator: SpeechTranslator = ToyTranslator()
     @ObservationIgnored private let listening = OSAllocatedUnfairLock(initialState: false)
     @ObservationIgnored private var pollTimer: Timer?
-    @ObservationIgnored private var heardVoice = false
-    @ObservationIgnored private var lastVoiceAt = Date.distantPast
+    @ObservationIgnored private var listenStarted = Date.distantPast
     @ObservationIgnored private var phrasesThisSession = 0
 
     static let defaultPhrases = [
@@ -71,105 +67,56 @@ final class FonosEngine {
 
     init() {
         let d = UserDefaults.standard
-        source = SourceKind(rawValue: d.string(forKey: "fonos.source") ?? "") ?? .demo
         quickPhrases = d.stringArray(forKey: "fonos.phrases") ?? Self.defaultPhrases
-        autoStopSeconds = d.object(forKey: "fonos.autostop") as? Double ?? 1.8
+        autoStopSeconds = d.object(forKey: "fonos.autostop") as? Double ?? 3
         speakAutomatically = d.object(forKey: "fonos.autospeak") as? Bool ?? true
-        translator = TranslatorFactory.make(for: source)
-        store.showDemo = source == .demo
-        if source == .band { band = BandConnection() }
-        wire(currentSource)
-    }
 
-    // MARK: Source
-
-    private var currentSource: FrameSource {
-        switch source {
-        case .band: band ?? demo
-        case .demo: demo
-        case .phoneMic: phoneMic
-        }
-    }
-
-    func select(_ kind: SourceKind) {
-        guard kind != source else { return }
-        stopStreaming()
-        source = kind
-        UserDefaults.standard.set(kind.rawValue, forKey: "fonos.source")
-        if kind == .band, band == nil { band = BandConnection() }
-        translator = TranslatorFactory.make(for: kind)
-        store.showDemo = kind == .demo
-        streams.reset()
-        wire(currentSource)
-        startStreaming()
-    }
-
-    private func wire(_ src: FrameSource) {
-        let streams = streams, analyzer = analyzer, listening = listening
-        let sink: @Sendable (SensorFrame) -> Void = { [weak self] frame in
+        let streams = streams, analyzer = analyzer, listening = listening, translator = translator
+        band.onFrame = { frame in
             streams.append(frame)
             analyzer.ingest(frame)
             if listening.withLock({ $0 }) {
-                Task { @MainActor in self?.translator.append(mic: frame.mic) }
+                DispatchQueue.main.async { translator.append(mic: frame.mic) }
             }
         }
-        demo.onFrame = nil; phoneMic.onFrame = nil; band?.onFrame = nil
-        src.onFrame = sink
     }
 
     // MARK: Streaming / sessions
 
     func startStreaming() {
         guard !isStreaming else { return }
-        if source == .band, band?.isConnected != true {
-            // The band will be asked to stream as soon as it connects.
-            band?.startStreaming()
-            isStreaming = band?.isConnected == true
-        } else {
-            currentSource.startStreaming()
-            isStreaming = true
-        }
+        band.startStreaming()
+        isStreaming = true
         analyzer.reset()
         sessionStart = .now
         phrasesThisSession = 0
-        startPolling()
-    }
-
-    func stopStreaming() {
-        if speakState == .listening { cancelListening() }
-        currentSource.stopStreaming()
-        isStreaming = false
-        pollTimer?.invalidate()
-        closeSession()
-    }
-
-    /// Saves the session summary when there was enough speech to measure.
-    private func closeSession() {
-        guard let start = sessionStart else { return }
-        sessionStart = nil
-        if let record = analyzer.summary(started: start, isDemo: source == .demo, phrases: phrasesThisSession) {
-            store.add(record)
-        }
-    }
-
-    private func startPolling() {
         pollTimer?.invalidate()
         pollTimer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { [weak self] _ in
             MainActor.assumeIsolated { self?.poll() }
         }
     }
 
+    func stopStreaming() {
+        if speakState == .listening { cancelListening() }
+        band.stopStreaming()
+        isStreaming = false
+        pollTimer?.invalidate()
+        if let start = sessionStart,
+           let record = analyzer.summary(started: start, isSample: true, phrases: phrasesThisSession) {
+            store.add(record)
+        }
+        sessionStart = nil
+    }
+
     private func poll() {
         let l = analyzer.liveState
         if l != live { live = l }
-        if source == .band, let band {
-            // Band may connect after the user pressed start.
-            if band.isConnected, !isStreaming { isStreaming = true }
-            if !band.isConnected, isStreaming, band.state != .idle { isStreaming = band.status.isStreaming }
-        }
-        guard speakState == .listening else { return }
-        if l.isVoicing { heardVoice = true; lastVoiceAt = .now }
-        if autoStopSeconds > 0, heardVoice, Date.now.timeIntervalSince(lastVoiceAt) > autoStopSeconds {
+        let s = band.status
+        if s != bandStatus { bandStatus = s }
+        // The toy wearer "speaks" for a few seconds, then listening ends on its own,
+        // the way silence would end it with a real band.
+        if speakState == .listening, autoStopSeconds > 0,
+           Date.now.timeIntervalSince(listenStarted) > autoStopSeconds {
             Task { await finishListening() }
         }
     }
@@ -197,8 +144,8 @@ final class FonosEngine {
         }
         translator.onPartial = { [weak self] text in self?.partialText = text }
         partialText = ""
-        heardVoice = false
-        lastVoiceAt = .now
+        listenStarted = .now
+        band.setTalking(true)
         listening.withLock { $0 = true }
         speakState = .listening
         UIAccessibility.post(notification: .announcement, argument: "Listening")
@@ -207,12 +154,12 @@ final class FonosEngine {
     func finishListening() async {
         guard speakState == .listening else { return }
         listening.withLock { $0 = false }
+        band.setTalking(false)
         speakState = .translating
-        let result = await translator.finish()
-        guard let result else {
+        guard let result = await translator.finish() else {
             speakState = .idle
             partialText = ""
-            message = heardVoice ? "Fonos couldn't make out the words. Try a shorter phrase." : "No speech was picked up. Check that the band sits snugly."
+            message = "Fonos couldn't make out the words. Try a shorter phrase."
             return
         }
         analyzer.addClarity(result.confidence)
@@ -224,6 +171,7 @@ final class FonosEngine {
 
     func cancelListening() {
         listening.withLock { $0 = false }
+        band.setTalking(false)
         translator.cancel()
         partialText = ""
         speakState = .idle
@@ -236,7 +184,6 @@ final class FonosEngine {
         speakState = .speaking
         voice.speak(text)
         Task { @MainActor in
-            // Return to idle when the synthesizer finishes.
             try? await Task.sleep(for: .milliseconds(300))
             while voice.isSpeaking { try? await Task.sleep(for: .milliseconds(150)) }
             if speakState == .speaking { speakState = .idle }
@@ -245,11 +192,6 @@ final class FonosEngine {
 
     // MARK: App lifecycle
 
-    func didBecomeActive() {
-        if source != .band || band?.rememberedBandID != nil { startStreaming() }
-    }
-
-    func didEnterBackground() {
-        stopStreaming()
-    }
+    func didBecomeActive() { startStreaming() }
+    func didEnterBackground() { stopStreaming() }
 }

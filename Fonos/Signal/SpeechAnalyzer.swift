@@ -113,7 +113,7 @@ final class SpeechAnalyzer: @unchecked Sendable {
     /// Seconds of signal received in this session.
     var elapsed: Double { lock.withLock { Double(frames) / 100 } }
 
-    func summary(started: Date, isDemo: Bool, phrases: Int) -> SessionRecord? {
+    func summary(started: Date, isSample: Bool, phrases: Int) -> SessionRecord? {
         lock.withLock {
             guard voicedFrames >= 50, let first = firstVoiced, let last = lastVoiced else { return nil }
             let span = Array(envelope[first...last])
@@ -137,7 +137,7 @@ final class SpeechAnalyzer: @unchecked Sendable {
                 pitchVariation: variation,
                 clarity: clarity.isEmpty ? nil : clarity.reduce(0, +) / Double(clarity.count),
                 phrases: phrases,
-                isDemo: isDemo
+                isSample: isSample
             )
         }
     }

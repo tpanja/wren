@@ -21,7 +21,8 @@ struct SessionRecord: Codable, Identifiable, Equatable, Sendable {
     /// 0...1 mean recognizer confidence. Nil when nothing was translated.
     var clarity: Double?
     var phrases: Int
-    var isDemo: Bool
+    /// Always true today: every session comes from toy data.
+    var isSample: Bool
 }
 
 /// The patient's own reference point. Every ring and trend is read against it.

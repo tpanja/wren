@@ -1,82 +1,30 @@
 import Foundation
 import Observation
 
-/// Persists session summaries as JSON in Application Support.
-/// Demo sessions live in memory only and are never written to disk.
+/// Holds session summaries in memory. Seeded with toy history; sessions
+/// recorded from the toy band are appended while the app runs.
 @Observable
 final class SessionStore {
 
-    private(set) var sessions: [SessionRecord] = []
-    private(set) var demoSessions: [SessionRecord] = []
-    var showDemo = false
+    private(set) var sessions: [SessionRecord]
 
-    private let url: URL
-
-    init(fileName: String = "sessions.json") {
-        let dir = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
-        try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
-        url = dir.appendingPathComponent(fileName)
-        load()
-        demoSessions = DemoHistory.make()
+    init() {
+        sessions = ToyHistory.make()
     }
 
-    /// What the Progress screen reads.
-    var visible: [SessionRecord] {
-        (showDemo ? demoSessions : sessions).sorted { $0.date < $1.date }
-    }
+    var visible: [SessionRecord] { sessions.sorted { $0.date < $1.date } }
 
     var baseline: Baseline? { Baseline.from(visible) }
 
     func add(_ record: SessionRecord) {
-        if record.isDemo {
-            demoSessions.append(record)
-        } else {
-            sessions.append(record)
-            save()
-        }
-    }
-
-    func deleteAll() {
-        sessions = []
-        save()
-    }
-
-    func exportCSV() -> URL? {
-        var lines = ["date,duration_s,speaking_s,strength_dbfs,pace_syl_s,pause_ratio,symmetry,pitch_variation_pct,clarity,phrases"]
-        let iso = ISO8601DateFormatter()
-        for s in sessions.sorted(by: { $0.date < $1.date }) {
-            func o(_ v: Double?) -> String { v.map { String(format: "%.4f", $0) } ?? "" }
-            lines.append([iso.string(from: s.date), o(s.duration), o(s.speakingSeconds), o(s.strengthDb), o(s.pace),
-                          o(s.pauseRatio), o(s.symmetry), o(s.pitchVariation), o(s.clarity), "\(s.phrases)"].joined(separator: ","))
-        }
-        let out = FileManager.default.temporaryDirectory.appendingPathComponent("fonos-sessions.csv")
-        do {
-            try lines.joined(separator: "\n").write(to: out, atomically: true, encoding: .utf8)
-            return out
-        } catch {
-            return nil
-        }
-    }
-
-    private func load() {
-        guard let data = try? Data(contentsOf: url) else { return }
-        let decoder = JSONDecoder()
-        decoder.dateDecodingStrategy = .iso8601
-        sessions = (try? decoder.decode([SessionRecord].self, from: data)) ?? []
-    }
-
-    private func save() {
-        let encoder = JSONEncoder()
-        encoder.dateEncodingStrategy = .iso8601
-        guard let data = try? encoder.encode(sessions) else { return }
-        try? data.write(to: url, options: [.atomic, .completeFileProtection])
+        sessions.append(record)
     }
 }
 
-/// Twelve weeks of synthetic history, labeled as demo everywhere it appears.
+/// Twelve weeks of toy history, labeled as sample data everywhere it appears.
 /// Shapes a slow, realistic change: pace and strength drift down, pauses
 /// lengthen, symmetry shifts slightly. Seeded so it is stable between launches.
-enum DemoHistory {
+enum ToyHistory {
     static func make(now: Date = .now) -> [SessionRecord] {
         var rng = SeededGenerator(seed: 7)
         let cal = Calendar.current
@@ -100,7 +48,7 @@ enum DemoHistory {
                     pitchVariation: 2.1 + 1.1 * t + noise(0.3),
                     clarity: 0.86 - 0.09 * t + noise(0.03),
                     phrases: 6 + Int(noise(4)),
-                    isDemo: true
+                    isSample: true
                 ))
             }
         }
