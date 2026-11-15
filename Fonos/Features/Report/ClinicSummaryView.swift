@@ -11,8 +11,6 @@ struct ClinicSummaryView: View {
     @AppStorage("fonos.patient.dob") private var dobStamp: Double = 0
     @AppStorage("fonos.report.lastExport") private var lastExportStamp: Double = 0
 
-    @State private var shareURL: URL?
-    @State private var sharing = false
     @State private var justShared: Date?
     @State private var failed = false
     @FocusState private var nameFocused: Bool
@@ -57,19 +55,6 @@ struct ClinicSummaryView: View {
         .navigationTitle("Clinic summary")
         .navigationBarTitleDisplayMode(.inline)
         .toolbarBackground(Theme.ground, for: .navigationBar)
-        .sheet(isPresented: $sharing) {
-            if let shareURL {
-                ActivitySheet(items: [shareURL]) { completed in
-                    sharing = false
-                    if completed {
-                        // The next summary starts where this one ended.
-                        lastExportStamp = r.periodEnd.timeIntervalSince1970
-                        justShared = r.periodEnd
-                    }
-                }
-                .presentationDetents([.medium, .large])
-            }
-        }
         .alert("The summary couldn't be created", isPresented: $failed) {
             Button("OK", role: .cancel) {}
         } message: {
@@ -153,8 +138,12 @@ struct ClinicSummaryView: View {
         Button {
             nameFocused = false
             if let url = ReportRenderer.pdf(r) {
-                shareURL = url
-                sharing = true
+                SharePresenter.present([url]) { completed in
+                    guard completed else { return }
+                    // The next summary starts where this one ended.
+                    lastExportStamp = r.periodEnd.timeIntervalSince1970
+                    justShared = r.periodEnd
+                }
             } else {
                 failed = true
             }
@@ -170,7 +159,7 @@ struct ClinicSummaryView: View {
         .padding(.horizontal, Theme.gutter)
         .padding(.top, 10)
         .padding(.bottom, 6)
-        .background(Theme.ground.opacity(0.96))
+        .background(Theme.ground.opacity(0.97).ignoresSafeArea(edges: .bottom))
     }
 }
 

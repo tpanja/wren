@@ -17,7 +17,7 @@ struct ClinicReportPage: View {
             if report.isSample { sampleNotice.padding(.top, 10) }
             summaryBlock.padding(.top, 12)
             measuresTable.padding(.top, 12)
-            trendGrid.padding(.top, 14)
+            trendGrid.padding(.top, 12)
             Spacer(minLength: 10)
             footBlocks
             footer.padding(.top, 10)
@@ -74,9 +74,9 @@ struct ClinicReportPage: View {
 
     private var patientBlock: some View {
         HStack(alignment: .top, spacing: 0) {
-            field("Patient", report.patient.name.isEmpty ? nil : report.patient.name, width: 168)
+            field("Patient", report.patient.name.isEmpty ? nil : report.patient.name, width: 158)
             field("Date of birth", report.patient.dateOfBirth.map(Paper.date), width: 92)
-            field("Baseline", baselineText, width: 136)
+            field("Baseline", baselineText, width: 150)
             field("Period", periodLength, width: nil)
         }
         .padding(.vertical, 8)
@@ -92,7 +92,7 @@ struct ClinicReportPage: View {
                 Text(value).font(Paper.text(9.5, .semibold)).foregroundStyle(Paper.ink).lineLimit(1)
             } else {
                 // Blank line the clinic can fill in by hand.
-                Rectangle().fill(Paper.rule).frame(height: 0.5).padding(.top, 11).padding(.trailing, 14)
+                Rectangle().fill(Paper.ink3).frame(height: 0.6).padding(.top, 11).padding(.trailing, 14)
             }
         }
         .frame(width: width, alignment: .leading)
@@ -101,7 +101,10 @@ struct ClinicReportPage: View {
 
     private var baselineText: String {
         guard let s = report.baselineStart, let e = report.baselineEnd else { return "Not yet set" }
-        return "First 5 sessions, \(Paper.shortDate(s))–\(Paper.shortDate(e))"
+        let cal = Calendar.current
+        let sameMonth = cal.isDate(s, equalTo: e, toGranularity: .month)
+        let end = sameMonth ? "\(cal.component(.day, from: e))" : Paper.shortDate(e)
+        return "First 5 sessions, \(Paper.shortDate(s))–\(end)"
     }
 
     private var periodLength: String {
@@ -154,13 +157,13 @@ struct ClinicReportPage: View {
                 headerCell("Period mean (n)", Col.mean, .trailing)
                 headerCell("Change", Col.change, .trailing)
                 headerCell("Slope / 30 days (95% CI)", Col.slope, .trailing)
-                headerCell("Status", nil, .leading).padding(.leading, 14)
+                headerCell("Status (±5%)", nil, .leading).padding(.leading, 14)
             }
             .padding(.bottom, 4)
             Paper.rule(0.75)
             ForEach(Array(report.rows.enumerated()), id: \.element.id) { i, row in
                 tableRow(row)
-                if i < report.rows.count - 1 { Paper.rule(0.4) }
+                if i < report.rows.count - 1 { Paper.rule(0.5) }
             }
             Paper.rule(0.75)
         }
@@ -176,10 +179,11 @@ struct ClinicReportPage: View {
     private func tableRow(_ r: ClinicReport.Row) -> some View {
         let m = r.metric
         return HStack(alignment: .firstTextBaseline, spacing: 0) {
-            VStack(alignment: .leading, spacing: 1) {
+            HStack(alignment: .firstTextBaseline, spacing: 4) {
                 Text(m.reportName).font(Paper.text(9, .semibold)).foregroundStyle(Paper.ink)
-                Text(m.reportUnit).font(Paper.text(7)).foregroundStyle(Paper.ink3)
+                Text(m.reportUnit).font(Paper.text(6.5)).foregroundStyle(Paper.ink3)
             }
+            .lineLimit(1)
             .frame(width: Col.measure, alignment: .leading)
 
             num(r.baseline.map(m.reportFormat) ?? "—", Col.baseline)
@@ -193,7 +197,7 @@ struct ClinicReportPage: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(.leading, 14)
         }
-        .padding(.vertical, 5)
+        .padding(.vertical, 4.5)
     }
 
     private func num(_ s: String, _ width: CGFloat, bold: Bool = false) -> some View {
@@ -222,7 +226,7 @@ struct ClinicReportPage: View {
                 Spacer()
                 legend
             }
-            Grid(horizontalSpacing: 14, verticalSpacing: 10) {
+            Grid(horizontalSpacing: 14, verticalSpacing: 8) {
                 GridRow {
                     ForEach(report.rows.prefix(3)) { MiniTrend(row: $0) }
                 }
@@ -332,7 +336,7 @@ private struct MiniTrend: View {
                         .font(Paper.display(6.5)).monospacedDigit().foregroundStyle(Paper.ink2)
                 }
             }
-            chart.frame(height: 62)
+            chart.frame(height: 56)
         }
         .frame(maxWidth: .infinity)
     }
@@ -437,7 +441,7 @@ enum Paper {
     }
 
     static func rule(_ width: CGFloat) -> some View {
-        Rectangle().fill(width >= 0.75 ? ink.opacity(0.85) : rule).frame(height: width)
+        Rectangle().fill(width >= 0.75 ? ink.opacity(0.85) : Color(hex: 0xB4BBC1)).frame(height: width)
     }
 
     static func sectionTitle(_ s: String) -> some View {

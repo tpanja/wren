@@ -6,7 +6,13 @@ import UIKit
 enum ReportRenderer {
 
     static func fileName(for report: ClinicReport) -> String {
-        "Fonos speech summary \(report.generated.formatted(.iso8601.year().month().day())).pdf"
+        // Local calendar date, so the file name matches the "Generated" date on the page.
+        let f = DateFormatter()
+        f.calendar = Calendar(identifier: .gregorian)
+        f.locale = Locale(identifier: "en_US_POSIX")
+        f.timeZone = .current
+        f.dateFormat = "yyyy-MM-dd"
+        return "Fonos speech summary \(f.string(from: report.generated)).pdf"
     }
 
     /// Writes the PDF to a temporary file and returns its URL.
@@ -34,17 +40,19 @@ enum ReportRenderer {
     }
 }
 
-/// Wraps UIActivityViewController so we learn whether the user actually
-/// shared, saved, or printed the file (ShareLink does not report that).
-struct ActivitySheet: UIViewControllerRepresentable {
-    let items: [Any]
-    let completion: (Bool) -> Void
-
-    func makeUIViewController(context: Context) -> UIActivityViewController {
+/// Presents the system share sheet from UIKit. Hosting
+/// UIActivityViewController inside a SwiftUI `.sheet` shows a blank sheet,
+/// and ShareLink does not report whether the user actually shared.
+@MainActor
+enum SharePresenter {
+    static func present(_ items: [Any], completion: @escaping (Bool) -> Void) {
+        let scenes = UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }
+        guard let scene = scenes.first(where: { $0.activationState == .foregroundActive }) ?? scenes.first,
+              var top = scene.keyWindow?.rootViewController else { completion(false); return }
+        while let next = top.presentedViewController { top = next }
         let vc = UIActivityViewController(activityItems: items, applicationActivities: nil)
         vc.completionWithItemsHandler = { _, completed, _, _ in completion(completed) }
-        return vc
+        vc.popoverPresentationController?.sourceView = top.view
+        top.present(vc, animated: true)
     }
-
-    func updateUIViewController(_ vc: UIActivityViewController, context: Context) {}
 }

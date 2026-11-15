@@ -22,10 +22,10 @@ struct ClinicReport: Equatable {
 
         var label: String {
             switch self {
-            case .insufficient: "Not enough data"
+            case .insufficient: "Too few sessions"
             case .stable: "Stable"
-            case .favorable: "Favorable change"
-            case .unfavorable: "Unfavorable change"
+            case .favorable: "Favorable"
+            case .unfavorable: "Unfavorable"
             }
         }
     }
