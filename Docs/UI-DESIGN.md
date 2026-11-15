@@ -31,7 +31,28 @@ Dark is the default. Settings offers Light and Match iPhone, and every token has
 
 ## Type
 
-SF Pro for interface text and SF Pro Rounded for headline numbers, all on system text styles so Dynamic Type works everywhere. Card titles are small uppercase with wide tracking, as in the WHOOP references.
+Two bundled faces, both under the SIL Open Font License (`Fonos/Resources/Fonts`, licenses alongside):
+
+- **Atkinson Hyperlegible Next** for all reading and interface text. The Braille Institute designed it for low-vision readers, with letterforms that stay distinct (I, l, 1; O, 0). That matters when patients read back their own translated words, often at large sizes.
+- **Sora** for numerals, screen titles, and tracked uppercase card titles. Its wide geometric figures carry the rings and big values, as in the WHOOP references.
+
+Both are variable fonts registered at launch (`FonosType.register()`), so no Info.plist entries are needed. SwiftUI text uses `Font.ui(_:_:)` and `Font.metric(_:weight:)`, which scale with Dynamic Type through `relativeTo:`. Navigation titles, tab labels, and segmented controls get the same faces through UIKit appearance (`FonosType.applyAppearance()`).
+
+## Icons
+
+Fonos draws its own icon set rather than using SF Symbols: 22 SVG template images in `Assets.xcassets/Icons`, all on a 24 pt grid with a 1.8 pt rounded stroke. They come from the product's own motifs:
+
+| Icon | Motif |
+|---|---|
+| Speak | A speech bubble carrying a waveform |
+| Progress | Open concentric rings |
+| Band | A collar with three sensor beads (left piezo, mic, right piezo) |
+| Symmetry | Mirrored lobes on a dashed axis |
+| Left / right piezo | A sensor disc with vibration arcs on its own side |
+| Pace | A metronome |
+| Pitch variation | An irregular zigzag |
+
+`FonosIcon` scales each icon with Dynamic Type. The filled check (`CheckDisc`) and the battery (`BatteryGlyph`) are drawn in SwiftUI, because a template image can't hold a cut-out or a live fill level.
 
 ## Screens
 
@@ -64,5 +85,17 @@ SF Pro for interface text and SF Pro Rounded for headline numbers, all on system
 - **Dynamic Type.** All text uses text styles. At accessibility sizes the Speak button moves to the top of the screen so it stays in the first viewport, and the chart legend wraps under its title.
 - **VoiceOver.** The Fold view reads out the live left/right balance. Rings and cards are single elements with a label and value. Starting to listen posts a "Listening" announcement.
 - **Reduce Motion.** Ring fills, the listening pulse, and the status-pill pulse stop animating, and live charts redraw at 10 fps instead of 30.
+- **Large text on Progress.** At accessibility sizes, the three rings become full-width rows so their labels never split mid-word, and ring numerals stop growing at xxxLarge to stay inside the ring.
 - **Haptics** confirm each change of Speak state.
 - **Honesty.** Numbers are compared with the patient's own baseline, changes under 5% are called steady, and every view of toy data says so.
+
+## Performance
+
+Live charts are the only continuous work, so they are built to cost nothing when unseen:
+
+- Each live view (`FoldView`, `StreamTrace`) pauses its `TimelineView` when it is off screen or the app is inactive. Tabs in a `TabView` stay alive, so without this, hidden charts kept redrawing.
+- Views read only the buffers they draw (`StreamStore.fold()` and `trace(_:seconds:)`), instead of copying all six buffers every frame.
+- Values that change 10 times a second (mic level, left/right balance) live in small subviews, so only they re-render, not the whole Band screen.
+- Paths are decimated to about one point per screen point, and the pitch tracker stops at the first strong peak without allocating.
+
+Measured on a Release build in the iPhone 17 Pro simulator: Speak about 10% CPU, Band about 16%, Progress about 2%. With the Debug baseline before these changes, Progress was at 19% because hidden charts kept drawing.

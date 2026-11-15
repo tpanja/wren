@@ -6,7 +6,7 @@ iOS companion app for the Fonos throat band. The band will measure throat vibrat
 
 ## Run it
 
-Requirements: Xcode 15 or later, iOS 17 or later. No third-party packages.
+Requirements: Xcode 15 or later, iOS 17 or later. No third-party packages. The two bundled fonts (Atkinson Hyperlegible Next and Sora) are OFL-licensed assets, not code dependencies.
 
 ```bash
 open Fonos.xcodeproj
@@ -31,14 +31,14 @@ xcodebuild -project Fonos.xcodeproj -scheme Fonos -destination 'platform=iOS Sim
 | **Speak** | Live throat signal (the Fold view), a 132 pt Speak button, the translated phrase with replay, and large quick-phrase buttons. |
 | **Progress** | Three headline rings (Clarity, Strength, Pace), a plain-language insight against the patient's own baseline, and Apple Health–style cards for all six measures, each with a detail chart. |
 | **Band** | Simulated band status, each sensor's live trace and contact state, and the left/right balance. |
-| **Settings** (person icon) | Voice and Personal Voice, speaking speed, listening behavior, quick phrases, appearance. |
+| **Settings** (sliders icon) | Voice and Personal Voice, speaking speed, listening behavior, quick phrases, appearance. |
 
 ## Layout
 
 ```
 Fonos/
   App/          FonosApp, RootView, FonosEngine (coordinator)
-  Design/       Theme tokens, shared components, FoldView
+  Design/       Theme tokens, Typography, Icons, shared components, FoldView
   Signal/       ToyBand (simulated sensors), StreamStore, DSP, SpeechAnalyzer
   Speech/       SpeechTranslator protocol + ToyTranslator, VoiceOutput
   Data/         SessionRecord, Metric, SessionStore + ToyHistory, Insights
