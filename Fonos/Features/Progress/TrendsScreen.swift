@@ -19,10 +19,13 @@ struct TrendsScreen: View {
     @Binding var showSettings: Bool
     @State private var range: TrendRange = .week
     @State private var showReport = false
+    @State private var showCheck = false
+    @AppStorage("fonos.voicebank.dismissed") private var voiceBankDismissed = false
     @Environment(\.dynamicTypeSize) private var typeSize
 
     private var sessions: [SessionRecord] { engine.store.visible }
     private var baseline: Baseline? { engine.store.baseline }
+    private var checks: [SpeechCheckRecord] { engine.checks.visible }
 
     var body: some View {
         NavigationStack {
@@ -35,18 +38,14 @@ struct TrendsScreen: View {
 
                     rings
                     insight
+                    WeeklyCheckCard(store: engine.checks) { showCheck = true }
+                    if showVoiceBanking {
+                        VoiceBankingCard { voiceBankDismissed = true }
+                    }
                     SampleBanner()
 
-                    Text("All measures")
-                        .font(.metric(.title2, weight: .bold))
-                        .accessibilityAddTraits(.isHeader)
-                        .foregroundStyle(Theme.ink)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .padding(.top, 16)
-
-                    ForEach(Metric.allCases) { m in
-                        NavigationLink(value: m) { MetricSummaryCard(metric: m, sessions: sessions, baseline: baseline) }
-                            .buttonStyle(.plain)
+                    ForEach(SpeechSystem.allCases) { sys in
+                        systemSection(sys)
                     }
 
                     practiceCard.padding(.top, 8)
@@ -56,7 +55,8 @@ struct TrendsScreen: View {
             }
             .background(Theme.ground)
             .navigationTitle("Progress")
-            .navigationDestination(for: Metric.self) { MetricDetailScreen(metric: $0) }
+            .navigationDestination(for: Measure.self) { MeasureDetailScreen(measure: $0) }
+            .fullScreenCover(isPresented: $showCheck) { SpeechCheckFlow() }
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
                     Button { showSettings = true } label: {
@@ -106,7 +106,7 @@ struct TrendsScreen: View {
     }
 
     private func ringLink(_ m: Metric, value: Double?, stacked: Bool) -> some View {
-        NavigationLink(value: m) {
+        NavigationLink(value: Measure.session(m)) {
             let label = HStack(spacing: 4) {
                 Text(m.title).cardTitle()
                     .lineLimit(1)
@@ -131,9 +131,56 @@ struct TrendsScreen: View {
 
     // MARK: Insight
 
+    /// Trends for every measure, from conversation and from the weekly check.
+    private var allTrends: [MeasureTrend] {
+        SpeechSystem.allCases.flatMap(\.measures).compactMap {
+            MeasureTrend.compute($0, sessions: sessions, checks: checks, baseline: baseline)
+        }
+    }
+
+    /// The single most notable change, written gently.
+    private func headline(_ trends: [MeasureTrend]) -> (title: String, body: String)? {
+        guard !trends.isEmpty else { return nil }
+        if let t = trends.filter({ $0.direction == .lower }).max(by: { abs($0.change) < abs($1.change) }) {
+            return ("\(t.phrase) since your baseline", t.measure.lowerHeadlineBody)
+        }
+        return ("Your speech is holding steady", "Your recent measures are close to your baseline across the board.")
+    }
+
+    /// Offer voice banking once speech starts to change: the patient's own
+    /// rating drops, or articulation or rhythm measures trend lower. Hidden
+    /// once dismissed or once a Personal Voice exists.
+    private var showVoiceBanking: Bool {
+        guard !voiceBankDismissed, !engine.voice.voices.contains(where: \.isPersonal) else { return false }
+        if let s = checks.last(where: { $0.selfReport != nil })?.selfReport?.speech, s <= 3 { return true }
+        return allTrends.contains { t in
+            t.direction == .lower && [.articulation, .rhythm].contains(SpeechSystem.of(t.measure))
+        }
+    }
+
+    // MARK: Sections by speech system
+
+    private func systemSection(_ sys: SpeechSystem) -> some View {
+        VStack(alignment: .leading, spacing: Theme.stack) {
+            VStack(alignment: .leading, spacing: 2) {
+                Text(sys.title)
+                    .font(.metric(.title2, weight: .bold))
+                    .foregroundStyle(Theme.ink)
+                    .accessibilityAddTraits(.isHeader)
+                Text(sys.summary).font(.ui(.subheadline)).foregroundStyle(Theme.inkSecondary)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.top, 16)
+
+            ForEach(sys.measures) { m in
+                NavigationLink(value: m) { MeasureSummaryCard(measure: m, sessions: sessions, checks: checks, baseline: baseline) }
+                    .buttonStyle(.plain)
+            }
+        }
+    }
+
     @ViewBuilder private var insight: some View {
-        let trends = Insights.trends(sessions, baseline: baseline)
-        if let h = Insights.headline(trends) {
+        if let h = headline(allTrends) {
             VStack(alignment: .leading, spacing: 8) {
                 Text(h.title)
                     .font(.ui(.headline))
@@ -143,7 +190,7 @@ struct TrendsScreen: View {
                     .foregroundStyle(Theme.inkSecondary)
                     .fixedSize(horizontal: false, vertical: true)
                 if let since = baseline?.establishedOn {
-                    Text("Baseline from your first sessions, through \(since.formatted(date: .abbreviated, time: .omitted))")
+                    Text("Baseline from your first sessions and first 3 weekly checks, through \(since.formatted(date: .abbreviated, time: .omitted))")
                         .font(.ui(.footnote))
                         .foregroundStyle(Theme.inkTertiary)
                         .padding(.top, 4)
@@ -199,37 +246,40 @@ struct TrendsScreen: View {
 
 // MARK: - Summary card (Apple Health style)
 
-struct MetricSummaryCard: View {
-    let metric: Metric
+struct MeasureSummaryCard: View {
+    let measure: Measure
     let sessions: [SessionRecord]
+    let checks: [SpeechCheckRecord]
     let baseline: Baseline?
 
     var body: some View {
-        let recent = sessions.suffix(7).compactMap { s in metric.value(s, baseline: baseline).map { (s.date, $0) } }
-        let latest = sessions.last
+        let recent = Array(measure.series(sessions: sessions, checks: checks, baseline: baseline).suffix(7))
         VStack(alignment: .leading, spacing: 14) {
-            CardHeader(title: metric.title, icon: metric.icon, color: metric.color,
-                       detail: latest.map { relative($0.date) }, chevron: true)
+            CardHeader(title: measure.title, icon: measure.icon, color: measure.color,
+                       detail: recent.last.map { relative($0.date) }, chevron: true)
             HStack(alignment: .bottom) {
-                if let v = recent.last?.1 {
-                    HStack(alignment: .firstTextBaseline, spacing: 4) {
-                        Text(metric.format(v))
-                            .font(.metric(.largeTitle, weight: .semibold))
-                            .foregroundStyle(Theme.ink)
-                        Text(metric.unit).font(.ui(.subheadline, .medium)).foregroundStyle(Theme.inkSecondary)
+                VStack(alignment: .leading, spacing: 2) {
+                    if let v = recent.last?.value {
+                        HStack(alignment: .firstTextBaseline, spacing: 4) {
+                            Text(measure.format(v))
+                                .font(.metric(.largeTitle, weight: .semibold))
+                                .foregroundStyle(Theme.ink)
+                            Text(measure.unit).font(.ui(.subheadline, .medium)).foregroundStyle(Theme.inkSecondary)
+                        }
+                    } else {
+                        Text("No data yet").font(.ui(.title3)).foregroundStyle(Theme.inkTertiary)
                     }
-                } else {
-                    Text("No data yet").font(.ui(.title3)).foregroundStyle(Theme.inkTertiary)
+                    Text(measure.sourceLabel).font(.ui(.footnote)).foregroundStyle(Theme.inkTertiary)
                 }
                 Spacer()
-                MiniBars(values: recent.map(\.1), color: metric.color, highlightLast: true)
+                MiniBars(values: recent.map(\.value), color: measure.color, highlightLast: true)
                     .frame(width: 92, height: 44)
             }
         }
         .card()
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel(metric.title)
-        .accessibilityValue(recent.last.map { "Latest \(metric.format($0.1)) \(metric.unit)" } ?? "No data")
+        .accessibilityLabel(measure.title)
+        .accessibilityValue(recent.last.map { "Latest \(measure.format($0.value)) \(measure.unit), \(measure.sourceLabel.lowercased())" } ?? "No data")
         .accessibilityHint("Shows the trend")
     }
 

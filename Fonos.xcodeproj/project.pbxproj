@@ -8,7 +8,6 @@
 
 /* Begin PBXBuildFile section */
 		02B75BA17071C4AF263E6EC0 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 6EA56FBD890D12131D1D8B64 /* Assets.xcassets */; };
-		14AF9B80101D16FA3FE25DBB /* MetricDetailScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C3B9F48D815B98721A68370 /* MetricDetailScreen.swift */; };
 		14EE73D1E5B94A8B4F885AA0 /* CheckTask.swift in Sources */ = {isa = PBXBuildFile; fileRef = AF728C063136E70A1965E051 /* CheckTask.swift */; };
 		1747BECF2E36FE923210736C /* FoldView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0C09A73442A0299DEC8CAF1 /* FoldView.swift */; };
 		1A4CAE7CB1007DC7A4F221A1 /* FonosEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7F6562590EF561FA76B75D1B /* FonosEngine.swift */; };
@@ -27,6 +26,7 @@
 		68132C9798E1B0A0728469B8 /* Sora.ttf in Resources */ = {isa = PBXBuildFile; fileRef = F778175CE4EF855E3B7A0CB0 /* Sora.ttf */; };
 		6BA3C3CAFFC5B5C7532386A5 /* SpeechAnalyzer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 298B4B410C1CF14DB484222B /* SpeechAnalyzer.swift */; };
 		80048D170FCA5B51F9A33972 /* StreamStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 10F02CD72E2845C38C191B7F /* StreamStore.swift */; };
+		843157ED8738226EF9B10E1B /* SpeechCheckFlow.swift in Sources */ = {isa = PBXBuildFile; fileRef = D40A297A2E26690F85095286 /* SpeechCheckFlow.swift */; };
 		8F23EFE5E5B8E1BD79C87538 /* Typography.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9749DA63BE923E8691B87AC0 /* Typography.swift */; };
 		905C8AB07825D0DE2CF1F0D1 /* ClinicSummaryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBA883FF19B6BC03FCCBC268 /* ClinicSummaryView.swift */; };
 		9A73DE204547774695F24D3F /* FonosApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 826C1D330089D7AB1C5756F3 /* FonosApp.swift */; };
@@ -37,6 +37,7 @@
 		B3D6579BD4B1A84B450DA90B /* SpeechCheckRecord.swift in Sources */ = {isa = PBXBuildFile; fileRef = 70E07860760A477894DE6F1C /* SpeechCheckRecord.swift */; };
 		B6A850A906E845FE234D2B3E /* ClinicReport.swift in Sources */ = {isa = PBXBuildFile; fileRef = 32E129B754930063AB9DC1D7 /* ClinicReport.swift */; };
 		B8077954C6998FD3914C31F6 /* OFL-AtkinsonHyperlegibleNext.txt in Resources */ = {isa = PBXBuildFile; fileRef = 72F9395D929A4CA18E6F7D31 /* OFL-AtkinsonHyperlegibleNext.txt */; };
+		B8E22A264BE0C81BA2DB5094 /* CheckCards.swift in Sources */ = {isa = PBXBuildFile; fileRef = 67A8E1EF40F8160F8A6FDBC5 /* CheckCards.swift */; };
 		BDE52F7328B4E5490C54556E /* Icons.swift in Sources */ = {isa = PBXBuildFile; fileRef = A62647ED14584CA33309DB43 /* Icons.swift */; };
 		BE86780FAA5698E3AEDAACE7 /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 71AE8564995998803739B121 /* Theme.swift */; };
 		C08F1C01CE6914C44061F31C /* ClinicReportPage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 104450D1D300FA857C47D45C /* ClinicReportPage.swift */; };
@@ -46,6 +47,7 @@
 		D68E7943FC176EF5D40EBA6C /* SettingsScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA19F71108BFFB4E184742A5 /* SettingsScreen.swift */; };
 		DD4F371B807634B0321704D7 /* VoiceOutput.swift in Sources */ = {isa = PBXBuildFile; fileRef = 291B88813B0687E06977D3E4 /* VoiceOutput.swift */; };
 		F02BD9FF0CD98A53E136E479 /* Metric.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3724F01C67526982452D57F7 /* Metric.swift */; };
+		FCAA9FF68D1C16B5D491C88C /* MeasureDetailScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4268930F1EDCE9E41DBE5EC3 /* MeasureDetailScreen.swift */; };
 		FD5720280040297394513476 /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 37C824A983294C65CD9614B6 /* RootView.swift */; };
 /* End PBXBuildFile section */
 
@@ -71,10 +73,11 @@
 		3724F01C67526982452D57F7 /* Metric.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Metric.swift; sourceTree = "<group>"; };
 		37C824A983294C65CD9614B6 /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
 		4116A13C0B88145790FF74ED /* ReportTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReportTests.swift; sourceTree = "<group>"; };
-		4C3B9F48D815B98721A68370 /* MetricDetailScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MetricDetailScreen.swift; sourceTree = "<group>"; };
+		4268930F1EDCE9E41DBE5EC3 /* MeasureDetailScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeasureDetailScreen.swift; sourceTree = "<group>"; };
 		4DCC807936E73BD4A804C417 /* Components.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Components.swift; sourceTree = "<group>"; };
 		574F1BA9694980A89B279779 /* Measure.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Measure.swift; sourceTree = "<group>"; };
 		61B909266F290F7B609DA2BF /* AtkinsonHyperlegibleNext.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = AtkinsonHyperlegibleNext.ttf; sourceTree = "<group>"; };
+		67A8E1EF40F8160F8A6FDBC5 /* CheckCards.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CheckCards.swift; sourceTree = "<group>"; };
 		6EA56FBD890D12131D1D8B64 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		70E07860760A477894DE6F1C /* SpeechCheckRecord.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpeechCheckRecord.swift; sourceTree = "<group>"; };
 		70F8E6AE775F36586A3228D6 /* ReportRenderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReportRenderer.swift; sourceTree = "<group>"; };
@@ -93,6 +96,7 @@
 		B55BF68F9C64E2D5F0417BC5 /* SpeechTranslator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpeechTranslator.swift; sourceTree = "<group>"; };
 		BD5DAC9D4730FC1EB6C9483C /* TaskAnalysisTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TaskAnalysisTests.swift; sourceTree = "<group>"; };
 		D1D6D1FD6BF074844BD122EE /* DSP.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DSP.swift; sourceTree = "<group>"; };
+		D40A297A2E26690F85095286 /* SpeechCheckFlow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpeechCheckFlow.swift; sourceTree = "<group>"; };
 		DA19F71108BFFB4E184742A5 /* SettingsScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsScreen.swift; sourceTree = "<group>"; };
 		DEC4661DB8D99CD5B2187471 /* Insights.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Insights.swift; sourceTree = "<group>"; };
 		EDFBDAFDD82A726815A6CB00 /* SignalTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignalTests.swift; sourceTree = "<group>"; };
@@ -154,6 +158,7 @@
 			isa = PBXGroup;
 			children = (
 				6891ECEC2CAC0F3CA0C8DD8F /* Band */,
+				F7FAAADE66FBE3CBD147FE11 /* Check */,
 				DD9253DB83E618A9A0168582 /* Progress */,
 				9E8013EF3CFD5AF6DDECFB9F /* Report */,
 				0726366D5FEC74A4B118FDB5 /* Settings */,
@@ -273,7 +278,7 @@
 		DD9253DB83E618A9A0168582 /* Progress */ = {
 			isa = PBXGroup;
 			children = (
-				4C3B9F48D815B98721A68370 /* MetricDetailScreen.swift */,
+				4268930F1EDCE9E41DBE5EC3 /* MeasureDetailScreen.swift */,
 				73CE3687206CA8D70E4A38AB /* TrendsScreen.swift */,
 			);
 			path = Progress;
@@ -295,6 +300,15 @@
 				FF00A85118BC5A192B10E3CE /* SpeakScreen.swift */,
 			);
 			path = Speak;
+			sourceTree = "<group>";
+		};
+		F7FAAADE66FBE3CBD147FE11 /* Check */ = {
+			isa = PBXGroup;
+			children = (
+				67A8E1EF40F8160F8A6FDBC5 /* CheckCards.swift */,
+				D40A297A2E26690F85095286 /* SpeechCheckFlow.swift */,
+			);
+			path = Check;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -404,6 +418,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				AADDCE9C6E5190896BA5AA75 /* BandScreen.swift in Sources */,
+				B8E22A264BE0C81BA2DB5094 /* CheckCards.swift in Sources */,
 				9F32E8809597C3F7323458F7 /* CheckStore.swift in Sources */,
 				14EE73D1E5B94A8B4F885AA0 /* CheckTask.swift in Sources */,
 				B6A850A906E845FE234D2B3E /* ClinicReport.swift in Sources */,
@@ -417,8 +432,8 @@
 				BDE52F7328B4E5490C54556E /* Icons.swift in Sources */,
 				3C8F0D905BC51D2B836D6E22 /* Insights.swift in Sources */,
 				B3A3C37E8F01D1E723E6A26C /* Measure.swift in Sources */,
+				FCAA9FF68D1C16B5D491C88C /* MeasureDetailScreen.swift in Sources */,
 				F02BD9FF0CD98A53E136E479 /* Metric.swift in Sources */,
-				14AF9B80101D16FA3FE25DBB /* MetricDetailScreen.swift in Sources */,
 				66CF77B83B0D7CE5A4FAE421 /* ReportRenderer.swift in Sources */,
 				FD5720280040297394513476 /* RootView.swift in Sources */,
 				264DE2F696C3930711C77A23 /* SessionRecord.swift in Sources */,
@@ -426,6 +441,7 @@
 				D68E7943FC176EF5D40EBA6C /* SettingsScreen.swift in Sources */,
 				1F10361208946DA64296006B /* SpeakScreen.swift in Sources */,
 				6BA3C3CAFFC5B5C7532386A5 /* SpeechAnalyzer.swift in Sources */,
+				843157ED8738226EF9B10E1B /* SpeechCheckFlow.swift in Sources */,
 				B3D6579BD4B1A84B450DA90B /* SpeechCheckRecord.swift in Sources */,
 				55596C7A08E562F156A424CF /* SpeechTranslator.swift in Sources */,
 				80048D170FCA5B51F9A33972 /* StreamStore.swift in Sources */,

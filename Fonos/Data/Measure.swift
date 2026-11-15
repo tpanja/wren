@@ -206,6 +206,15 @@ enum Measure: Hashable, Identifiable {
         switch self { case .session(let m): m.reportFormat(v); case .check(let c): c.reportFormat(v) }
     }
 
+    var isCheck: Bool { if case .check = self { true } else { false } }
+
+    var color: Color {
+        switch self {
+        case .session(let m): m.color
+        case .check: SpeechSystem.of(self).color
+        }
+    }
+
     /// Where the values come from, in plain words.
     var sourceLabel: String {
         switch self {
