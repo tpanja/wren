@@ -11,7 +11,7 @@ final class PhoneMic: @unchecked Sendable {
         case notAllowed, noInput
         var errorDescription: String? {
             switch self {
-            case .notAllowed: "Fonos needs the microphone. Allow it in Settings > Privacy & Security > Microphone."
+            case .notAllowed: "Wren needs the microphone. Allow it in Settings > Privacy & Security > Microphone."
             case .noInput: "No microphone is available."
             }
         }

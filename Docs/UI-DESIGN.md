@@ -17,7 +17,7 @@ The screenshots supplied for inspiration set the look:
 
 Each stream and measure keeps its color everywhere it appears.
 
-The light palette is taken from a photo of the Fonos band (exposure-corrected against the white shell, then snapped to web-safe values). Surfaces use light tints of the backdrop grey.
+The light palette is taken from a photo of the Wren Band (exposure-corrected against the white shell, then snapped to web-safe values). Surfaces use light tints of the backdrop grey.
 
 | Role | Light | From the band | Dark |
 |---|---|---|---|
@@ -39,7 +39,7 @@ Light is the default. Settings offers Dark and Match iPhone. Dark draws from the
 
 **Design review.** The [unslop-ui](../.claude/skills/unslop-ui/SKILL.md) skill's catalog of "AI-made" tells was applied to the app: no unprompted glow, decorative gradients, uniform large radii, or off-scale spacing; motion only where it reports state, with every press effect respecting Reduce Motion. Its scanner reads web files only, so review Swift changes by eye against [tells.md](../.claude/skills/unslop-ui/references/tells.md). The band-sampled grey-green is marked `unslop-ignore` in `Theme.swift` because it is a deliberate choice, not the catalog's default sage.
 
-**Signature details.** The Speak button is a solid circle in the state color, with no sheen or glow; the only extra is the ripple while listening, because it reports state. The Fold view's fill is the app's one gradient; every other surface is a solid fill. Range pickers are Fonos's own `SegmentedPicker`, a well with a white thumb that glides between options. Rings sit on a tinted track of their own color, and Apple Health–style mini bars show history in a 18% tint of the measure's color with the latest bar solid.
+**Signature details.** The Speak button is a solid circle in the state color, with no sheen or glow; the only extra is the ripple while listening, because it reports state. The Fold view's fill is the app's one gradient; every other surface is a solid fill. Range pickers are Wren's own `SegmentedPicker`, a well with a white thumb that glides between options. Rings sit on a tinted track of their own color, and Apple Health–style mini bars show history in a 18% tint of the measure's color with the latest bar solid.
 
 ## Type
 
@@ -52,7 +52,7 @@ Both are variable fonts registered at launch (`FonosType.register()`), so no Inf
 
 ## Icons
 
-Fonos draws its own icon set rather than using SF Symbols: 22 SVG template images in `Assets.xcassets/Icons`, all on a 24 pt grid with a 1.8 pt rounded stroke. They come from the product's own motifs:
+Wren draws its own icon set rather than using SF Symbols: 22 SVG template images in `Assets.xcassets/Icons`, all on a 24 pt grid with a 1.8 pt rounded stroke. They come from the product's own motifs:
 
 | Icon | Motif |
 |---|---|
@@ -86,11 +86,11 @@ Fonos draws its own icon set rather than using SF Symbols: 22 SVG template image
 7. Four sections, one per speech system (Breathing, Voice, Articulation, Rhythm and intelligibility), each with Apple Health–style cards that say whether the values come from conversation or the weekly check.
 8. Days with sessions in the last week.
 
-**Measure detail** (one screen for every measure): the average (or the tapped day's value), the trend against baseline, a line chart with a dashed baseline rule and drag-to-inspect (check measures show a point per check and default to 3 months), then what the measure means, how it's measured, and its speech system, plus a reminder that Fonos does not diagnose.
+**Measure detail** (one screen for every measure): the average (or the tapped day's value), the trend against baseline, a line chart with a dashed baseline rule and drag-to-inspect (check measures show a point per check and default to 3 months), then what the measure means, how it's measured, and its speech system, plus a reminder that Wren does not diagnose.
 
 **Speech check** (full-screen cover): intro listing the four tasks and tips for comparable results, then one screen per task with the instruction in Title 3, a "Read instructions aloud" button, a 60 pt Start button, and "Skip this task". While recording, a live level bar, a timer (or countdown for the 6 s tasks), and a Done button for tasks that end with the voice. After each task, the headline number or a plain "couldn't measure that one" with Try again. Then a results screen grouped by speech system that compares with last week in neutral words. Taps in the first 0.8 s after a step changes are ignored, so a double tap or tremor can't skip a task with the button that took the previous one's place. Quitting asks for confirmation.
 
-**Band**: a hero card with the band's badge, name, and state in plain words, and the one action that matters now: "Connect your band" (60 pt) on the simulated band; "Connect band" when disconnected; "Stop looking" while searching; Pause and Disconnect when connected; "Open Settings" when Bluetooth is off or not allowed. While Fonos looks for the band, two rings radiate from the badge (a single still ring with Reduce Motion), the page's one authored motion. Bands found nearby appear as 60 pt rows with signal bars, and with only one band Fonos connects on its own after two seconds. Until a band is connected, a four-step guide (power, distance, connect, fit) and a "Band not showing up?" disclosure replace the sensor cards. Once signal flows, the sensor cards and the balance bar return; contact state shows only when the band reports it. A quiet footer switches to the simulated band and back. A remembered band that drops shows "Waiting for your band" and reconnects on its own; "Forget this band" asks first. The Speak tab's status pill says "Band not connected" or "Waiting for band" in the caution color, and the throat-signal caption says whether the signal is sample, live, or missing.
+**Band**: a hero card with the band's badge, name, and state in plain words, and the one action that matters now: "Connect your band" (60 pt) on the simulated band; "Connect band" when disconnected; "Stop looking" while searching; Pause and Disconnect when connected; "Open Settings" when Bluetooth is off or not allowed. While Wren looks for the band, two rings radiate from the badge (a single still ring with Reduce Motion), the page's one authored motion. Bands found nearby appear as 60 pt rows with signal bars, and with only one band Wren connects on its own after two seconds. Until a band is connected, a four-step guide (power, distance, connect, fit) and a "Band not showing up?" disclosure replace the sensor cards. Once signal flows, the sensor cards and the balance bar return; contact state shows only when the band reports it. A quiet footer switches to the simulated band and back. A remembered band that drops shows "Waiting for your band" and reconnects on its own; "Forget this band" asks first. The Speak tab's status pill says "Band not connected" or "Waiting for band" in the caution color, and the throat-signal caption says whether the signal is sample, live, or missing.
 
 **Settings** (sheet): voice and Personal Voice, speaking speed, test voice; when listening stops (I tap Done, 2, 3, or 5 s) and whether to speak automatically; edit, reorder, and restore quick phrases; appearance; and an About section that states the data source.
 

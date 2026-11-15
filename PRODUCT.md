@@ -12,11 +12,11 @@ Delegated: native SwiftUI app, iOS 17+, Swift 5.9+, no third-party packages. Fra
 
 ## Users
 
-The person living with ALS who wears the Fonos throat band. They hold and operate the phone themselves, typically with dysarthric speech and declining hand and arm function that worsens over months. They use it at home and out in the world to be understood by others, and to watch how their speech is changing.
+The person living with ALS who wears the Wren throat band. They hold and operate the phone themselves, typically with dysarthric speech and declining hand and arm function that worsens over months. They use it at home and out in the world to be understood by others, and to watch how their speech is changing.
 
 ## Product Purpose
 
-Fonos turns throat vibration into clear speech. The band captures three streams (one contact microphone, two piezo vibration sensors on either side of the larynx) and streams them to the phone over Bluetooth Low Energy. The phone translates the dysarthric speech into clear audio and plays it aloud, and it turns the same signals into a running record of speech health so the patient (and later, if they choose, their care team) can see progression.
+Wren turns throat vibration into clear speech. The band captures three streams (one contact microphone, two piezo vibration sensors on either side of the larynx) and streams them to the phone over Bluetooth Low Energy. The phone translates the dysarthric speech into clear audio and plays it aloud, and it turns the same signals into a running record of speech health so the patient (and later, if they choose, their care team) can see progression.
 
 Success: the patient can be understood in a conversation with one tap or less, and can see an honest, readable trend of their speech over weeks.
 
@@ -43,7 +43,7 @@ Speech is captured at the throat, not through the air, so it works in noise and 
 
 ## Brand Commitments
 
-Name: Fonos. No logo provided yet.
+Name: Wren. No logo provided yet.
 
 ## Evidence on Hand
 

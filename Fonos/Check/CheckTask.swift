@@ -33,9 +33,9 @@ enum CheckTask: Int, CaseIterable, Identifiable, Codable {
         case .breath:
             "Take a deep breath, then say “ahh” at a comfortable pitch for as long as you can. Stop when you run out of breath."
         case .amr:
-            "Say “pa-pa-pa” as quickly and clearly as you can until Fonos stops you."
+            "Say “pa-pa-pa” as quickly and clearly as you can until Wren stops you."
         case .smr:
-            "Say “pa-ta-ka” over and over, as quickly and clearly as you can, until Fonos stops you."
+            "Say “pa-ta-ka” over and over, as quickly and clearly as you can, until Wren stops you."
         case .passage:
             "Read the passage aloud at your usual pace. Tap Done when you finish."
         }

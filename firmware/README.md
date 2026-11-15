@@ -1,6 +1,6 @@
-# Fonos band firmware
+# Wren Band firmware
 
-`fonos_band/fonos_band.ino` runs the Fonos band (an ESP32-S3 with an I2S throat microphone and two piezos): it streams the mic at 8 kHz and both piezos at 1 kHz to the Fonos app over Bluetooth Low Energy. The app side of the protocol is `Fonos/Signal/BandProtocol.swift`; change both together.
+`fonos_band/fonos_band.ino` runs the Wren Band (an ESP32-S3 with an I2S throat microphone and two piezos): it streams the mic at 8 kHz and both piezos at 1 kHz to the Wren app over Bluetooth Low Energy. The app side of the protocol is `Fonos/Signal/BandProtocol.swift`; change both together.
 
 ## Flash it
 
@@ -14,11 +14,11 @@ arduino-cli upload -p /dev/cu.usbmodem1101 --fqbn "esp32:esp32:esp32s3:USBMode=h
 
 In the Arduino IDE the same settings are: board **ESP32S3 Dev Module**, USB Mode **Hardware CDC and JTAG**, USB CDC On Boot **Enabled**, Flash Size **4MB**, PSRAM **Enabled**, Partition Scheme **Huge APP**. The Bluetooth stack doesn't fit the default partition.
 
-The serial console (115200 baud) prints `advertising as Fonos Band, waiting for the app` once a second, then `streaming: 100 frames/s, 0 dropped` while the app is connected.
+The serial console (115200 baud) prints `advertising as Wren Band, waiting for the app` once a second, then `streaming: 100 frames/s, 0 dropped` while the app is connected.
 
 ## Connect it to the app
 
-Open Fonos → **Band** → **Connect your band**, and allow Bluetooth. Fonos finds the band and connects, and after that reconnects on its own whenever the band is on and in range. Don't pair the band in iPhone Settings → Bluetooth; it connects from the app only.
+Open Wren → **Band** → **Connect your band**, and allow Bluetooth. Wren finds the band and connects, and after that reconnects on its own whenever the band is on and in range. Don't pair the band in iPhone Settings → Bluetooth; it connects from the app only.
 
 ## Wiring
 
@@ -43,7 +43,7 @@ Piezos must use ADC1 pins (GPIO 1–10 on the S3); ADC2 can't be read while the 
 
 ## Protocol (version 1)
 
-- Advertised name **Fonos Band**, with service `079A0425-8A6E-4126-91C5-A5B5B2525F6B` in the advertisement.
+- Advertised name **Wren Band** (**Wren Band** before the rename; the app shows either as Wren Band), with service `079A0425-8A6E-4126-91C5-A5B5B2525F6B` in the advertisement.
 - One characteristic, `B5CFF4BC-810E-4AF7-8262-5F5F5D057AC5`, notify only.
 - Each notification carries one or more 126-byte frames, each 10 ms of signal, little-endian:
 

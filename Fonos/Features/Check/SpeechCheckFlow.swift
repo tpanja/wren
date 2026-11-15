@@ -292,9 +292,9 @@ private struct RecordingCard: View {
 
     private var hint: String {
         switch task {
-        case .breath: "Keep going until you run out of breath. Fonos stops when you do."
-        case .amr, .smr: "Keep going. Fonos stops you after \(Int(task.maxSeconds)) seconds."
-        case .passage: "Tap Done when you finish, or Fonos stops when you go quiet."
+        case .breath: "Keep going until you run out of breath. Wren stops when you do."
+        case .amr, .smr: "Keep going. Wren stops you after \(Int(task.maxSeconds)) seconds."
+        case .passage: "Tap Done when you finish, or Wren stops when you go quiet."
         }
     }
 }
@@ -317,7 +317,7 @@ private struct ResultCard: View {
             } else {
                 HStack(spacing: 8) {
                     FonosIcon(.warning, size: 22, relativeTo: .headline).foregroundStyle(Theme.caution)
-                    Text("Fonos couldn't measure that one").font(.ui(.headline)).foregroundStyle(Theme.ink)
+                    Text("Wren couldn't measure that one").font(.ui(.headline)).foregroundStyle(Theme.ink)
                 }
                 Text("It may have been too short or too quiet. Try again, or skip it this week.")
                     .font(.ui(.body)).foregroundStyle(Theme.inkSecondary)

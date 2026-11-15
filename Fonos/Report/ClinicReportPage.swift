@@ -370,7 +370,7 @@ struct ClinicReportPage: View {
                 Text("Descriptive measures from a wearable throat sensor. Not diagnostic, and not validated against clinical scales. Interpret alongside clinical assessment.")
                     .font(Paper.text(7)).foregroundStyle(Paper.ink2)
                 Spacer(minLength: 12)
-                Text("Fonos \(Paper.appVersion) · Page \(page) of \(Self.pageCount)")
+                Text("Wren \(Paper.appVersion) · Page \(page) of \(Self.pageCount)")
                     .font(Paper.text(7)).foregroundStyle(Paper.ink3)
                     .fixedSize()
             }

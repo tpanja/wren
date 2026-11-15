@@ -55,7 +55,7 @@ struct VoiceBankingCard: View {
             Text("Consider saving your voice")
                 .font(.metric(.title3, weight: .semibold))
                 .foregroundStyle(Theme.ink)
-            Text("Recording your voice now, while speaking is easier, lets your iPhone make a Personal Voice that sounds like you. Fonos then speaks your words in it.")
+            Text("Recording your voice now, while speaking is easier, lets your iPhone make a Personal Voice that sounds like you. Wren then speaks your words in it.")
                 .font(.ui(.body))
                 .foregroundStyle(Theme.inkSecondary)
                 .fixedSize(horizontal: false, vertical: true)
@@ -64,7 +64,7 @@ struct VoiceBankingCard: View {
                 VStack(alignment: .leading, spacing: 8) {
                     step(1, "Open Settings, then Accessibility, then Personal Voice.")
                     step(2, "Tap Create a Personal Voice and read the phrases aloud. It takes about 15 minutes, and you can stop and come back.")
-                    step(3, "Your iPhone prepares the voice on its own. Then choose it in Fonos Settings under Voice.")
+                    step(3, "Your iPhone prepares the voice on its own. Then choose it in Wren Settings under Voice.")
                     Text("Your speech therapist can also tell you about other voice and message banking options.")
                         .font(.ui(.footnote)).foregroundStyle(Theme.inkTertiary)
                         .fixedSize(horizontal: false, vertical: true)

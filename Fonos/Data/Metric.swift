@@ -73,7 +73,7 @@ enum Metric: String, CaseIterable, Identifiable, Codable {
     var explanation: String {
         switch self {
         case .clarity:
-            "How confidently Fonos understood your words, averaged across what you said. It reflects the translator as well as your speech, so it can change when the translator is updated."
+            "How confidently Wren understood your words, averaged across what you said. It reflects the translator as well as your speech, so it can change when the translator is updated."
         case .strength:
             "How loudly your throat vibrates while you speak, compared with your first sessions. 100% means the same strength as your baseline."
         case .pace:

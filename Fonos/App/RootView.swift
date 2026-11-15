@@ -22,7 +22,7 @@ struct RootView: View {
         .sheet(isPresented: $showSettings) {
             SettingsScreen()
         }
-        .alert("Fonos", isPresented: Binding(
+        .alert("Wren", isPresented: Binding(
             get: { engine.message != nil },
             set: { if !$0 { engine.message = nil } }
         )) {

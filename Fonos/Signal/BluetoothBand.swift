@@ -163,7 +163,8 @@ final class BluetoothBand: NSObject, FrameSource, @unchecked Sendable {
     }
 
     private func name(_ p: CBPeripheral, advertised: String? = nil) -> String {
-        advertised ?? p.name ?? BandProtocol.advertisedName
+        guard let n = advertised ?? p.name, !BandProtocol.legacyNames.contains(n) else { return BandProtocol.advertisedName }
+        return n
     }
 
     private func attach(_ p: CBPeripheral) {
@@ -201,7 +202,7 @@ final class BluetoothBand: NSObject, FrameSource, @unchecked Sendable {
     private func receive(_ data: Data) {
         let packets: [BandProtocol.Packet]
         do { packets = try BandProtocol.decode(data) } catch {
-            update { $0.lastError = "The band sent data Fonos can't read. Update the band's firmware." }
+            update { $0.lastError = "The band sent data Wren can't read. Update the band's firmware." }
             return
         }
         for packet in packets {
@@ -289,7 +290,7 @@ extension BluetoothBand: CBCentralManagerDelegate {
 extension BluetoothBand: CBPeripheralDelegate {
     func peripheral(_ p: CBPeripheral, didDiscoverServices error: Error?) {
         guard let service = p.services?.first(where: { $0.uuid == BandProtocol.service }) else {
-            update { $0.lastError = "This device isn't a Fonos band, or its firmware is out of date." }
+            update { $0.lastError = "This device isn't a Wren Band, or its firmware is out of date." }
             central?.cancelPeripheralConnection(p)
             return
         }
@@ -298,7 +299,7 @@ extension BluetoothBand: CBPeripheralDelegate {
 
     func peripheral(_ p: CBPeripheral, didDiscoverCharacteristicsFor service: CBService, error: Error?) {
         guard let c = service.characteristics?.first(where: { $0.uuid == BandProtocol.frames }) else {
-            update { $0.lastError = "The band's firmware is out of date. Flash the current Fonos firmware." }
+            update { $0.lastError = "The band's firmware is out of date. Flash the current Wren firmware." }
             return
         }
         framesCharacteristic = c

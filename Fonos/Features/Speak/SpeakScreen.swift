@@ -125,7 +125,7 @@ struct SpeakScreen: View {
                             .foregroundStyle(Theme.leftInk)
                     }
                 } else {
-                    Text("Tap Speak and talk normally. Fonos will say your words clearly.")
+                    Text("Tap Speak and talk normally. Wren will say your words clearly.")
                         .font(.ui(.title3))
                         .foregroundStyle(Theme.inkSecondary)
                         .frame(maxWidth: .infinity, alignment: .leading)

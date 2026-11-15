@@ -12,7 +12,7 @@ enum ReportRenderer {
         f.locale = Locale(identifier: "en_US_POSIX")
         f.timeZone = .current
         f.dateFormat = "yyyy-MM-dd"
-        return "Fonos speech summary \(f.string(from: report.generated)).pdf"
+        return "Wren speech summary \(f.string(from: report.generated)).pdf"
     }
 
     /// Writes the PDF (one page per `ClinicReportPage`) to a temporary file and returns its URL.
@@ -22,8 +22,8 @@ enum ReportRenderer {
         try? FileManager.default.removeItem(at: url)
         var box = CGRect(origin: .zero, size: size)
         let info: [CFString: Any] = [
-            kCGPDFContextTitle: "Fonos Speech Monitoring Summary",
-            kCGPDFContextCreator: "Fonos \(Paper.appVersion)",
+            kCGPDFContextTitle: "Wren Speech Monitoring Summary",
+            kCGPDFContextCreator: "Wren \(Paper.appVersion)",
             kCGPDFContextSubject: "Speech measures \(Paper.date(report.periodStart)) to \(Paper.date(report.periodEnd))",
         ]
         guard let ctx = CGContext(url as CFURL, mediaBox: &box, info as CFDictionary) else { return nil }

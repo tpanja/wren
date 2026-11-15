@@ -42,7 +42,7 @@ struct ClinicSummaryView: View {
                 patientCard
                 if let justShared { sharedNote(justShared) }
 
-                Text("The report is made on this iPhone. Fonos does not upload it anywhere; you choose where it goes.")
+                Text("The report is made on this iPhone. Wren does not upload it anywhere; you choose where it goes.")
                     .font(.ui(.footnote))
                     .foregroundStyle(Theme.inkTertiary)
                     .padding(.bottom, 96)
@@ -58,7 +58,7 @@ struct ClinicSummaryView: View {
         .alert("The summary couldn't be created", isPresented: $failed) {
             Button("OK", role: .cancel) {}
         } message: {
-            Text("Try again. If it keeps failing, restart Fonos.")
+            Text("Try again. If it keeps failing, restart Wren.")
         }
     }
 

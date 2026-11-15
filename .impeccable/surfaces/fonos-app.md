@@ -5,7 +5,7 @@ primary_target: "Fonos/App"
 related_targets: []
 ---
 
-# Fonos app shell (Speak, Progress, Band)
+# Wren app shell (Speak, Progress, Band)
 
 Mode: Operate. Native iOS, SwiftUI. Code-led build.
 

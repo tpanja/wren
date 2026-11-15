@@ -85,7 +85,7 @@ struct MeasureDetailScreen: View {
                 }
                 .card()
 
-                Text("Fonos describes changes in your speech. It does not diagnose. Talk with your care team about what these trends mean for you.")
+                Text("Wren describes changes in your speech. It does not diagnose. Talk with your care team about what these trends mean for you.")
                     .font(.ui(.footnote))
                     .foregroundStyle(Theme.inkTertiary)
             }

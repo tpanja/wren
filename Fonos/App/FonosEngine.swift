@@ -343,7 +343,7 @@ final class FonosEngine {
         guard let result else {
             speakState = .idle
             partialText = ""
-            message = "Fonos couldn't make out the words. Try again."
+            message = "Wren couldn't make out the words. Try again."
             return
         }
         analyzer.addClarity(result.confidence)
@@ -411,7 +411,7 @@ final class FonosEngine {
         taskLevel = 0
         let result = TaskResult.analyze(task, frames: frames)
         taskState = .done(result)
-        UIAccessibility.post(notification: .announcement, argument: result.measured ? "Done" : "Fonos couldn't measure that one")
+        UIAccessibility.post(notification: .announcement, argument: result.measured ? "Done" : "Wren couldn't measure that one")
     }
 
     func cancelTask() {

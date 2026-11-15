@@ -40,11 +40,11 @@ struct SettingsScreen: View {
                     }
                     .padding(.vertical, 4)
 
-                    Button("Test voice") { engine.say("This is how Fonos will sound.") }
+                    Button("Test voice") { engine.say("This is how Wren will sound.") }
                 } header: {
                     Text("Voice").cardTitle()
                 } footer: {
-                    Text("A Personal Voice you've created in iPhone Settings sounds like you. Fonos uses it when you allow it.")
+                    Text("A Personal Voice you've created in iPhone Settings sounds like you. Wren uses it when you allow it.")
                 }
                 .listRowBackground(Theme.card)
 
@@ -120,7 +120,7 @@ struct SettingsScreen: View {
                 } header: {
                     Text("Demo recordings").cardTitle()
                 } footer: {
-                    Text("Save them to Files or AirDrop them to another device, then play one near this iPhone while Fonos listens. They're also in Files under On My iPhone › Fonos.")
+                    Text("Save them to Files or AirDrop them to another device, then play one near this iPhone while Wren listens. They're also in Files under On My iPhone › Wren.")
                 }
                 .listRowBackground(Theme.card)
 
@@ -136,13 +136,13 @@ struct SettingsScreen: View {
                 .listRowBackground(Theme.card)
 
                 Section {
-                    LabeledContent("Band", value: engine.bandMode == .simulated ? "Simulated" : "Fonos band over Bluetooth")
+                    LabeledContent("Band", value: engine.bandMode == .simulated ? "Simulated" : "Wren Band over Bluetooth")
                     LabeledContent("Translator", value: "Demo recordings (\(DemoClip.bundled.count))")
                     LabeledContent("Version", value: Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "–")
                 } header: {
                     Text("About").cardTitle()
                 } footer: {
-                    Text("Fonos is not a medical device and does not diagnose.")
+                    Text("Wren is not a medical device and does not diagnose.")
                 }
                 .listRowBackground(Theme.card)
             }

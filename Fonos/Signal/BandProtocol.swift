@@ -4,7 +4,8 @@ import Foundation
 /// The Fonos band's Bluetooth Low Energy protocol, version 1. The firmware in
 /// `firmware/fonos_band` implements the other side; keep the two in step.
 ///
-/// The band advertises as "Fonos Band" with `service` in its advertisement.
+/// The band advertises as "Wren Band" with `service` in its advertisement
+/// (firmware before the rename says "Fonos Band"; the app shows it as Wren Band).
 /// The `frames` characteristic notifies one or more 126-byte frames back to
 /// back, each 10 ms of signal, all little-endian:
 ///
@@ -25,7 +26,9 @@ import Foundation
 enum BandProtocol {
     static let service = CBUUID(string: "079A0425-8A6E-4126-91C5-A5B5B2525F6B")
     static let frames = CBUUID(string: "B5CFF4BC-810E-4AF7-8262-5F5F5D057AC5")
-    static let advertisedName = "Fonos Band"
+    static let advertisedName = "Wren Band"
+    /// What bands flashed before the rename advertise.
+    static let legacyNames: Set<String> = ["Fonos Band"]
 
     static let version: UInt8 = 1
     static let frameSize = 126

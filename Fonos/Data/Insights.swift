@@ -65,17 +65,17 @@ enum Insights {
             let body: String
             switch t.metric {
             case .pace:
-                body = "You're speaking a little more slowly than in your first sessions. Fonos adjusts automatically, and slower speech often translates more accurately."
+                body = "You're speaking a little more slowly than in your first sessions. Wren adjusts automatically, and slower speech often translates more accurately."
             case .strength:
                 body = "Your voice is vibrating less strongly than at your baseline. Speaking in shorter phrases and resting between them can help the band pick up more of each word."
             case .pauses:
-                body = "There's more silence between your sounds than at your baseline. Fonos waits for you, so there's no need to rush."
+                body = "There's more silence between your sounds than at your baseline. Wren waits for you, so there's no need to rush."
             case .symmetry:
                 body = "One side of your throat is vibrating more than the other compared with your baseline. Check that the band sits centered and both sensors touch your skin."
             case .steadiness:
                 body = "Your pitch varies more from moment to moment than at your baseline. This is worth mentioning at your next clinic visit."
             case .clarity:
-                body = "Fonos is less confident about your words than in your first sessions. Recording a few practice phrases can help."
+                body = "Wren is less confident about your words than in your first sessions. Recording a few practice phrases can help."
             }
             return (title, body)
         }

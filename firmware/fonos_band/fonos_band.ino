@@ -1,5 +1,5 @@
-// Fonos band firmware: streams the throat microphone and both piezos to the
-// Fonos app over Bluetooth Low Energy. Protocol version 1, matching
+// Wren Band firmware: streams the throat microphone and both piezos to the
+// Wren app over Bluetooth Low Energy. Protocol version 1, matching
 // Fonos/Signal/BandProtocol.swift in the app. Change both together.
 //
 // Board: ESP32-S3 (dual core), Arduino core by Espressif 3.x, built-in BLE
@@ -50,7 +50,7 @@
 #define MIC_GAIN      4
 #define PIEZO_GAIN   16
 
-#define DEVICE_NAME  "Fonos Band"
+#define DEVICE_NAME  "Wren Band"
 static const char* SERVICE_UUID = "079a0425-8a6e-4126-91c5-a5b5b2525f6b";
 static const char* FRAMES_UUID  = "b5cff4bc-810e-4af7-8262-5f5f5d057ac5";
 

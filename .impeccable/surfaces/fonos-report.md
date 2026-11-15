@@ -11,7 +11,7 @@ Mode: Read. A printed or emailed document a neurologist or speech-language patho
 
 Audience and job: the clinician interprets trends between visits; the patient only generates and shares it. Report period = since the last shared summary (first export: all sessions). Optional patient name and date of birth, stored on the phone only; blank lines print when empty.
 
-Content: header (Fonos, title, period, generated date, report ID), patient block, sample-data notice while data is synthetic, one-sentence summary, measures table (baseline, period mean, change vs baseline, slope per 30 days with 95% CI, status against the ±5% band), six small trend charts, data-quality block (sessions, active days, voiced minutes, piezo and translator coverage, longest gap), methods footnotes and a non-diagnostic statement.
+Content: header (Wren, title, period, generated date, report ID), patient block, sample-data notice while data is synthetic, one-sentence summary, measures table (baseline, period mean, change vs baseline, slope per 30 days with 95% CI, status against the ±5% band), six small trend charts, data-quality block (sessions, active days, voiced minutes, piezo and translator coverage, longest gap), methods footnotes and a non-diagnostic statement.
 
 ## Direction contract
 

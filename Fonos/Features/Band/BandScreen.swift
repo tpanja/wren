@@ -120,7 +120,7 @@ private struct BandHero: View {
             Button("Forget band", role: .destructive) { engine.disconnectBand(forget: true) }
             Button("Keep it", role: .cancel) {}
         } message: {
-            Text("Fonos will stop reconnecting to it. You can connect it again any time.")
+            Text("Wren will stop reconnecting to it. You can connect it again any time.")
         }
     }
 
@@ -211,21 +211,21 @@ private struct BandHero: View {
         case .waiting(let name):
             return Presentation(badge: .searching, title: name, detail: "Waiting for your band",
                                 detailColor: Theme.actionInk,
-                                note: "Turn the band on and keep it near your iPhone. Fonos connects on its own when it finds it.")
+                                note: "Turn the band on and keep it near your iPhone. Wren connects on its own when it finds it.")
         case .poweredOff:
-            return Presentation(badge: .problem, title: "Bluetooth is off", detail: "Fonos needs Bluetooth to hear your band",
+            return Presentation(badge: .problem, title: "Bluetooth is off", detail: "Wren needs Bluetooth to hear your band",
                                 detailColor: Theme.cautionInk,
                                 note: "Turn on Bluetooth in Control Center, or in Settings.")
         case .unauthorized:
-            return Presentation(badge: .problem, title: "Bluetooth isn't allowed", detail: "Fonos can't look for your band",
+            return Presentation(badge: .problem, title: "Bluetooth isn't allowed", detail: "Wren can't look for your band",
                                 detailColor: Theme.cautionInk,
-                                note: "In Settings, open Fonos and turn on Bluetooth.")
+                                note: "In Settings, open Wren and turn on Bluetooth.")
         case .unsupported:
             return Presentation(badge: .problem, title: "No Bluetooth here", detail: "This device can't connect to the band",
                                 detailColor: Theme.cautionInk,
-                                note: "The iOS Simulator has no Bluetooth. Run Fonos on an iPhone to connect the band, or use the simulated band below.")
+                                note: "The iOS Simulator has no Bluetooth. Run Wren on an iPhone to connect the band, or use the simulated band below.")
         case .notStarted, .idle:
-            return Presentation(badge: .idle, title: "Fonos band", detail: "Not connected", detailColor: quiet)
+            return Presentation(badge: .idle, title: "Wren Band", detail: "Not connected", detailColor: quiet)
         }
     }
 }
@@ -319,7 +319,7 @@ private struct SetupGuide: View {
     private let steps: [(String, String)] = [
         ("Power the band", "Charge it, or plug it into a USB power bank. It's ready to connect a few seconds after it powers on."),
         ("Keep your iPhone close", "Within about an arm's length while connecting. After that, across a room is fine."),
-        ("Tap Connect band", "Allow Bluetooth when your iPhone asks. Fonos finds the band and connects."),
+        ("Tap Connect band", "Allow Bluetooth when your iPhone asks. Wren finds the band and connects."),
         ("Put the band on", "Center the microphone at the front of your throat with a sensor on each side. Snug, but comfortable."),
     ]
 
@@ -349,7 +349,7 @@ private struct SetupGuide: View {
                 }
             }
 
-            Text("Fonos remembers your band and reconnects on its own next time.")
+            Text("Wren remembers your band and reconnects on its own next time.")
                 .font(.ui(.footnote))
                 .foregroundStyle(Theme.inkTertiary)
                 .fixedSize(horizontal: false, vertical: true)
@@ -360,9 +360,9 @@ private struct SetupGuide: View {
                 VStack(alignment: .leading, spacing: 10) {
                     tip("Turn the band off and on again, then tap Connect band.")
                     tip("Check that Bluetooth is on in Control Center.")
-                    tip("Don't pair the band in iPhone Settings. It connects from Fonos only, and won't appear there.")
+                    tip("Don't pair the band in iPhone Settings. It connects from Wren only, and won't appear there.")
                     tip("Check the band has power: unplug it and plug it back in. If it still doesn't appear, its firmware may need flashing.")
-                    tip("Still stuck? Ask whoever set up your band to check it against the Fonos firmware guide.")
+                    tip("Still stuck? Ask whoever set up your band to check it against the Wren firmware guide.")
                 }
                 .padding(.top, 12)
             } label: {
@@ -398,7 +398,7 @@ private struct ModeFooter: View {
                     .font(.ui(.subheadline, .semibold))
                     .foregroundStyle(Theme.actionInk)
                     .frame(minHeight: 44)
-                Text("Try Fonos without the band.")
+                Text("Try Wren without the band.")
             } else if BluetoothBand.remembered != nil {
                 Button("Go back to your band") { engine.use(.bluetooth) }
                     .font(.ui(.subheadline, .semibold))
