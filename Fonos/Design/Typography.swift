@@ -39,12 +39,18 @@ enum FonosType {
         }
     }
 
+    /// PostScript names of each variable font's default instance.
+    static let textBase = "AtkinsonHyperlegibleNext-Regular"
+    static let displayBase = "Sora-Regular"
+
     /// UIKit font with an explicit weight on the variable `wght` axis,
     /// scaled for Dynamic Type. Used for bars and segmented controls.
-    static func uiFont(_ family: String, size: CGFloat, weight: CGFloat, style: UIFont.TextStyle) -> UIFont {
+    static func uiFont(_ base: String, size: CGFloat, weight: CGFloat, style: UIFont.TextStyle) -> UIFont {
+        guard let regular = UIFont(name: base, size: size) else {
+            return UIFontMetrics(forTextStyle: style).scaledFont(for: .systemFont(ofSize: size))
+        }
         let wghtTag = 0x7767_6874 // 'wght'
-        let descriptor = UIFontDescriptor(fontAttributes: [
-            .family: family,
+        let descriptor = regular.fontDescriptor.addingAttributes([
             UIFontDescriptor.AttributeName(rawValue: kCTFontVariationAttribute as String): [wghtTag: weight],
         ])
         return UIFontMetrics(forTextStyle: style).scaledFont(for: UIFont(descriptor: descriptor, size: size))
@@ -53,15 +59,15 @@ enum FonosType {
     /// Navigation titles, tab labels, and segmented controls in the brand faces.
     static func applyAppearance() {
         let nav = UINavigationBar.appearance()
-        nav.largeTitleTextAttributes = [.font: uiFont(display, size: 32, weight: 700, style: .largeTitle)]
-        nav.titleTextAttributes = [.font: uiFont(display, size: 17, weight: 600, style: .headline)]
+        nav.largeTitleTextAttributes = [.font: uiFont(displayBase, size: 32, weight: 700, style: .largeTitle)]
+        nav.titleTextAttributes = [.font: uiFont(displayBase, size: 17, weight: 600, style: .headline)]
         UITabBarItem.appearance().setTitleTextAttributes(
-            [.font: uiFont(text, size: 11, weight: 600, style: .caption2)], for: .normal)
+            [.font: uiFont(textBase, size: 11, weight: 600, style: .caption2)], for: .normal)
         let seg = UISegmentedControl.appearance()
-        seg.setTitleTextAttributes([.font: uiFont(text, size: 14, weight: 500, style: .subheadline)], for: .normal)
-        seg.setTitleTextAttributes([.font: uiFont(text, size: 14, weight: 700, style: .subheadline)], for: .selected)
+        seg.setTitleTextAttributes([.font: uiFont(textBase, size: 14, weight: 500, style: .subheadline)], for: .normal)
+        seg.setTitleTextAttributes([.font: uiFont(textBase, size: 14, weight: 700, style: .subheadline)], for: .selected)
         UIBarButtonItem.appearance().setTitleTextAttributes(
-            [.font: uiFont(text, size: 17, weight: 600, style: .body)], for: .normal)
+            [.font: uiFont(textBase, size: 17, weight: 600, style: .body)], for: .normal)
     }
 }
 
