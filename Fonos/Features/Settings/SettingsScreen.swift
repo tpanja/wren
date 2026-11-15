@@ -46,6 +46,7 @@ struct SettingsScreen: View {
                 } footer: {
                     Text("A Personal Voice you've created in iPhone Settings sounds like you. Fonos uses it when you allow it.")
                 }
+                .listRowBackground(Theme.card)
 
                 Section("Listening") {
                     Picker("Stop listening after", selection: $engine.autoStopSeconds) {
@@ -56,6 +57,7 @@ struct SettingsScreen: View {
                     }
                     Toggle("Speak translation automatically", isOn: $engine.speakAutomatically)
                 }
+                .listRowBackground(Theme.card)
 
                 Section {
                     ForEach(engine.quickPhrases, id: \.self) { Text($0) }
@@ -74,6 +76,7 @@ struct SettingsScreen: View {
                 } footer: {
                     Text("Swipe left to remove a phrase. Use Edit to reorder.")
                 }
+                .listRowBackground(Theme.card)
 
                 Section("Appearance") {
                     Picker("Appearance", selection: $appearance) {
@@ -82,6 +85,7 @@ struct SettingsScreen: View {
                     .pickerStyle(.inline)
                     .labelsHidden()
                 }
+                .listRowBackground(Theme.card)
 
                 Section {
                     LabeledContent("Data source", value: "Simulated band")
@@ -92,7 +96,10 @@ struct SettingsScreen: View {
                 } footer: {
                     Text("Fonos is not a medical device and does not diagnose. All data shown is sample data from a simulated band.")
                 }
+                .listRowBackground(Theme.card)
             }
+            .scrollContentBackground(.hidden)
+            .background(Theme.ground)
             .navigationTitle("Settings")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

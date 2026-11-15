@@ -90,8 +90,19 @@ struct MetricDetailScreen: View {
         .toolbarBackground(Theme.ground, for: .navigationBar)
     }
 
+    /// Y range fitted to the data and baseline with 15% headroom, so a real
+    /// change is visible instead of flattened against a zero baseline.
+    private func domain(_ pts: [DayPoint]) -> ClosedRange<Double> {
+        var values = pts.map(\.value)
+        if let b = baselineValue { values.append(b) }
+        guard let lo = values.min(), let hi = values.max() else { return 0...1 }
+        let pad = max((hi - lo) * 0.15, abs(hi) * 0.02, 0.1)
+        return (lo - pad)...(hi + pad)
+    }
+
     private func chart(_ pts: [DayPoint]) -> some View {
-        Chart {
+        let yDomain = domain(pts)
+        return Chart {
             if let b = baselineValue {
                 RuleMark(y: .value("Baseline", b))
                     .foregroundStyle(Theme.inkTertiary)
@@ -101,7 +112,9 @@ struct MetricDetailScreen: View {
                     }
             }
             ForEach(pts) { p in
-                AreaMark(x: .value("Day", p.day, unit: .day), y: .value(metric.title, p.value))
+                AreaMark(x: .value("Day", p.day, unit: .day),
+                         yStart: .value("Floor", yDomain.lowerBound),
+                         yEnd: .value(metric.title, p.value))
                     .interpolationMethod(.monotone)
                     .foregroundStyle(.linearGradient(colors: [metric.color.opacity(0.25), metric.color.opacity(0)],
                                                      startPoint: .top, endPoint: .bottom))
@@ -116,7 +129,7 @@ struct MetricDetailScreen: View {
                     .foregroundStyle(metric.color).symbolSize(80)
             }
         }
-        .chartYScale(domain: .automatic(includesZero: false))
+        .chartYScale(domain: yDomain)
         .chartXSelection(value: $selected)
         .chartXAxis {
             AxisMarks(values: .automatic(desiredCount: 4)) { _ in

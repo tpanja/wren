@@ -18,6 +18,7 @@ struct TrendsScreen: View {
     @Environment(FonosEngine.self) private var engine
     @Binding var showSettings: Bool
     @State private var range: TrendRange = .week
+    @Environment(\.dynamicTypeSize) private var typeSize
 
     private var sessions: [SessionRecord] { engine.store.visible }
     private var baseline: Baseline? { engine.store.baseline }
@@ -37,6 +38,7 @@ struct TrendsScreen: View {
 
                     Text("All measures")
                         .font(.metric(.title2, weight: .bold))
+                        .accessibilityAddTraits(.isHeader)
                         .foregroundStyle(Theme.ink)
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .padding(.top, 16)
@@ -69,27 +71,44 @@ struct TrendsScreen: View {
     // MARK: Rings
 
     private var rings: some View {
-        HStack(alignment: .top, spacing: 0) {
-            ForEach(Metric.rings) { m in
-                NavigationLink(value: m) {
-                    VStack(spacing: 10) {
-                        MetricRing(metric: m, value: Insights.mean(m, in: sessions, baseline: baseline, days: range.rawValue))
-                        HStack(spacing: 2) {
-                            Text(m.title).cardTitle()
-                            FonosIcon(.chevron, size: 12, relativeTo: .caption2).foregroundStyle(Theme.inkSecondary)
-                        }
-                    }
-                    .frame(maxWidth: .infinity)
-                    .contentShape(Rectangle())
+        let values = Dictionary(uniqueKeysWithValues: Metric.rings.map {
+            ($0, Insights.mean($0, in: sessions, baseline: baseline, days: range.rawValue))
+        })
+        return Group {
+            if typeSize.isAccessibilitySize {
+                // Large text: one ring per row so labels never split mid-word.
+                VStack(spacing: 10) {
+                    ForEach(Metric.rings) { m in ringLink(m, value: values[m] ?? nil, stacked: false) }
                 }
-                .buttonStyle(.plain)
-                .accessibilityElement(children: .ignore)
-                .accessibilityLabel(m.title)
-                .accessibilityValue(Insights.mean(m, in: sessions, baseline: baseline, days: range.rawValue)
-                    .map { "\(m.format($0)) \(m.unit == "%" ? "percent" : m.unit == "syl/s" ? "syllables per second" : m.unit)" } ?? "No data")
+            } else {
+                HStack(alignment: .top, spacing: 0) {
+                    ForEach(Metric.rings) { m in ringLink(m, value: values[m] ?? nil, stacked: true) }
+                }
             }
         }
         .padding(.vertical, 12)
+    }
+
+    private func ringLink(_ m: Metric, value: Double?, stacked: Bool) -> some View {
+        NavigationLink(value: m) {
+            let label = HStack(spacing: 4) {
+                Text(m.title).cardTitle()
+                FonosIcon(.chevron, size: 12, relativeTo: .caption2).foregroundStyle(Theme.inkSecondary)
+            }
+            if stacked {
+                VStack(spacing: 10) { MetricRing(metric: m, value: value); label }
+                    .frame(maxWidth: .infinity)
+            } else {
+                HStack(spacing: 16) { MetricRing(metric: m, value: value, diameter: 104); label; Spacer(minLength: 0) }
+                    .card(padding: 14)
+            }
+        }
+        .buttonStyle(.plain)
+        .contentShape(Rectangle())
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(m.title)
+        .accessibilityValue(value.map { "\(m.format($0)) \(m.unit == "%" ? "percent" : m.unit == "syl/s" ? "syllables per second" : m.unit)" } ?? "No data")
+        .accessibilityAddTraits(.isButton)
     }
 
     // MARK: Insight

@@ -86,6 +86,8 @@ struct MetricRing: View {
             }
             .minimumScaleFactor(0.6)
             .lineLimit(1)
+            // The ring is a fixed size; numerals stop growing at xxxLarge.
+            .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
             .padding(.horizontal, lineWidth + 4)
         } else {
             Text("–").font(.metric(.title)).foregroundStyle(Theme.inkTertiary)

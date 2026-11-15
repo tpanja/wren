@@ -45,7 +45,7 @@ enum FonosType {
 
     /// UIKit font with an explicit weight on the variable `wght` axis,
     /// scaled for Dynamic Type. Used for bars and segmented controls.
-    static func uiFont(_ base: String, size: CGFloat, weight: CGFloat, style: UIFont.TextStyle) -> UIFont {
+    static func uiFont(_ base: String, size: CGFloat, weight: CGFloat, style: UIFont.TextStyle, maxSize: CGFloat? = nil) -> UIFont {
         guard let regular = UIFont(name: base, size: size) else {
             return UIFontMetrics(forTextStyle: style).scaledFont(for: .systemFont(ofSize: size))
         }
@@ -53,7 +53,9 @@ enum FonosType {
         let descriptor = regular.fontDescriptor.addingAttributes([
             UIFontDescriptor.AttributeName(rawValue: kCTFontVariationAttribute as String): [wghtTag: weight],
         ])
-        return UIFontMetrics(forTextStyle: style).scaledFont(for: UIFont(descriptor: descriptor, size: size))
+        let font = UIFont(descriptor: descriptor, size: size)
+        if let maxSize { return UIFontMetrics(forTextStyle: style).scaledFont(for: font, maximumPointSize: maxSize) }
+        return UIFontMetrics(forTextStyle: style).scaledFont(for: font)
     }
 
     /// Navigation titles, tab labels, and segmented controls in the brand faces.
@@ -64,8 +66,8 @@ enum FonosType {
         UITabBarItem.appearance().setTitleTextAttributes(
             [.font: uiFont(textBase, size: 11, weight: 600, style: .caption2)], for: .normal)
         let seg = UISegmentedControl.appearance()
-        seg.setTitleTextAttributes([.font: uiFont(textBase, size: 14, weight: 500, style: .subheadline)], for: .normal)
-        seg.setTitleTextAttributes([.font: uiFont(textBase, size: 14, weight: 700, style: .subheadline)], for: .selected)
+        seg.setTitleTextAttributes([.font: uiFont(textBase, size: 14, weight: 500, style: .subheadline, maxSize: 20)], for: .normal)
+        seg.setTitleTextAttributes([.font: uiFont(textBase, size: 14, weight: 700, style: .subheadline, maxSize: 20)], for: .selected)
         UIBarButtonItem.appearance().setTitleTextAttributes(
             [.font: uiFont(textBase, size: 17, weight: 600, style: .body)], for: .normal)
     }
