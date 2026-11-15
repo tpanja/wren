@@ -18,6 +18,7 @@ struct TrendsScreen: View {
     @Environment(FonosEngine.self) private var engine
     @Binding var showSettings: Bool
     @State private var range: TrendRange = .week
+    @State private var showReport = false
     @Environment(\.dynamicTypeSize) private var typeSize
 
     private var sessions: [SessionRecord] { engine.store.visible }
@@ -63,8 +64,23 @@ struct TrendsScreen: View {
                     }
                     .accessibilityLabel("Settings")
                 }
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button { showReport = true } label: {
+                        FonosIcon(.report, size: 24, relativeTo: .title3).frame(width: 44, height: 44)
+                    }
+                    .accessibilityLabel("Clinic summary")
+                    .accessibilityHint("Creates a one-page report for your care team")
+                }
             }
             .toolbarBackground(Theme.ground, for: .navigationBar)
+            .sheet(isPresented: $showReport) {
+                NavigationStack {
+                    ClinicSummaryView()
+                        .toolbar {
+                            ToolbarItem(placement: .cancellationAction) { Button("Done") { showReport = false } }
+                        }
+                }
+            }
         }
     }
 

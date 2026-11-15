@@ -20,18 +20,23 @@
 		44799414A0FB8677F67DC64E /* Components.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4DCC807936E73BD4A804C417 /* Components.swift */; };
 		55596C7A08E562F156A424CF /* SpeechTranslator.swift in Sources */ = {isa = PBXBuildFile; fileRef = B55BF68F9C64E2D5F0417BC5 /* SpeechTranslator.swift */; };
 		64D78ECDCB6A2A58F3E0377B /* DSP.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1D6D1FD6BF074844BD122EE /* DSP.swift */; };
+		66CF77B83B0D7CE5A4FAE421 /* ReportRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 70F8E6AE775F36586A3228D6 /* ReportRenderer.swift */; };
 		68132C9798E1B0A0728469B8 /* Sora.ttf in Resources */ = {isa = PBXBuildFile; fileRef = F778175CE4EF855E3B7A0CB0 /* Sora.ttf */; };
 		6BA3C3CAFFC5B5C7532386A5 /* SpeechAnalyzer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 298B4B410C1CF14DB484222B /* SpeechAnalyzer.swift */; };
 		80048D170FCA5B51F9A33972 /* StreamStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 10F02CD72E2845C38C191B7F /* StreamStore.swift */; };
 		8F23EFE5E5B8E1BD79C87538 /* Typography.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9749DA63BE923E8691B87AC0 /* Typography.swift */; };
+		905C8AB07825D0DE2CF1F0D1 /* ClinicSummaryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBA883FF19B6BC03FCCBC268 /* ClinicSummaryView.swift */; };
 		9A73DE204547774695F24D3F /* FonosApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 826C1D330089D7AB1C5756F3 /* FonosApp.swift */; };
 		A1150F614DD2964CA71E32A3 /* TrendsScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 73CE3687206CA8D70E4A38AB /* TrendsScreen.swift */; };
 		AADDCE9C6E5190896BA5AA75 /* BandScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8825132E7B75E8F4C1961E7 /* BandScreen.swift */; };
+		B6A850A906E845FE234D2B3E /* ClinicReport.swift in Sources */ = {isa = PBXBuildFile; fileRef = 32E129B754930063AB9DC1D7 /* ClinicReport.swift */; };
 		B8077954C6998FD3914C31F6 /* OFL-AtkinsonHyperlegibleNext.txt in Resources */ = {isa = PBXBuildFile; fileRef = 72F9395D929A4CA18E6F7D31 /* OFL-AtkinsonHyperlegibleNext.txt */; };
 		BDE52F7328B4E5490C54556E /* Icons.swift in Sources */ = {isa = PBXBuildFile; fileRef = A62647ED14584CA33309DB43 /* Icons.swift */; };
 		BE86780FAA5698E3AEDAACE7 /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 71AE8564995998803739B121 /* Theme.swift */; };
+		C08F1C01CE6914C44061F31C /* ClinicReportPage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 104450D1D300FA857C47D45C /* ClinicReportPage.swift */; };
 		CD14665E92C0012B56FB509A /* SignalTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EDFBDAFDD82A726815A6CB00 /* SignalTests.swift */; };
 		D3CCE3214B795F8EDAB6F111 /* OFL-Sora.txt in Resources */ = {isa = PBXBuildFile; fileRef = 14E111881ABC22E2F67EA7B0 /* OFL-Sora.txt */; };
+		D4DD48AE294E7AC146664826 /* ReportTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4116A13C0B88145790FF74ED /* ReportTests.swift */; };
 		D68E7943FC176EF5D40EBA6C /* SettingsScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA19F71108BFFB4E184742A5 /* SettingsScreen.swift */; };
 		DD4F371B807634B0321704D7 /* VoiceOutput.swift in Sources */ = {isa = PBXBuildFile; fileRef = 291B88813B0687E06977D3E4 /* VoiceOutput.swift */; };
 		F02BD9FF0CD98A53E136E479 /* Metric.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3724F01C67526982452D57F7 /* Metric.swift */; };
@@ -50,16 +55,20 @@
 
 /* Begin PBXFileReference section */
 		0AD26073D28A0D49002EA44E /* SessionRecord.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionRecord.swift; sourceTree = "<group>"; };
+		104450D1D300FA857C47D45C /* ClinicReportPage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClinicReportPage.swift; sourceTree = "<group>"; };
 		10F02CD72E2845C38C191B7F /* StreamStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StreamStore.swift; sourceTree = "<group>"; };
 		14E111881ABC22E2F67EA7B0 /* OFL-Sora.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = "OFL-Sora.txt"; sourceTree = "<group>"; };
 		291B88813B0687E06977D3E4 /* VoiceOutput.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoiceOutput.swift; sourceTree = "<group>"; };
 		298B4B410C1CF14DB484222B /* SpeechAnalyzer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpeechAnalyzer.swift; sourceTree = "<group>"; };
+		32E129B754930063AB9DC1D7 /* ClinicReport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClinicReport.swift; sourceTree = "<group>"; };
 		3724F01C67526982452D57F7 /* Metric.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Metric.swift; sourceTree = "<group>"; };
 		37C824A983294C65CD9614B6 /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
+		4116A13C0B88145790FF74ED /* ReportTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReportTests.swift; sourceTree = "<group>"; };
 		4C3B9F48D815B98721A68370 /* MetricDetailScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MetricDetailScreen.swift; sourceTree = "<group>"; };
 		4DCC807936E73BD4A804C417 /* Components.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Components.swift; sourceTree = "<group>"; };
 		61B909266F290F7B609DA2BF /* AtkinsonHyperlegibleNext.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = AtkinsonHyperlegibleNext.ttf; sourceTree = "<group>"; };
 		6EA56FBD890D12131D1D8B64 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		70F8E6AE775F36586A3228D6 /* ReportRenderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReportRenderer.swift; sourceTree = "<group>"; };
 		71AE8564995998803739B121 /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
 		72F9395D929A4CA18E6F7D31 /* OFL-AtkinsonHyperlegibleNext.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = "OFL-AtkinsonHyperlegibleNext.txt"; sourceTree = "<group>"; };
 		73CE3687206CA8D70E4A38AB /* TrendsScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrendsScreen.swift; sourceTree = "<group>"; };
@@ -79,6 +88,7 @@
 		F7292F3FC5C4A3BAD048E82E /* SessionStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionStore.swift; sourceTree = "<group>"; };
 		F778175CE4EF855E3B7A0CB0 /* Sora.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = Sora.ttf; sourceTree = "<group>"; };
 		F8825132E7B75E8F4C1961E7 /* BandScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BandScreen.swift; sourceTree = "<group>"; };
+		FBA883FF19B6BC03FCCBC268 /* ClinicSummaryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClinicSummaryView.swift; sourceTree = "<group>"; };
 		FF00A85118BC5A192B10E3CE /* SpeakScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpeakScreen.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -133,6 +143,7 @@
 			children = (
 				6891ECEC2CAC0F3CA0C8DD8F /* Band */,
 				DD9253DB83E618A9A0168582 /* Progress */,
+				9E8013EF3CFD5AF6DDECFB9F /* Report */,
 				0726366D5FEC74A4B118FDB5 /* Settings */,
 				F70DB17C73D903230A837993 /* Speak */,
 			);
@@ -146,6 +157,7 @@
 				92B1FBC3112ACF3D92E2A5D7 /* Data */,
 				B15944F55EC7CE8936FA4D0E /* Design */,
 				71D9D62C0BF95DFF1384C10B /* Features */,
+				F431D1C597B2B93DC5F62FF0 /* Report */,
 				A4192544E43FDBC9537CCA6A /* Resources */,
 				7B1D1AB4CBC2E4072AF9688A /* Signal */,
 				C769B61165BB2273B6DE619F /* Speech */,
@@ -175,6 +187,14 @@
 			path = Data;
 			sourceTree = "<group>";
 		};
+		9E8013EF3CFD5AF6DDECFB9F /* Report */ = {
+			isa = PBXGroup;
+			children = (
+				FBA883FF19B6BC03FCCBC268 /* ClinicSummaryView.swift */,
+			);
+			path = Report;
+			sourceTree = "<group>";
+		};
 		9EC6A97ECA1E561F481AEB67 /* App */ = {
 			isa = PBXGroup;
 			children = (
@@ -197,6 +217,7 @@
 		A42D0F3919C28FF874D2D88C /* FonosTests */ = {
 			isa = PBXGroup;
 			children = (
+				4116A13C0B88145790FF74ED /* ReportTests.swift */,
 				EDFBDAFDD82A726815A6CB00 /* SignalTests.swift */,
 			);
 			path = FonosTests;
@@ -230,6 +251,16 @@
 				73CE3687206CA8D70E4A38AB /* TrendsScreen.swift */,
 			);
 			path = Progress;
+			sourceTree = "<group>";
+		};
+		F431D1C597B2B93DC5F62FF0 /* Report */ = {
+			isa = PBXGroup;
+			children = (
+				32E129B754930063AB9DC1D7 /* ClinicReport.swift */,
+				104450D1D300FA857C47D45C /* ClinicReportPage.swift */,
+				70F8E6AE775F36586A3228D6 /* ReportRenderer.swift */,
+			);
+			path = Report;
 			sourceTree = "<group>";
 		};
 		F70DB17C73D903230A837993 /* Speak */ = {
@@ -336,6 +367,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D4DD48AE294E7AC146664826 /* ReportTests.swift in Sources */,
 				CD14665E92C0012B56FB509A /* SignalTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -345,6 +377,9 @@
 			buildActionMask = 2147483647;
 			files = (
 				AADDCE9C6E5190896BA5AA75 /* BandScreen.swift in Sources */,
+				B6A850A906E845FE234D2B3E /* ClinicReport.swift in Sources */,
+				C08F1C01CE6914C44061F31C /* ClinicReportPage.swift in Sources */,
+				905C8AB07825D0DE2CF1F0D1 /* ClinicSummaryView.swift in Sources */,
 				44799414A0FB8677F67DC64E /* Components.swift in Sources */,
 				64D78ECDCB6A2A58F3E0377B /* DSP.swift in Sources */,
 				1747BECF2E36FE923210736C /* FoldView.swift in Sources */,
@@ -354,6 +389,7 @@
 				3C8F0D905BC51D2B836D6E22 /* Insights.swift in Sources */,
 				F02BD9FF0CD98A53E136E479 /* Metric.swift in Sources */,
 				14AF9B80101D16FA3FE25DBB /* MetricDetailScreen.swift in Sources */,
+				66CF77B83B0D7CE5A4FAE421 /* ReportRenderer.swift in Sources */,
 				FD5720280040297394513476 /* RootView.swift in Sources */,
 				264DE2F696C3930711C77A23 /* SessionRecord.swift in Sources */,
 				226A926E4BA0BC2DF6E0D1FD /* SessionStore.swift in Sources */,
