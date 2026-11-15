@@ -27,28 +27,23 @@ enum DSP {
         for v in x { energy += v * v }
         guard energy > 1e-6 else { return nil }
 
-        var bestLag = 0
-        var best: Float = 0
-        var prev: Float = 0, prevPrev: Float = 0
-        var corr = [Float](repeating: 0, count: maxLag + 1)
+        // Walk lags upward and stop at the first strong local maximum. This
+        // avoids octave errors from later peaks and skips most of the lags,
+        // with no allocation (this runs ~50 times a second).
+        var prevPrev: Float = 0, prev: Float = 0
         for lag in minLag...maxLag {
             var s: Float = 0
             for i in 0..<(n - lag) { s += x[i] * x[i + lag] }
             let c = s / energy
-            corr[lag] = c
-            // Take the first strong local maximum; avoids octave errors from later peaks.
-            if lag > minLag + 1, prev > prevPrev, prev >= c, prev > 0.45, best == 0 {
-                best = prev; bestLag = lag - 1
+            if lag >= minLag + 2, prev > prevPrev, prev >= c, prev > 0.45 {
+                // Peak at lag - 1. Parabolic interpolation for sub-sample precision.
+                let denom = prevPrev - 2 * prev + c
+                let shift = denom != 0 ? 0.5 * (prevPrev - c) / denom : 0
+                return sampleRate / (Float(lag - 1) + shift)
             }
             prevPrev = prev; prev = c
         }
-        guard bestLag > 0 else { return nil }
-
-        // Parabolic interpolation around the peak for sub-sample precision.
-        let a = corr[bestLag - 1], b = corr[bestLag], c = corr[min(bestLag + 1, maxLag)]
-        let denom = a - 2 * b + c
-        let shift = denom != 0 ? 0.5 * (a - c) / denom : 0
-        return sampleRate / (Float(bestLag) + shift)
+        return nil
     }
 
     /// Counts syllable nuclei in an energy envelope (dB, 100 Hz):
