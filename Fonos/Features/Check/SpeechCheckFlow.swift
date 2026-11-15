@@ -22,6 +22,10 @@ struct SpeechCheckFlow: View {
     /// are ignored, so a double tap or a tremor can't skip a task or answer
     /// the next question with the button that took the previous one's place.
     @State private var stepChanged = Date.distantPast
+    /// The last saved check when the flow opened. Captured once, so saving
+    /// doesn't make the results compare this check with itself while dismissing.
+    @State private var previous: SpeechCheckRecord?
+    @State private var capturedPrevious = false
 
     var body: some View {
         NavigationStack {
@@ -30,7 +34,7 @@ struct SpeechCheckFlow: View {
                 case .intro: CheckIntro(start: { go(.task(.breath)) })
                 case .task(let t): TaskStep(task: t, settled: settled, onResult: { record($0) }, onNext: { next(after: t) })
                 case .question(let q): QuestionStep(item: q, selected: answers[q]) { answer(q, $0) } skipAll: { if settled() { go(.results) } }
-                case .results: CheckResults(draft: draftWithAnswers, previous: engine.checks.latest, save: save)
+                case .results: CheckResults(draft: draftWithAnswers, previous: previous, save: save)
                 }
             }
             .animation(.easeInOut(duration: 0.25), value: step)
@@ -58,6 +62,11 @@ struct SpeechCheckFlow: View {
             }
         }
         .interactiveDismissDisabled(step != .intro)
+        .onAppear {
+            guard !capturedPrevious else { return }
+            previous = engine.checks.latest
+            capturedPrevious = true
+        }
         .onDisappear { engine.cancelTask() }
     }
 
