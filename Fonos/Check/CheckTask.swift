@@ -53,6 +53,16 @@ enum CheckTask: Int, CaseIterable, Identifiable, Codable {
     /// Whether the task ends on its own when the voice stops.
     var stopsOnSilence: Bool { self == .breath || self == .passage }
 
+    /// What the simulated band does for this task.
+    var toyMode: ToyBand.Mode {
+        switch self {
+        case .breath: .vowel
+        case .amr: .ddk(smr: false)
+        case .smr: .ddk(smr: true)
+        case .passage: .passage
+        }
+    }
+
     var icon: Icon {
         switch self {
         case .breath: .breath

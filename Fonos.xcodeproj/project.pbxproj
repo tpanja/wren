@@ -30,6 +30,7 @@
 		8F23EFE5E5B8E1BD79C87538 /* Typography.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9749DA63BE923E8691B87AC0 /* Typography.swift */; };
 		905C8AB07825D0DE2CF1F0D1 /* ClinicSummaryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBA883FF19B6BC03FCCBC268 /* ClinicSummaryView.swift */; };
 		9A73DE204547774695F24D3F /* FonosApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 826C1D330089D7AB1C5756F3 /* FonosApp.swift */; };
+		9F32E8809597C3F7323458F7 /* CheckStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7F780EC82CF37326734F1366 /* CheckStore.swift */; };
 		A1150F614DD2964CA71E32A3 /* TrendsScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 73CE3687206CA8D70E4A38AB /* TrendsScreen.swift */; };
 		AADDCE9C6E5190896BA5AA75 /* BandScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8825132E7B75E8F4C1961E7 /* BandScreen.swift */; };
 		B3A3C37E8F01D1E723E6A26C /* Measure.swift in Sources */ = {isa = PBXBuildFile; fileRef = 574F1BA9694980A89B279779 /* Measure.swift */; };
@@ -83,6 +84,7 @@
 		798FEC97B471E86D740A8D87 /* Fonos.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = Fonos.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		7D65BAD4126C0EF1770D5E65 /* ToyBand.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToyBand.swift; sourceTree = "<group>"; };
 		7F6562590EF561FA76B75D1B /* FonosEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FonosEngine.swift; sourceTree = "<group>"; };
+		7F780EC82CF37326734F1366 /* CheckStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CheckStore.swift; sourceTree = "<group>"; };
 		7F8240AF6F1EC200135754F3 /* FonosTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = FonosTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		826C1D330089D7AB1C5756F3 /* FonosApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FonosApp.swift; sourceTree = "<group>"; };
 		9749DA63BE923E8691B87AC0 /* Typography.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Typography.swift; sourceTree = "<group>"; };
@@ -202,6 +204,7 @@
 		9C45CDE1F673223A9CDB2DBD /* Check */ = {
 			isa = PBXGroup;
 			children = (
+				7F780EC82CF37326734F1366 /* CheckStore.swift */,
 				AF728C063136E70A1965E051 /* CheckTask.swift */,
 				70E07860760A477894DE6F1C /* SpeechCheckRecord.swift */,
 				2E826D86EBA7C8D719ADD091 /* TaskAnalysis.swift */,
@@ -401,6 +404,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				AADDCE9C6E5190896BA5AA75 /* BandScreen.swift in Sources */,
+				9F32E8809597C3F7323458F7 /* CheckStore.swift in Sources */,
 				14EE73D1E5B94A8B4F885AA0 /* CheckTask.swift in Sources */,
 				B6A850A906E845FE234D2B3E /* ClinicReport.swift in Sources */,
 				C08F1C01CE6914C44061F31C /* ClinicReportPage.swift in Sources */,

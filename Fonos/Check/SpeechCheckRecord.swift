@@ -107,7 +107,8 @@ enum ToyCheckHistory {
         return (0...weeks).map { w in
             let t = Double(w) / Double(weeks)
             func n(_ s: Double) -> Double { Double.random(in: -s...s, using: &rng) }
-            let date = cal.date(byAdding: .day, value: -7 * (weeks - w), to: cal.startOfDay(for: now))!
+            // The last sample check is a week ago, so this week's check is due.
+            let date = cal.date(byAdding: .day, value: -7 * (weeks - w + 1), to: cal.startOfDay(for: now))!
                 .addingTimeInterval(10 * 3600 + Double(Int.random(in: 0...3600, using: &rng)))
             return SpeechCheckRecord(
                 date: date,
