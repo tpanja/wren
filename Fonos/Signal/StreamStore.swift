@@ -71,6 +71,35 @@ final class StreamStore: @unchecked Sendable {
         }
     }
 
+    /// What the Fold view draws: mic waveform plus both piezo envelopes.
+    struct Fold {
+        var micWave: [Float] = []
+        var leftLevel: [Float] = []
+        var rightLevel: [Float] = []
+        var hasPiezo = false
+    }
+
+    enum Channel { case mic, left, right }
+
+    /// Copies only the Fold view's buffers (no raw piezo waveforms).
+    func fold() -> Fold {
+        lock.withLock {
+            Fold(micWave: micWave.ordered(), leftLevel: leftLevel.ordered(),
+                 rightLevel: rightLevel.ordered(), hasPiezo: hasPiezo)
+        }
+    }
+
+    /// The most recent `seconds` of one raw stream, without copying the rest.
+    func trace(_ channel: Channel, seconds: Double) -> [Float] {
+        lock.withLock {
+            switch channel {
+            case .mic: micWave.suffix(Int(seconds * 800))
+            case .left: leftWave.suffix(Int(seconds * 1_000))
+            case .right: rightWave.suffix(Int(seconds * 1_000))
+            }
+        }
+    }
+
     func snapshot() -> Snapshot {
         lock.withLock {
             Snapshot(
@@ -106,5 +135,13 @@ struct Ring {
 
     func ordered() -> [Float] {
         Array(storage[head...] + storage[..<head])
+    }
+
+    /// The newest `n` samples, oldest first.
+    func suffix(_ n: Int) -> [Float] {
+        let n = min(n, storage.count)
+        let start = (head - n + storage.count) % storage.count
+        if start + n <= storage.count { return Array(storage[start..<(start + n)]) }
+        return Array(storage[start...] + storage[..<(start + n - storage.count)])
     }
 }
