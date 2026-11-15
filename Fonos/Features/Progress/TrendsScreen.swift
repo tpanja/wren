@@ -141,7 +141,7 @@ struct TrendsScreen: View {
     /// The single most notable change, written gently.
     private func headline(_ trends: [MeasureTrend]) -> (title: String, body: String)? {
         guard !trends.isEmpty else { return nil }
-        if let t = trends.filter({ $0.direction == .lower }).max(by: { abs($0.change) < abs($1.change) }) {
+        if let t = trends.filter({ $0.direction == .lower }).max(by: { $0.severity < $1.severity }) {
             return ("\(t.phrase) since your baseline", t.measure.lowerHeadlineBody)
         }
         return ("Your speech is holding steady", "Your recent measures are close to your baseline across the board.")

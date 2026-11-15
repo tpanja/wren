@@ -164,6 +164,15 @@ final class TaskAnalysisTests: XCTestCase {
         }
     }
 
+    func testNearZeroMeasuresUseAbsoluteChange() throws {
+        let t = try XCTUnwrap(MeasureTrend.compute(.check(.fatigue), sessions: [], checks: ToyCheckHistory.make(), baseline: nil))
+        // About −1 dB at baseline to about −2.5 dB now: a dB difference, not a percentage.
+        XCTAssertEqual(t.change, -1.5, accuracy: 0.7)
+        XCTAssertEqual(t.direction, .lower)
+        XCTAssertTrue(t.phrase.hasSuffix("dB"), t.phrase)
+        XCTAssertLessThan(t.severity, 0.3)
+    }
+
     func testSkippedTaskLeavesMeasuresNil() {
         var r = SpeechCheckRecord(date: .now, isSample: true)
         XCTAssertEqual(r.completedTasks, 0)

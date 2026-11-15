@@ -208,6 +208,29 @@ enum Measure: Hashable, Identifiable {
 
     var isCheck: Bool { if case .check = self { true } else { false } }
 
+    /// Measures whose values sit near zero or on a short ordinal scale are
+    /// compared by absolute difference; a percentage of them means nothing
+    /// (−0.8 dB to −2.4 dB is not "down 200%").
+    var changeIsAbsolute: Bool {
+        if case .check(let c) = self { return [.fatigue, .selfSpeech, .selfSalivation, .selfSwallowing].contains(c) }
+        return false
+    }
+
+    /// Change treated as day-to-day variation: ±5% for relative measures,
+    /// 1 dB for reading stamina, half a point for the 0–4 ratings.
+    var steadyBand: Double {
+        guard changeIsAbsolute, case .check(let c) = self else { return 0.05 }
+        return c == .fatigue ? 1 : 0.5
+    }
+
+    /// Scale that puts an absolute change on roughly the same footing as a
+    /// relative one when ranking which change to headline: 2 dB of stamina
+    /// or half a rating point counts like 20% or 12.5%.
+    var severityScale: Double {
+        guard changeIsAbsolute, case .check(let c) = self else { return 1 }
+        return c == .fatigue ? 10 : 4
+    }
+
     var color: Color {
         switch self {
         case .session(let m): m.color
@@ -333,30 +356,35 @@ struct MeasureTrend: Identifiable {
     let measure: Measure
     let recent: Double
     let baseline: Double
+    /// Relative change, or the absolute difference for `changeIsAbsolute` measures.
     let change: Double
     var id: String { measure.id }
 
     var direction: Trend.Direction {
-        guard abs(change) >= 0.05 else { return .steady }
+        guard abs(change) >= measure.steadyBand else { return .steady }
         return (change > 0) == measure.higherIsBetter ? .better : .lower
     }
 
+    /// For choosing the headline across measures of different kinds.
+    var severity: Double { abs(change) / measure.severityScale }
+
     var phrase: String {
-        let pct = Int((abs(change) * 100).rounded())
-        switch direction {
-        case .steady: return "\(measure.title) is steady"
-        default: return "\(measure.title) is \(change > 0 ? "up" : "down") \(pct)%"
-        }
+        guard direction != .steady else { return "\(measure.title) is steady" }
+        let amount = measure.changeIsAbsolute
+            ? "\(measure.format(abs(change))) \(measure.unit == "of 4" ? "point\(measure.format(abs(change)) == "1" ? "" : "s")" : measure.unit)"
+            : "\(Int((abs(change) * 100).rounded()))%"
+        return "\(measure.title) is \(change > 0 ? "up" : "down") \(amount)"
     }
 
     static func compute(_ m: Measure, sessions: [SessionRecord], checks: [SpeechCheckRecord],
                         baseline: Baseline?, now: Date = .now) -> MeasureTrend? {
         let pts = m.series(sessions: sessions, checks: checks, baseline: baseline)
-        guard let b = m.baselineValue(pts), b != 0 else { return nil }
+        guard let b = m.baselineValue(pts), m.changeIsAbsolute || b != 0 else { return nil }
         let cutoff = Calendar.current.date(byAdding: .day, value: -m.recentDays, to: now)!
         let recent = pts.filter { $0.date >= cutoff && $0.date <= now }.map(\.value)
         guard !recent.isEmpty else { return nil }
         let r = recent.reduce(0, +) / Double(recent.count)
-        return MeasureTrend(measure: m, recent: r, baseline: b, change: (r - b) / abs(b))
+        return MeasureTrend(measure: m, recent: r, baseline: b,
+                            change: m.changeIsAbsolute ? r - b : (r - b) / abs(b))
     }
 }
