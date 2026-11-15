@@ -233,7 +233,7 @@ For the payload above, at beginner level:
 
 ```json
 {
-  "headline": "More in tune than your first week",
+  "headline": "More in tune than your usual",
   "summary": "Your scale landed in tune more often than your usual. The notes still start a little low and take a moment to settle, especially the third note.",
   "wins": [
     { "metric": "pitch_accuracy_pct", "observation": "You were in tune 71% of the time, up from your usual 66%." },
