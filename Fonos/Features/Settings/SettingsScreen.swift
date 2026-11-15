@@ -106,13 +106,13 @@ struct SettingsScreen: View {
                 .listRowBackground(Theme.card)
 
                 Section {
-                    LabeledContent("Data source", value: "Simulated band")
+                    LabeledContent("Band", value: engine.bandMode == .simulated ? "Simulated" : "Fonos band over Bluetooth")
                     LabeledContent("Translator", value: "Toy translator")
                     LabeledContent("Version", value: Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "–")
                 } header: {
                     Text("About").cardTitle()
                 } footer: {
-                    Text("Fonos is not a medical device and does not diagnose. All data shown is sample data from a simulated band.")
+                    Text("Fonos is not a medical device and does not diagnose.")
                 }
                 .listRowBackground(Theme.card)
             }

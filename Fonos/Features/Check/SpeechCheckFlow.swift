@@ -148,7 +148,6 @@ private struct CheckIntro: View {
                 Text("Skip any task that is tiring or uncomfortable. Stop whenever you need to.")
                     .font(.ui(.footnote))
                     .foregroundStyle(Theme.inkTertiary)
-                SampleBanner(text: "Sample data. The simulated band performs each task, so results are not measurements of your voice.")
             }
             .padding(.horizontal, Theme.gutter)
             .padding(.bottom, 24)
@@ -374,7 +373,6 @@ private struct CheckResults: View {
                 Text("One check can vary for many reasons, like tiredness or a cold. Trends over several weeks say more.")
                     .font(.ui(.footnote)).foregroundStyle(Theme.inkTertiary)
                     .fixedSize(horizontal: false, vertical: true)
-                SampleBanner()
             }
             .padding(.horizontal, Theme.gutter)
             .padding(.bottom, 24)

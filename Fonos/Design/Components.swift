@@ -328,16 +328,3 @@ struct TileButtonStyle: ButtonStyle {
 extension ButtonStyle where Self == TileButtonStyle {
     static var tile: TileButtonStyle { TileButtonStyle() }
 }
-
-/// Sample-data notice. Shown wherever toy data could be mistaken for a real measurement.
-struct SampleBanner: View {
-    var text = "Sample data. These numbers show what Fonos will look like with a real band."
-    var body: some View {
-        Label { Text(text) } icon: { FonosIcon(.info, size: 18, relativeTo: .footnote) }
-            .font(.ui(.footnote))
-            .foregroundStyle(Theme.inkSecondary)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(.horizontal, 16).padding(.vertical, 12)
-            .background(Theme.well.opacity(0.7), in: RoundedRectangle(cornerRadius: Theme.controlRadius, style: .continuous))
-    }
-}

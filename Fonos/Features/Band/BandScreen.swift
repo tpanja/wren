@@ -22,9 +22,6 @@ struct BandScreen: View {
                     if case .scanning = engine.link.state { NearbyBands() }
 
                     if engine.bandConnected {
-                        if engine.bandMode == .simulated {
-                            SampleBanner(text: "Simulated band. These signals are sample data, not your voice.")
-                        }
                         sensors
                     } else {
                         SetupGuide()
@@ -195,7 +192,7 @@ private struct BandHero: View {
         let quiet = Theme.inkSecondary
         if engine.bandMode == .simulated {
             return Presentation(badge: engine.isStreaming ? .live : .idle, title: "Simulated band",
-                                detail: engine.isStreaming ? "Streaming sample data" : "Paused",
+                                detail: engine.isStreaming ? "Streaming" : "Paused",
                                 detailColor: engine.isStreaming ? Theme.goodInk : quiet)
         }
         switch engine.link.state {
@@ -401,7 +398,7 @@ private struct ModeFooter: View {
                     .font(.ui(.subheadline, .semibold))
                     .foregroundStyle(Theme.actionInk)
                     .frame(minHeight: 44)
-                Text("Shows sample signals, so you can try Fonos without the band.")
+                Text("Try Fonos without the band.")
             } else if BluetoothBand.remembered != nil {
                 Button("Go back to your band") { engine.use(.bluetooth) }
                     .font(.ui(.subheadline, .semibold))

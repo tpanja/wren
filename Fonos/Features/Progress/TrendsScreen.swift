@@ -39,7 +39,6 @@ struct TrendsScreen: View {
                     if showVoiceBanking {
                         VoiceBankingCard { voiceBankDismissed = true }
                     }
-                    SampleBanner()
 
                     ForEach(SpeechSystem.allCases) { sys in
                         systemSection(sys)
