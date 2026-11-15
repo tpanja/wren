@@ -7,3 +7,4 @@ build/
 .impeccable/review/
 build-release/
 firmware/backup/
+build-mac/
