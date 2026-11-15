@@ -34,7 +34,7 @@ final class SignalTests: XCTestCase {
         XCTAssertEqual(DSP.syllablePeaks(env, floorDb: -50), 4)
     }
 
-    func testAnalyzerSummarizesToyBand() {
+    func testAnalyzerSummarizesToyBand() throws {
         let band = ToyBand()
         let analyzer = SpeechAnalyzer()
         let done = expectation(description: "frames")
