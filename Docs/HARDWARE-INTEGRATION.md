@@ -1,10 +1,8 @@
-# Hardware integration (not built yet)
+# Hardware integration
 
-The Bluetooth connection to the ESP32 throat band is intentionally out of scope for this phase. The app runs on toy data so the experience can be designed and reviewed before the hardware link exists. This note records where the real band will plug in, so that work stays small when it starts.
+Fonos connects to the ESP32 throat band over Bluetooth Low Energy. The firmware lives in [`firmware/`](../firmware/README.md); its README covers flashing, wiring, gains, and the wire format.
 
 ## The seam: `FrameSource`
-
-`Fonos/Signal/ToyBand.swift` defines:
 
 ```swift
 protocol FrameSource: AnyObject {
@@ -15,21 +13,33 @@ protocol FrameSource: AnyObject {
 }
 ```
 
-`ToyBand` is the only conforming type today. A future `BluetoothBand` would:
+Two sources conform: `ToyBand` (simulated) and `BluetoothBand` (the real band). `FonosEngine` routes both into the same pipeline (`StreamStore`, `SpeechAnalyzer`, the translator), and `bandMode` picks which one feeds it. Nothing downstream knows which band it is. Sessions and checks recorded from the real band are not marked as sample data.
 
-1. Use CoreBluetooth to find and connect to the band, and remember it for automatic reconnection.
-2. Decode each notification into a `SensorFrame` (80 mic samples at 8 kHz, 10 samples per piezo at 1 kHz, normalized to −1…1).
-3. Report battery and sensor contact through `BandStatus`.
-4. Call `onFrame` on a background queue.
+## Protocol v1 (`BandProtocol`)
 
-`FonosEngine` would then hold a `FrameSource` instead of a concrete `ToyBand`. Nothing in `StreamStore`, `SpeechAnalyzer`, the translator, or any screen needs to change.
+- The band advertises as **Fonos Band** with service `079A0425-8A6E-4126-91C5-A5B5B2525F6B`.
+- One notify characteristic, `B5CFF4BC-810E-4AF7-8262-5F5F5D057AC5`, carries 126-byte frames, each 10 ms: a 6-byte header (version, flags, sequence, battery), 80 µ-law mic samples at 8 kHz, and 10 Int16 samples per piezo at 1 kHz. A notification may hold several frames.
+- `BandProtocol.decode` rejects partial frames and other versions. `BandProtocolTests` pins the layout, µ-law against G.711 reference codes, multi-frame notifications, and sequence wraparound. `BandProtocol.encode` mirrors the firmware's encoder.
 
-## Still to decide with the firmware
+## Connecting (`BluetoothBand`)
 
-- GATT service and characteristic layout, and how frames are packed. The rates above need about 16 KB/s of 16-bit audio; 8-bit µ-law for the mic would halve that and fit a 10 ms frame in one notification at the default iOS MTU.
-- How sensor contact is detected on the band.
-- Connection UX: first-time pairing screen, reconnect behavior, and what the Band tab shows while disconnected.
-- Permissions to add at that point: `NSBluetoothAlwaysUsageDescription` and, for background streaming, the `bluetooth-central` background mode.
+- CoreBluetooth runs on its own queue; frames go straight to `onFrame` there, like the simulated band. The engine polls `snapshot` 10 times a second for the UI, so the main thread never sees frame-rate data.
+- Bluetooth starts (and iOS asks for permission) only when the user taps Connect, or at launch if a band was connected before.
+- **First connection:** a scan filtered to the Fonos service. With one band nearby, Fonos connects after two seconds; with more, the user picks one. The chosen band's identifier is remembered.
+- **Reconnection:** at launch and after any drop, Fonos issues a connect request for the remembered band. iOS keeps that request open indefinitely, so the band reconnects whenever it's on and in range. "Forget this band" clears it.
+- **Lost frames:** the sequence number shows gaps. Up to half a second of lost frames is filled with silence so durations and rates stay right, and the count is kept in `snapshot.droppedFrames`. The Band page calls the signal patchy below 85 frames a second.
+- **Backgrounding:** the app unsubscribes from notifications in the background and resubscribes when active; the connection stays up.
+- **Speak flow:** with the real band, listening stops after the chosen seconds of quiet once speech has started (the simulated band uses a timer instead). Speech check tasks detect the voice 15 dB above the task's own quietest moment, so they work at any band gain.
+
+## Permissions
+
+`NSBluetoothAlwaysUsageDescription` is set in `project.yml`. Background streaming (the `bluetooth-central` background mode) is not enabled: Fonos stops streaming when it leaves the screen, as before.
+
+## Still to do
+
+- Run the firmware and app together on real hardware. Nothing here has been tested against a board yet, and the iOS Simulator has no Bluetooth, so the connection flow has only been checked down to the "No Bluetooth here" state.
+- Skin-contact sensing and battery measurement on the band (the protocol already has fields for both).
+- A real translator: `SpeechTranslator` is the seam. `ToyTranslator` still returns scripted phrases even when the real band is connected.
 
 ## Translation
 
