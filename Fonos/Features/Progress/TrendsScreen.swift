@@ -93,6 +93,8 @@ struct TrendsScreen: View {
         NavigationLink(value: m) {
             let label = HStack(spacing: 4) {
                 Text(m.title).cardTitle()
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.6)
                 FonosIcon(.chevron, size: 12, relativeTo: .caption2).foregroundStyle(Theme.inkSecondary)
             }
             if stacked {
