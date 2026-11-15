@@ -1,0 +1,288 @@
+import SwiftUI
+
+struct SpeakScreen: View {
+    @Environment(WrenEngine.self) private var engine
+    @Binding var showSettings: Bool
+    @Environment(\.dynamicTypeSize) private var typeSize
+
+    var body: some View {
+        NavigationStack {
+            ScrollView {
+                VStack(spacing: Theme.stack) {
+                    if typeSize.isAccessibilitySize {
+                        // At the largest text sizes, keep Speak in the first viewport.
+                        SpeakButton().padding(.vertical, 20)
+                        transcriptCard
+                        foldCard
+                    } else {
+                        foldCard
+                        transcriptCard
+                        SpeakButton().padding(.top, 24).padding(.bottom, 8)
+                    }
+                    phrases
+                    if !engine.utterances.isEmpty { history }
+                }
+                .padding(.horizontal, Theme.gutter)
+                .padding(.top, 4)
+                .padding(.bottom, 32)
+            }
+            .wrenScreen()
+            .toolbar {
+                ToolbarItem(placement: .topBarLeading) {
+                    Button { showSettings = true } label: {
+                        WrenIcon(.settings, size: 24, relativeTo: .title3)
+                            .frame(width: 44, height: 44)
+                    }
+                    .accessibilityLabel("Settings")
+                }
+                ToolbarItem(placement: .principal) {
+                    StatusPill(text: statusText, color: statusColor, pulsing: engine.speakState == .listening)
+                }
+                ToolbarItem(placement: .topBarTrailing) {
+                    BatteryBadge(percent: engine.bandStatus.battery, charging: engine.bandStatus.isCharging)
+                }
+            }
+            .navigationBarTitleDisplayMode(.inline)
+        }
+    }
+
+    private var statusText: String {
+        switch engine.speakState {
+        case .listening: "Listening"
+        case .translating: "Translating"
+        case .speaking: "Speaking"
+        case .idle:
+            if !engine.bandConnected {
+                if case .waiting = engine.link.state { "Waiting for band" } else { "Band not connected" }
+            } else { engine.isStreaming ? "Band ready" : "Band paused" }
+        }
+    }
+
+    private var statusColor: Color {
+        switch engine.speakState {
+        case .listening: Theme.alert
+        case .translating, .speaking: Theme.pace
+        case .idle: !engine.bandConnected ? Theme.caution : engine.isStreaming ? Theme.good : Theme.inkTertiary
+        }
+    }
+
+    // MARK: Fold
+
+    private var foldCard: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text("Throat signal").cardTitle()
+            FoldView(streams: engine.streams)
+                .frame(height: 150)
+            if engine.listeningSource == .phone {
+                Text("Listening through the iPhone microphone")
+                    .font(.ui(.caption))
+                    .foregroundStyle(Theme.inkTertiary)
+            } else if engine.bandMode == .bluetooth {
+                Text(engine.bandConnected ? "Live signal from your band" : "Band not connected. Speak uses the iPhone microphone.")
+                    .font(.ui(.caption))
+                    .foregroundStyle(Theme.inkTertiary)
+            }
+        }
+        .card()
+    }
+
+    // MARK: Transcript
+
+    private var transcriptCard: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            switch engine.speakState {
+            case .listening:
+                // Words appear only once listening ends.
+                Text("…")
+                    .font(.ui(.title2, .semibold))
+                    .foregroundStyle(Theme.inkSecondary)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .accessibilityLabel("Listening")
+            case .translating:
+                Text("Translating…")
+                    .font(.ui(.title2, .semibold))
+                    .foregroundStyle(Theme.inkSecondary)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .accessibilityLabel("Translating")
+            default:
+                if let last = engine.utterances.first {
+                    HStack(alignment: .top, spacing: 12) {
+                        Text(last.text)
+                            .font(.ui(.title2, .semibold))
+                            .foregroundStyle(Theme.ink)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                        Button { engine.say(last.text) } label: {
+                            WrenIcon(.replay, size: 26, relativeTo: .title3)
+                                .frame(width: 52, height: 52)
+                                .background(Theme.well, in: Circle())
+                        }
+                        .accessibilityLabel("Say it again")
+                        .disabled(engine.speakState == .speaking)
+                    }
+                    if let c = last.confidence {
+                        Text("Clarity \(Int(c * 100))%")
+                            .font(.ui(.footnote, .medium))
+                            .foregroundStyle(Theme.leftInk)
+                    }
+                } else {
+                    Text("Tap Speak and talk normally. Wren will say your words clearly.")
+                        .font(.ui(.title3))
+                        .foregroundStyle(Theme.inkSecondary)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                }
+            }
+        }
+        .frame(minHeight: 72, alignment: .topLeading)
+        .card()
+        .animation(.easeOut(duration: 0.2), value: engine.speakState)
+    }
+
+    // MARK: Phrases
+
+    private var phrases: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text("Quick phrases").cardTitle().padding(.top, 16).padding(.leading, 4)
+            LazyVGrid(columns: [GridItem(.flexible(), spacing: 12), GridItem(.flexible(), spacing: 12)], spacing: 12) {
+                ForEach(engine.quickPhrases, id: \.self) { phrase in
+                    Button { engine.say(phrase, asPhrase: true) } label: {
+                        Text(phrase)
+                            .font(.ui(.body, .semibold))
+                            .foregroundStyle(Theme.ink)
+                            .multilineTextAlignment(.leading)
+                            .padding(.vertical, 12)
+                            .frame(maxWidth: .infinity, minHeight: 64, alignment: .leading)
+                            .padding(.horizontal, 16)
+                            .background { Surface(radius: Theme.tileRadius, lift: 0.6) }
+                            .contentShape(RoundedRectangle(cornerRadius: Theme.tileRadius, style: .continuous))
+                    }
+                    .buttonStyle(.tile)
+                    .accessibilityHint("Speaks this phrase")
+                }
+            }
+        }
+    }
+
+    private var history: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            Text("Said today").cardTitle().padding(.bottom, 6)
+            ForEach(engine.utterances.dropFirst().prefix(8)) { u in
+                Button { engine.say(u.text) } label: {
+                    HStack {
+                        Text(u.text).foregroundStyle(Theme.ink).frame(maxWidth: .infinity, alignment: .leading)
+                        Text(u.date, style: .time).font(.ui(.footnote)).foregroundStyle(Theme.inkTertiary)
+                    }
+                    .frame(minHeight: 48)
+                    .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .accessibilityHint("Says it again")
+                Divider().overlay(Theme.hairline)
+            }
+        }
+        .card()
+        .padding(.top, 12)
+    }
+}
+
+// MARK: - Speak button
+
+/// The primary action: 132 pt, reachable with one imprecise tap. No holding required.
+struct SpeakButton: View {
+    @Environment(WrenEngine.self) private var engine
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @State private var breathe = false
+
+    var body: some View {
+        let state = engine.speakState
+        VStack(spacing: 12) {
+            Button(action: engine.primaryAction) {
+                ZStack {
+                    if state == .listening && !reduceMotion {
+                        Circle()
+                            .stroke(Theme.alert.opacity(0.45), lineWidth: 2)
+                            .scaleEffect(breathe ? 1.24 : 1)
+                            .opacity(breathe ? 0 : 1)
+                            .animation(.easeOut(duration: 1.5).repeatForever(autoreverses: false), value: breathe)
+                    }
+                    Orb(color: fill(state))
+                    icon(state)
+                        .foregroundStyle(state == .listening ? .white : Theme.onAction)
+                        .transition(.scale(scale: 0.7).combined(with: .opacity))
+                        .id(state)
+                }
+                .frame(width: 132, height: 132)
+                .animation(reduceMotion ? nil : .smooth(duration: 0.35), value: state)
+                .contentShape(Circle())
+            }
+            .buttonStyle(PressScale())
+            .disabled(state == .translating)
+            .accessibilityLabel(label(state))
+            .accessibilityHint(hint(state))
+            .onChange(of: state) { _, s in breathe = s == .listening }
+
+            Text(caption(state))
+                .font(.metric(.headline, weight: .semibold))
+                .tracking(0.2)
+                .foregroundStyle(Theme.ink)
+                .contentTransition(.opacity)
+                .animation(.smooth(duration: 0.25), value: state)
+                .padding(.top, 8)
+                .accessibilityHidden(true)
+        }
+        .frame(maxWidth: .infinity)
+        .sensoryFeedback(.impact(weight: .medium), trigger: state)
+    }
+
+    @ViewBuilder private func icon(_ s: WrenEngine.SpeakState) -> some View {
+        switch s {
+        case .idle: WrenIcon(.speak, size: 52, relativeTo: .largeTitle)
+        case .listening: WrenIcon(.stop, size: 46, relativeTo: .largeTitle)
+        case .translating: ProgressView().controlSize(.large).tint(Theme.onAction)
+        case .speaking: WrenIcon(.replay, size: 52, relativeTo: .largeTitle)
+        }
+    }
+
+    private func fill(_ s: WrenEngine.SpeakState) -> Color {
+        switch s {
+        case .listening: Theme.alert
+        case .translating, .speaking: Theme.pace
+        case .idle: Theme.action
+        }
+    }
+
+    private func caption(_ s: WrenEngine.SpeakState) -> String {
+        switch s {
+        case .idle: "Speak"
+        case .listening: "Listening · tap when done"
+        case .translating: "Translating"
+        case .speaking: "Speaking · tap to stop"
+        }
+    }
+
+    private func label(_ s: WrenEngine.SpeakState) -> String {
+        switch s {
+        case .idle: "Speak"
+        case .listening: "Done speaking"
+        case .translating: "Translating"
+        case .speaking: "Stop speaking"
+        }
+    }
+
+    private func hint(_ s: WrenEngine.SpeakState) -> String {
+        switch s {
+        case .idle: "Starts listening to your throat band"
+        case .listening: "Translates what you said and speaks it aloud"
+        default: ""
+        }
+    }
+}
+
+struct PressScale: ButtonStyle {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .scaleEffect(configuration.isPressed && !reduceMotion ? 0.95 : 1)
+            .opacity(configuration.isPressed && reduceMotion ? 0.8 : 1)
+            .animation(reduceMotion ? nil : .spring(response: 0.28, dampingFraction: 0.62), value: configuration.isPressed)
+    }
+}

@@ -1,7 +1,5 @@
 # Wren
 
-> Formerly Fonos. The app and band are called Wren and Wren Band; the repository, Xcode project, code names (`FonosEngine` and so on), firmware folder and bundle ID (`com.fonos.app`) still say Fonos, so existing installs and saved settings carry over.
-
 iOS companion app for the Wren Band. The band measures throat vibration with one contact microphone and two piezo sensors, one on each side of the larynx. The phone turns dysarthric speech from people living with ALS into clear speech, and turns the same signals into a running record of how their speech is changing.
 
 The person with ALS operates the app themselves, often with declining hand control. Every action is a single large tap, and the Speak button is never more than one tap away.
@@ -10,14 +8,14 @@ The person with ALS operates the app themselves, often with declining hand contr
 
 ## Run it
 
-Requirements: Xcode 15 or later, iOS 17 or later. One Swift package, [sherpa-onnx](https://github.com/k2-fsa/sherpa-onnx) 1.13.8, runs Wren's voice on the device; Xcode fetches it. The voice model itself is too large for git, so download it once (about 130 MB, Kokoro v1.0 int8, Apache-2.0):
+Requirements: Xcode 15 or later, iOS 17 or later. One Swift package, [sherpa-onnx](https://github.com/k2-fsa/sherpa-onnx) 1.13.8, runs Wren's voice on the device; Xcode fetches it. The voice model itself is too large for git, so download it once (about 350 MB, Kokoro v1.0 at full precision, Apache-2.0):
 
 ```bash
 tools/fetch-tts-model.sh
 ```
 
 ```bash
-open Fonos.xcodeproj
+open Wren.xcodeproj
 ```
 
 Without the model the app still runs and falls back to Apple's voices. The two bundled fonts are OFL-licensed assets, not code dependencies.
@@ -31,7 +29,7 @@ xcodegen generate
 Run the unit tests:
 
 ```bash
-xcodebuild -project Fonos.xcodeproj -scheme Fonos -destination 'platform=iOS Simulator,name=iPhone 17 Pro' test
+xcodebuild -project Wren.xcodeproj -scheme Wren -destination 'platform=iOS Simulator,name=iPhone 17 Pro' test
 ```
 
 ## What's in the app
@@ -78,17 +76,16 @@ A change under 5% from baseline is reported as steady. Reading stamina sits near
 ## Design
 
 - **Look.** Light by default, with colors sampled from the band itself: white-shell cards on a pale grey ground, black-strap text, WHOOP-style rings, and Apple Health–style summary cards. Each stream keeps one color everywhere: mic grey-green (the liner), left piezo green and right piezo blue (the sensor wires).
-- **Type.** Atkinson Hyperlegible Next (Braille Institute) for all reading text, chosen for low-vision legibility. Sora for numerals, titles, and tracked caps. Both are in `Fonos/Resources/Fonts` with their licenses and scale with Dynamic Type.
+- **Type.** Atkinson Hyperlegible Next (Braille Institute) for all reading text, chosen for low-vision legibility. Sora for numerals, titles, and tracked caps. Both are in `Wren/Resources/Fonts` with their licenses and scale with Dynamic Type.
 - **Icons.** A custom SVG set in `Assets.xcassets/Icons` on a 24 pt grid with a 1.8 pt rounded stroke. No SF Symbols.
 - **Accessibility.** Targets of 60 pt or larger for primary actions, full VoiceOver labels, Dynamic Type through accessibility sizes (the Speak button moves to the top at the largest sizes), Reduce Motion respected, and no gesture-only or timed actions.
-- **Design review skill.** The repo carries the [unslop-ui](.claude/skills/unslop-ui/SKILL.md) Claude skill (vendored unchanged from [vibecoded-design-tells](https://github.com/JCarterJohnson/vibecoded-design-tells), MIT). Claude Code loads it automatically in this repo when you ask it to build, restyle, or review UI, and uses it to avoid default "AI-made" looks. Its scanner (`python3 .claude/skills/unslop-ui/scripts/devibe_scan.py <path>`) reads web files only (HTML, CSS, JS/TS, and similar), so it finds nothing in the Swift sources; for this app, audit by eye against [references/tells.md](.claude/skills/unslop-ui/references/tells.md).
 - **Performance.** Live charts pause when off screen, and views copy only the buffers they draw. In a Release build on the simulator, the app uses about 10% of one core on the Speak screen and about 2% on Progress.
 
 ## Layout
 
 ```
-Fonos/
-  App/          FonosApp, RootView, FonosEngine (coordinator: streaming, sessions, Speak flow)
+Wren/
+  App/          WrenApp, RootView, WrenEngine (coordinator: streaming, sessions, Speak flow)
   Design/       Theme tokens, Typography, Icons, shared components, FoldView
   Signal/       BandProtocol (BLE wire format), BluetoothBand (real band), ToyBand (simulated), PhoneMic (iPhone mic), StreamStore, DSP, SpeechAnalyzer
   Speech/       SpeechTranslator protocol, ClipTranslator + ClipRecognizer (demo recordings), AppleSpeech (Speech framework fallback), VoiceOutput (Personal Voice aware)
@@ -98,8 +95,7 @@ Fonos/
   Report/       ClinicReport (period, slopes, status, data quality), ClinicReportPage (the two PDF pages), ReportRenderer
   Features/     Speak, Progress, Speech check, Band, Settings, and Clinic summary screens
   Resources/    Asset catalog (app icon, custom icons), bundled fonts
-.claude/skills/ unslop-ui design-review skill for Claude Code (not part of the app build)
-FonosTests/     Unit tests: DSP, pitch tracking, syllable detection, analyzer, baseline, trends, task analysis, report statistics and PDF
+WrenTests/     Unit tests: DSP, pitch tracking, syllable detection, analyzer, baseline, trends, task analysis, report statistics and PDF
 Docs/           Data handling, UI design, hardware integration notes
 firmware/       ESP32 band firmware (Arduino) and its flashing and wiring guide
 ```
@@ -115,7 +111,7 @@ firmware/       ESP32 band firmware (Arduino) and its flashing and wiring guide
 
 ## Demo recordings
 
-`Fonos/Resources/DemoClips/` holds ten recordings of people with dysarthria reading a sentence, with the sentence each one was asked to say (`clips.json`). They come from the [TORGO database](https://www.cs.toronto.edu/~complingweb/data/TORGO/torgo.html) (University of Toronto), via its [Hugging Face copy](https://huggingface.co/datasets/abnerh/TORGO-database). TORGO's speakers have dysarthria from cerebral palsy or ALS; the public copy doesn't say which speaker has which, so these are dysarthric speech, not necessarily ALS. TORGO is free for academic (non-profit) use and asks that publications cite Rudzicz, Namasivayam and Wolff (2012), *Language Resources and Evaluation* 46(4).
+`Wren/Resources/DemoClips/` holds ten recordings of people with dysarthria reading a sentence, with the sentence each one was asked to say (`clips.json`). They come from the [TORGO database](https://www.cs.toronto.edu/~complingweb/data/TORGO/torgo.html) (University of Toronto), via its [Hugging Face copy](https://huggingface.co/datasets/abnerh/TORGO-database). TORGO's speakers have dysarthria from cerebral palsy or ALS; the public copy doesn't say which speaker has which, so these are dysarthric speech, not necessarily ALS. TORGO is free for academic (non-profit) use and asks that publications cite Rudzicz, Namasivayam and Wolff (2012), *Language Resources and Evaluation* 46(4).
 
 | Clip | Severity | Sentence |
 |---|---|---|
@@ -138,7 +134,7 @@ firmware/       ESP32 band firmware (Arduino) and its flashing and wiring guide
 
 ## Voice
 
-Wren speaks with [Kokoro](https://huggingface.co/hexgrad/Kokoro-82M) v1.0, an open neural text-to-speech model, run on the iPhone by sherpa-onnx (`Speech/NeuralVoice.swift`). Six English voices are offered in Settings (Heart is the default). Sentences are spoken one at a time with short silences: about 250 ms between sentences and 150 ms after a semicolon, colon or dash; commas get Kokoro's own brief pause. The next sentence renders while the current one plays. The patient's Personal Voice takes priority when they allow it; Apple's voices are the fallback.
+Wren speaks with [Kokoro](https://huggingface.co/hexgrad/Kokoro-82M) v1.0, an open neural text-to-speech model, run on the iPhone by sherpa-onnx (`Speech/NeuralVoice.swift`). Six English voices are offered in Settings (Heart is the default). Sentences are spoken one at a time with short silences: about 250 ms between sentences and 150 ms after a semicolon, colon or dash; commas get Kokoro's own brief pause. The next sentence renders while the current one plays. Each sentence is cleaned for the phone speaker before it plays: a 70 Hz high-pass removes the model's DC offset and rumble (about a fifth of its raw energy, heard as a buzz), a gentle gate takes pauses to silence, and short fades stop clicks. `VoiceQualityTests` renders a sentence and checks all three. The patient's Personal Voice takes priority when they allow it; Apple's voices are the fallback.
 
 ## Known limitations
 

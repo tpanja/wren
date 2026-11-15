@@ -13,11 +13,11 @@ protocol FrameSource: AnyObject {
 }
 ```
 
-Two sources conform: `ToyBand` (simulated) and `BluetoothBand` (the real band). `FonosEngine` routes both into the same pipeline (`StreamStore`, `SpeechAnalyzer`, the translator), and `bandMode` picks which one feeds it. Nothing downstream knows which band it is. Sessions and checks recorded from the real band are not marked as sample data.
+Two sources conform: `ToyBand` (simulated) and `BluetoothBand` (the real band). `WrenEngine` routes both into the same pipeline (`StreamStore`, `SpeechAnalyzer`, the translator), and `bandMode` picks which one feeds it. Nothing downstream knows which band it is. Sessions and checks recorded from the real band are not marked as sample data.
 
 ## Protocol v1 (`BandProtocol`)
 
-- The band advertises as **Wren Band** (firmware before the rename: **Wren Band**) with service `079A0425-8A6E-4126-91C5-A5B5B2525F6B`.
+- The band advertises as **Wren Band** with service `079A0425-8A6E-4126-91C5-A5B5B2525F6B`.
 - One notify characteristic, `B5CFF4BC-810E-4AF7-8262-5F5F5D057AC5`, carries 126-byte frames, each 10 ms: a 6-byte header (version, flags, sequence, battery), 80 µ-law mic samples at 8 kHz, and 10 Int16 samples per piezo at 1 kHz. A notification may hold several frames.
 - `BandProtocol.decode` rejects partial frames and other versions. `BandProtocolTests` pins the layout, µ-law against G.711 reference codes, multi-frame notifications, and sequence wraparound. `BandProtocol.encode` mirrors the firmware's encoder.
 

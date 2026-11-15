@@ -33,22 +33,22 @@ The light palette is taken from a photo of the Wren Band (exposure-corrected aga
 
 The accents sit near 3:1 on white: fine for fills, rings, and traces, not for small text. Each has a deeper shade of the same hue for labels and links (`leftInk #006666`, `rightInk #336699`, `micInk #666633`, `steadinessInk #CC3333`, `pausesInk #666666`), and the app tint uses `#006666`.
 
-Light is the default. Settings offers Dark and Match iPhone. Dark draws from the same band: strap-black surfaces, shell-white text, and the wire and liner colors at the lighter values measured in the photo (`Fonos/Design/Theme.swift`).
+Light is the default. Settings offers Dark and Match iPhone. Dark draws from the same band: strap-black surfaces, shell-white text, and the wire and liner colors at the lighter values measured in the photo (`Wren/Design/Theme.swift`).
 
 **Surfaces.** Every card is a `Surface`: white, a 1 pt edge, a tight contact shadow, and a soft lift. In dark, surfaces separate by tone and cast no shadow. Corners follow one small scale by role, always continuous: 16 pt for cards, 12 pt for buttons, tiles, wells, and banners, and 6 pt for small labels. The status pill is the only pill shape. Spacing runs on a 4 pt scale (4, 8, 12, 16, 20, 24, 32).
 
-**Design review.** The [unslop-ui](../.claude/skills/unslop-ui/SKILL.md) skill's catalog of "AI-made" tells was applied to the app: no unprompted glow, decorative gradients, uniform large radii, or off-scale spacing; motion only where it reports state, with every press effect respecting Reduce Motion. Its scanner reads web files only, so review Swift changes by eye against [tells.md](../.claude/skills/unslop-ui/references/tells.md). The band-sampled grey-green is marked `unslop-ignore` in `Theme.swift` because it is a deliberate choice, not the catalog's default sage.
+**Design review.** The app avoids the common tells of "AI-made" interfaces: no unprompted glow, decorative gradients, uniform large radii, or off-scale spacing; motion only where it reports state, with every press effect respecting Reduce Motion. The band-sampled grey-green is marked `unslop-ignore` in `Theme.swift` because it is a deliberate choice, not a default sage.
 
 **Signature details.** The Speak button is a solid circle in the state color, with no sheen or glow; the only extra is the ripple while listening, because it reports state. The Fold view's fill is the app's one gradient; every other surface is a solid fill. Range pickers are Wren's own `SegmentedPicker`, a well with a white thumb that glides between options. Rings sit on a tinted track of their own color, and Apple Health–style mini bars show history in a 18% tint of the measure's color with the latest bar solid.
 
 ## Type
 
-Two bundled faces, both under the SIL Open Font License (`Fonos/Resources/Fonts`, licenses alongside):
+Two bundled faces, both under the SIL Open Font License (`Wren/Resources/Fonts`, licenses alongside):
 
 - **Atkinson Hyperlegible Next** for all reading and interface text. The Braille Institute designed it for low-vision readers, with letterforms that stay distinct (I, l, 1; O, 0). That matters when patients read back their own translated words, often at large sizes.
 - **Sora** for numerals, screen titles, and tracked uppercase card titles. Its wide geometric figures carry the rings and big values, as in the WHOOP references.
 
-Both are variable fonts registered at launch (`FonosType.register()`), so no Info.plist entries are needed. SwiftUI text uses `Font.ui(_:_:)` and `Font.metric(_:weight:)`, which scale with Dynamic Type through `relativeTo:`. Navigation titles, tab labels, and segmented controls get the same faces through UIKit appearance (`FonosType.applyAppearance()`).
+Both are variable fonts registered at launch (`WrenType.register()`), so no Info.plist entries are needed. SwiftUI text uses `Font.ui(_:_:)` and `Font.metric(_:weight:)`, which scale with Dynamic Type through `relativeTo:`. Navigation titles, tab labels, and segmented controls get the same faces through UIKit appearance (`WrenType.applyAppearance()`).
 
 ## Icons
 
@@ -64,7 +64,7 @@ Wren draws its own icon set rather than using SF Symbols: 22 SVG template images
 | Pace | A metronome |
 | Pitch variation | An irregular zigzag |
 
-`FonosIcon` scales each icon with Dynamic Type. The filled check (`CheckDisc`) and the battery (`BatteryGlyph`) are drawn in SwiftUI, because a template image can't hold a cut-out or a live fill level.
+`WrenIcon` scales each icon with Dynamic Type. The filled check (`CheckDisc`) and the battery (`BatteryGlyph`) are drawn in SwiftUI, because a template image can't hold a cut-out or a live fill level.
 
 ## Screens
 
@@ -118,7 +118,7 @@ Measured on a Release build in the iPhone 17 Pro simulator: Speak about 10% CPU,
 
 ## Clinic summary (PDF export)
 
-A two-page US Letter report for the care team, generated on the phone (`Fonos/Report`). It is written in a clinical result-sheet register, not the app's dark look: white page, near-black ink, hairline rules, tabular numerals, and one teal accent for trend lines. Status is stated in words ("Stable", "Favorable", "Unfavorable", "Too few data"), with unfavorable rows in bold brick red, so the page still reads in black-and-white print or fax.
+A two-page US Letter report for the care team, generated on the phone (`Wren/Report`). It is written in a clinical result-sheet register, not the app's dark look: white page, near-black ink, hairline rules, tabular numerals, and one teal accent for trend lines. Status is stated in words ("Stable", "Favorable", "Unfavorable", "Too few data"), with unfavorable rows in bold brick red, so the page still reads in black-and-white print or fax.
 
 **Page 1:** header (period, generated time, report ID) · patient, date of birth, baseline (sessions and checks), period · sample-data notice while data is synthetic · summary naming the affected speech systems · measures table grouped by speech system, with a note on what n and change mean · non-diagnostic statement.
 

@@ -1,6 +1,6 @@
 # Wren Band firmware
 
-`fonos_band/fonos_band.ino` runs the Wren Band (an ESP32-S3 with an I2S throat microphone and two piezos): it streams the mic at 8 kHz and both piezos at 1 kHz to the Wren app over Bluetooth Low Energy. The app side of the protocol is `Fonos/Signal/BandProtocol.swift`; change both together.
+`wren_band/wren_band.ino` runs the Wren Band (an ESP32-S3 with an I2S throat microphone and two piezos): it streams the mic at 8 kHz and both piezos at 1 kHz to the Wren app over Bluetooth Low Energy. The app side of the protocol is `Wren/Signal/BandProtocol.swift`; change both together.
 
 ## Flash it
 
@@ -8,8 +8,8 @@ From the repo root, with the board on USB (the port name may differ):
 
 ```bash
 arduino-cli core install esp32:esp32
-arduino-cli compile --fqbn "esp32:esp32:esp32s3:USBMode=hwcdc,CDCOnBoot=cdc,FlashSize=4M,PSRAM=enabled,PartitionScheme=huge_app" firmware/fonos_band
-arduino-cli upload -p /dev/cu.usbmodem1101 --fqbn "esp32:esp32:esp32s3:USBMode=hwcdc,CDCOnBoot=cdc,FlashSize=4M,PSRAM=enabled,PartitionScheme=huge_app" firmware/fonos_band
+arduino-cli compile --fqbn "esp32:esp32:esp32s3:USBMode=hwcdc,CDCOnBoot=cdc,FlashSize=4M,PSRAM=enabled,PartitionScheme=huge_app" firmware/wren_band
+arduino-cli upload -p /dev/cu.usbmodem1101 --fqbn "esp32:esp32:esp32s3:USBMode=hwcdc,CDCOnBoot=cdc,FlashSize=4M,PSRAM=enabled,PartitionScheme=huge_app" firmware/wren_band
 ```
 
 In the Arduino IDE the same settings are: board **ESP32S3 Dev Module**, USB Mode **Hardware CDC and JTAG**, USB CDC On Boot **Enabled**, Flash Size **4MB**, PSRAM **Enabled**, Partition Scheme **Huge APP**. The Bluetooth stack doesn't fit the default partition.
@@ -43,7 +43,7 @@ Piezos must use ADC1 pins (GPIO 1–10 on the S3); ADC2 can't be read while the 
 
 ## Protocol (version 1)
 
-- Advertised name **Wren Band** (**Wren Band** before the rename; the app shows either as Wren Band), with service `079A0425-8A6E-4126-91C5-A5B5B2525F6B` in the advertisement.
+- Advertised name **Wren Band**, with service `079A0425-8A6E-4126-91C5-A5B5B2525F6B` in the advertisement.
 - One characteristic, `B5CFF4BC-810E-4AF7-8262-5F5F5D057AC5`, notify only.
 - Each notification carries one or more 126-byte frames, each 10 ms of signal, little-endian:
 
