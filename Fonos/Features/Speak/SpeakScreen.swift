@@ -51,7 +51,10 @@ struct SpeakScreen: View {
         case .listening: "Listening"
         case .translating: "Translating"
         case .speaking: "Speaking"
-        case .idle: engine.isStreaming ? "Band ready" : "Band paused"
+        case .idle:
+            if !engine.bandConnected {
+                if case .waiting = engine.link.state { "Waiting for band" } else { "Band not connected" }
+            } else { engine.isStreaming ? "Band ready" : "Band paused" }
         }
     }
 
@@ -59,7 +62,7 @@ struct SpeakScreen: View {
         switch engine.speakState {
         case .listening: Theme.alert
         case .translating, .speaking: Theme.pace
-        case .idle: engine.isStreaming ? Theme.good : Theme.inkTertiary
+        case .idle: !engine.bandConnected ? Theme.caution : engine.isStreaming ? Theme.good : Theme.inkTertiary
         }
     }
 
@@ -80,7 +83,8 @@ struct SpeakScreen: View {
             }
             FoldView(streams: engine.streams)
                 .frame(height: 150)
-            Text("Sample signal from a simulated band")
+            Text(engine.bandMode == .simulated ? "Sample signal from a simulated band"
+                 : engine.bandConnected ? "Live signal from your band" : "Band not connected. Connect it on the Band tab.")
                 .font(.ui(.caption))
                 .foregroundStyle(Theme.inkTertiary)
         }

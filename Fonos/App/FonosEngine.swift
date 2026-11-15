@@ -3,11 +3,17 @@ import Observation
 import os
 import UIKit
 
-/// The app's coordinator. Streams toy band frames into the display buffers
-/// and the analyzer, and runs the Speak flow: listen → translate → speak.
+/// The app's coordinator. Streams band frames (from the simulated band or the
+/// real one over Bluetooth) into the display buffers and the analyzer, and
+/// runs the Speak flow: listen → translate → speak.
 @MainActor
 @Observable
 final class FonosEngine {
+
+    /// Which band feeds the app. Simulated until the user connects a real band.
+    enum BandMode: String {
+        case simulated, bluetooth
+    }
 
     enum SpeakState: Equatable {
         case idle
@@ -39,6 +45,11 @@ final class FonosEngine {
     private(set) var utterances: [Utterance] = []
     private(set) var live = SpeechAnalyzer.Live()
     private(set) var bandStatus = BandStatus()
+    /// The Bluetooth link: connection state, bands found, signal strength.
+    private(set) var link = BluetoothBand.Snapshot()
+    private(set) var bandMode: BandMode {
+        didSet { UserDefaults.standard.set(bandMode.rawValue, forKey: "fonos.band.mode") }
+    }
     private(set) var sessionStart: Date?
     private(set) var taskState: TaskState = .idle
     /// Seconds into the current task recording.
@@ -66,7 +77,12 @@ final class FonosEngine {
     let checks = CheckStore()
     let voice = VoiceOutput()
 
-    @ObservationIgnored private let band = ToyBand()
+    @ObservationIgnored private let toy = ToyBand()
+    @ObservationIgnored private let bluetooth = BluetoothBand()
+    private var band: FrameSource { bandMode == .simulated ? toy : bluetooth }
+    @ObservationIgnored private var scanStarted = Date.distantPast
+    @ObservationIgnored private var listenVoiceSeen = false
+    @ObservationIgnored private var listenLastVoice = Date.distantPast
     @ObservationIgnored private let translator: SpeechTranslator = ToyTranslator()
     @ObservationIgnored private let listening = OSAllocatedUnfairLock(initialState: false)
     @ObservationIgnored private var pollTimer: Timer?
@@ -77,6 +93,7 @@ final class FonosEngine {
     @ObservationIgnored private var taskStarted = Date.distantPast
     @ObservationIgnored private var taskVoiceSeen = false
     @ObservationIgnored private var taskLastVoice = Date.distantPast
+    @ObservationIgnored private var taskFloorDb: Float = 0
 
     static let defaultPhrases = [
         "Yes", "No", "Thank you", "Please wait, I'm still talking",
@@ -88,9 +105,10 @@ final class FonosEngine {
         quickPhrases = d.stringArray(forKey: "fonos.phrases") ?? Self.defaultPhrases
         autoStopSeconds = d.object(forKey: "fonos.autostop") as? Double ?? 3
         speakAutomatically = d.object(forKey: "fonos.autospeak") as? Bool ?? true
+        bandMode = d.string(forKey: "fonos.band.mode").flatMap(BandMode.init(rawValue:)) ?? .simulated
 
         let streams = streams, analyzer = analyzer, listening = listening, translator = translator, taskFrames = taskFrames
-        band.onFrame = { frame in
+        let route: @Sendable (SensorFrame) -> Void = { frame in
             streams.append(frame)
             // Task speech stays out of the conversation session measures.
             let inTask = taskFrames.withLock { buf -> Bool in
@@ -103,6 +121,58 @@ final class FonosEngine {
                 DispatchQueue.main.async { translator.append(mic: frame.mic) }
             }
         }
+        toy.onFrame = route
+        bluetooth.onFrame = route
+        // A band connected before reconnects on its own.
+        if bandMode == .bluetooth { bluetooth.activate() }
+    }
+
+    // MARK: Band
+
+    /// True when frames can flow: the simulated band, or a connected real band.
+    var bandConnected: Bool {
+        if bandMode == .simulated { return true }
+        if case .connected = link.state { return true }
+        return false
+    }
+
+    /// "Connect your band": switches to the real band, then reconnects the
+    /// remembered one or, the first time, looks for bands nearby.
+    func setUpBand() {
+        use(.bluetooth)
+        if BluetoothBand.remembered == nil { findBands() }
+    }
+
+    /// Looks for nearby Fonos bands (asks for Bluetooth permission the first time).
+    func findBands() {
+        scanStarted = .now
+        bluetooth.scan()
+    }
+
+    func stopFindingBands() { bluetooth.stopScan() }
+
+    /// Connects to a band and makes it the app's source from now on.
+    func connectBand(_ id: UUID) {
+        bluetooth.connect(id)
+        use(.bluetooth)
+    }
+
+    /// Disconnects the real band. `forget` stops automatic reconnection.
+    func disconnectBand(forget: Bool) {
+        bluetooth.disconnect(forget: forget)
+    }
+
+    /// Switches between the simulated and the real band.
+    func use(_ mode: BandMode) {
+        guard mode != bandMode else { return }
+        let wasStreaming = isStreaming
+        if wasStreaming { stopStreaming() }
+        bandMode = mode
+        // Old signal from the other band must not look live.
+        streams.reset()
+        analyzer.reset()
+        if mode == .simulated { bluetooth.disconnect(forget: false) } else { bluetooth.reconnect() }
+        if wasStreaming { startStreaming() }
     }
 
     // MARK: Streaming / sessions
@@ -127,7 +197,7 @@ final class FonosEngine {
         isStreaming = false
         pollTimer?.invalidate()
         if let start = sessionStart,
-           let record = analyzer.summary(started: start, isSample: true, phrases: phrasesThisSession) {
+           let record = analyzer.summary(started: start, isSample: bandMode == .simulated, phrases: phrasesThisSession) {
             store.add(record)
         }
         sessionStart = nil
@@ -138,12 +208,26 @@ final class FonosEngine {
         if l != live { live = l }
         let s = band.status
         if s != bandStatus { bandStatus = s }
-        // The toy wearer "speaks" for a few seconds, then listening ends on its own,
-        // the way silence would end it with a real band.
+        let snap = bluetooth.snapshot
+        if snap != link { link = snap }
+        // One band nearby after a short look: connect without asking.
+        if case .scanning = snap.state, snap.found.count == 1, Date.now.timeIntervalSince(scanStarted) > 2 {
+            scanStarted = .distantFuture
+            connectBand(snap.found[0].id)
+        }
         if case .recording(let task) = taskState { pollTask(task) }
-        if speakState == .listening, autoStopSeconds > 0,
-           Date.now.timeIntervalSince(listenStarted) > autoStopSeconds {
-            Task { await finishListening() }
+
+        guard speakState == .listening, autoStopSeconds > 0 else { return }
+        if bandMode == .simulated {
+            // The toy wearer "speaks" for a few seconds, then listening ends
+            // on its own, the way silence ends it with a real band.
+            if Date.now.timeIntervalSince(listenStarted) > autoStopSeconds { Task { await finishListening() } }
+        } else {
+            // Real band: stop after `autoStopSeconds` of quiet once speech has started.
+            if l.isVoicing { listenVoiceSeen = true; listenLastVoice = .now }
+            if listenVoiceSeen, Date.now.timeIntervalSince(listenLastVoice) > autoStopSeconds {
+                Task { await finishListening() }
+            }
         }
     }
 
@@ -171,7 +255,8 @@ final class FonosEngine {
         translator.onPartial = { [weak self] text in self?.partialText = text }
         partialText = ""
         listenStarted = .now
-        band.setTalking(true)
+        listenVoiceSeen = false
+        toy.setTalking(true)
         listening.withLock { $0 = true }
         speakState = .listening
         UIAccessibility.post(notification: .announcement, argument: "Listening")
@@ -180,7 +265,7 @@ final class FonosEngine {
     func finishListening() async {
         guard speakState == .listening else { return }
         listening.withLock { $0 = false }
-        band.setTalking(false)
+        toy.setTalking(false)
         speakState = .translating
         guard let result = await translator.finish() else {
             speakState = .idle
@@ -197,7 +282,7 @@ final class FonosEngine {
 
     func cancelListening() {
         listening.withLock { $0 = false }
-        band.setTalking(false)
+        toy.setTalking(false)
         translator.cancel()
         partialText = ""
         speakState = .idle
@@ -228,7 +313,8 @@ final class FonosEngine {
         taskLevel = 0
         taskVoiceSeen = false
         taskLastVoice = .now
-        band.setMode(task.toyMode)
+        taskFloorDb = 0
+        toy.setMode(task.toyMode)
         taskState = .recording(task)
         UIAccessibility.post(notification: .announcement, argument: "Recording")
     }
@@ -240,7 +326,7 @@ final class FonosEngine {
             defer { buf = nil }
             return buf ?? []
         }
-        band.setMode(.conversation)
+        toy.setMode(.conversation)
         taskLevel = 0
         let result = TaskResult.analyze(task, frames: frames)
         taskState = .done(result)
@@ -249,7 +335,7 @@ final class FonosEngine {
 
     func cancelTask() {
         taskFrames.withLock { $0 = nil }
-        band.setMode(.conversation)
+        toy.setMode(.conversation)
         taskLevel = 0
         taskState = .idle
     }
@@ -257,6 +343,8 @@ final class FonosEngine {
     func clearTask() { if case .done = taskState { taskState = .idle } }
 
     func saveCheck(_ record: SpeechCheckRecord) {
+        var record = record
+        record.isSample = bandMode == .simulated
         checks.add(record)
     }
 
@@ -269,7 +357,10 @@ final class FonosEngine {
         let db = recent.max() ?? -90
         // Map −50…−10 dBFS onto the meter.
         taskLevel = Double(min(max((db + 50) / 40, 0), 1))
-        if db > -38 { taskVoiceSeen = true; taskLastVoice = .now }
+        // Voice is 15 dB above the quietest moment of this task, so it works
+        // for any band gain (the simulated band's floor is about −50 dBFS).
+        taskFloorDb = min(taskFloorDb, db)
+        if db > max(taskFloorDb + 15, -60) { taskVoiceSeen = true; taskLastVoice = .now }
 
         let silence = Date.now.timeIntervalSince(taskLastVoice)
         let silenceLimit: Double = task == .passage ? 3 : 1.5

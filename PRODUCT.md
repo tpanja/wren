@@ -26,19 +26,19 @@ Speech is captured at the throat, not through the air, so it works in noise and 
 
 ## Operating Context
 
-- Current phase: the app runs entirely on toy data (a simulated band and scripted translations). The Bluetooth link to the ESP32 is deliberately not built yet; `FrameSource` is the seam it will plug into.
+- Current phase: the app connects to the ESP32 band over Bluetooth LE (protocol v1, `BandProtocol`; firmware in `firmware/`) and falls back to a simulated band until one is connected. Translation is still scripted, and histories are synthetic.
 - Sessions happen in conversation: the patient starts listening, speaks, and the phone voices the translation.
 - Progression review happens later, calmly, at home.
 - Many patients have recorded or will record an iOS Personal Voice; the app should use it when authorized.
 
 ## Capabilities and Constraints
 
-- Show band status (battery, sensor contact) from the simulated band.
+- Connect the band with minimal effort: one action, automatic reconnection, plain-language setup and troubleshooting. Show band status (battery and sensor contact when the band reports them).
 - Visualize three live data streams: microphone, left piezo, right piezo.
 - Compute per-session speech metrics and show their trend over time.
 - Translate on-phone: `SpeechTranslator` protocol. Today only `ToyTranslator` (scripted phrases) conforms; the result is spoken aloud with AVSpeechSynthesizer (Personal Voice when authorized).
 - Toy data drives every screen and is labeled as sample data.
-- Undecided: the BLE protocol and ESP32 firmware, the clinical translation model, clinical metric validation, any data sharing with clinicians.
+- Undecided: skin-contact sensing and battery measurement on the band, the clinical translation model, clinical metric validation, any data sharing with clinicians.
 - This is not a diagnostic device. Metrics are descriptive trends, never diagnoses.
 
 ## Brand Commitments

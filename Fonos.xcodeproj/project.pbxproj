@@ -18,12 +18,14 @@
 		2FCDCE622209A4653EEBF6F8 /* AtkinsonHyperlegibleNext.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 61B909266F290F7B609DA2BF /* AtkinsonHyperlegibleNext.ttf */; };
 		39E0BE5FCF29B577B8B320E5 /* TaskAnalysis.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E826D86EBA7C8D719ADD091 /* TaskAnalysis.swift */; };
 		3C8F0D905BC51D2B836D6E22 /* Insights.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEC4661DB8D99CD5B2187471 /* Insights.swift */; };
+		3FD92F6D30C0368F83651848 /* BandProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2DB54B8BFF6D4029EF3F66FD /* BandProtocol.swift */; };
 		44799414A0FB8677F67DC64E /* Components.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4DCC807936E73BD4A804C417 /* Components.swift */; };
 		55596C7A08E562F156A424CF /* SpeechTranslator.swift in Sources */ = {isa = PBXBuildFile; fileRef = B55BF68F9C64E2D5F0417BC5 /* SpeechTranslator.swift */; };
 		643BA1EDFAC1C9AB194B2F4C /* TaskAnalysisTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BD5DAC9D4730FC1EB6C9483C /* TaskAnalysisTests.swift */; };
 		64D78ECDCB6A2A58F3E0377B /* DSP.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1D6D1FD6BF074844BD122EE /* DSP.swift */; };
 		66CF77B83B0D7CE5A4FAE421 /* ReportRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 70F8E6AE775F36586A3228D6 /* ReportRenderer.swift */; };
 		68132C9798E1B0A0728469B8 /* Sora.ttf in Resources */ = {isa = PBXBuildFile; fileRef = F778175CE4EF855E3B7A0CB0 /* Sora.ttf */; };
+		6AD1814950B551C62D11560E /* BluetoothBand.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A6894FEAA2BD9839F22DB5D /* BluetoothBand.swift */; };
 		6BA3C3CAFFC5B5C7532386A5 /* SpeechAnalyzer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 298B4B410C1CF14DB484222B /* SpeechAnalyzer.swift */; };
 		80048D170FCA5B51F9A33972 /* StreamStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 10F02CD72E2845C38C191B7F /* StreamStore.swift */; };
 		843157ED8738226EF9B10E1B /* SpeechCheckFlow.swift in Sources */ = {isa = PBXBuildFile; fileRef = D40A297A2E26690F85095286 /* SpeechCheckFlow.swift */; };
@@ -33,6 +35,7 @@
 		9F32E8809597C3F7323458F7 /* CheckStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7F780EC82CF37326734F1366 /* CheckStore.swift */; };
 		A1150F614DD2964CA71E32A3 /* TrendsScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 73CE3687206CA8D70E4A38AB /* TrendsScreen.swift */; };
 		AADDCE9C6E5190896BA5AA75 /* BandScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8825132E7B75E8F4C1961E7 /* BandScreen.swift */; };
+		AB3154CB38F7A38C0FEF37F1 /* BandProtocolTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 37F0155DD61918CCB3B6D565 /* BandProtocolTests.swift */; };
 		B3A3C37E8F01D1E723E6A26C /* Measure.swift in Sources */ = {isa = PBXBuildFile; fileRef = 574F1BA9694980A89B279779 /* Measure.swift */; };
 		B3D6579BD4B1A84B450DA90B /* SpeechCheckRecord.swift in Sources */ = {isa = PBXBuildFile; fileRef = 70E07860760A477894DE6F1C /* SpeechCheckRecord.swift */; };
 		B6A850A906E845FE234D2B3E /* ClinicReport.swift in Sources */ = {isa = PBXBuildFile; fileRef = 32E129B754930063AB9DC1D7 /* ClinicReport.swift */; };
@@ -68,10 +71,12 @@
 		14E111881ABC22E2F67EA7B0 /* OFL-Sora.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = "OFL-Sora.txt"; sourceTree = "<group>"; };
 		291B88813B0687E06977D3E4 /* VoiceOutput.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoiceOutput.swift; sourceTree = "<group>"; };
 		298B4B410C1CF14DB484222B /* SpeechAnalyzer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpeechAnalyzer.swift; sourceTree = "<group>"; };
+		2DB54B8BFF6D4029EF3F66FD /* BandProtocol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BandProtocol.swift; sourceTree = "<group>"; };
 		2E826D86EBA7C8D719ADD091 /* TaskAnalysis.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TaskAnalysis.swift; sourceTree = "<group>"; };
 		32E129B754930063AB9DC1D7 /* ClinicReport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClinicReport.swift; sourceTree = "<group>"; };
 		3724F01C67526982452D57F7 /* Metric.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Metric.swift; sourceTree = "<group>"; };
 		37C824A983294C65CD9614B6 /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
+		37F0155DD61918CCB3B6D565 /* BandProtocolTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BandProtocolTests.swift; sourceTree = "<group>"; };
 		4116A13C0B88145790FF74ED /* ReportTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReportTests.swift; sourceTree = "<group>"; };
 		4268930F1EDCE9E41DBE5EC3 /* MeasureDetailScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeasureDetailScreen.swift; sourceTree = "<group>"; };
 		4DCC807936E73BD4A804C417 /* Components.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Components.swift; sourceTree = "<group>"; };
@@ -90,6 +95,7 @@
 		7F780EC82CF37326734F1366 /* CheckStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CheckStore.swift; sourceTree = "<group>"; };
 		7F8240AF6F1EC200135754F3 /* FonosTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = FonosTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		826C1D330089D7AB1C5756F3 /* FonosApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FonosApp.swift; sourceTree = "<group>"; };
+		8A6894FEAA2BD9839F22DB5D /* BluetoothBand.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BluetoothBand.swift; sourceTree = "<group>"; };
 		9749DA63BE923E8691B87AC0 /* Typography.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Typography.swift; sourceTree = "<group>"; };
 		A62647ED14584CA33309DB43 /* Icons.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Icons.swift; sourceTree = "<group>"; };
 		AF728C063136E70A1965E051 /* CheckTask.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CheckTask.swift; sourceTree = "<group>"; };
@@ -186,6 +192,8 @@
 		7B1D1AB4CBC2E4072AF9688A /* Signal */ = {
 			isa = PBXGroup;
 			children = (
+				2DB54B8BFF6D4029EF3F66FD /* BandProtocol.swift */,
+				8A6894FEAA2BD9839F22DB5D /* BluetoothBand.swift */,
 				D1D6D1FD6BF074844BD122EE /* DSP.swift */,
 				298B4B410C1CF14DB484222B /* SpeechAnalyzer.swift */,
 				10F02CD72E2845C38C191B7F /* StreamStore.swift */,
@@ -247,6 +255,7 @@
 		A42D0F3919C28FF874D2D88C /* FonosTests */ = {
 			isa = PBXGroup;
 			children = (
+				37F0155DD61918CCB3B6D565 /* BandProtocolTests.swift */,
 				4116A13C0B88145790FF74ED /* ReportTests.swift */,
 				EDFBDAFDD82A726815A6CB00 /* SignalTests.swift */,
 				BD5DAC9D4730FC1EB6C9483C /* TaskAnalysisTests.swift */,
@@ -407,6 +416,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				AB3154CB38F7A38C0FEF37F1 /* BandProtocolTests.swift in Sources */,
 				D4DD48AE294E7AC146664826 /* ReportTests.swift in Sources */,
 				CD14665E92C0012B56FB509A /* SignalTests.swift in Sources */,
 				643BA1EDFAC1C9AB194B2F4C /* TaskAnalysisTests.swift in Sources */,
@@ -417,7 +427,9 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				3FD92F6D30C0368F83651848 /* BandProtocol.swift in Sources */,
 				AADDCE9C6E5190896BA5AA75 /* BandScreen.swift in Sources */,
+				6AD1814950B551C62D11560E /* BluetoothBand.swift in Sources */,
 				B8E22A264BE0C81BA2DB5094 /* CheckCards.swift in Sources */,
 				9F32E8809597C3F7323458F7 /* CheckStore.swift in Sources */,
 				14EE73D1E5B94A8B4F885AA0 /* CheckTask.swift in Sources */,
@@ -473,6 +485,7 @@
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = Fonos;
+				INFOPLIST_KEY_NSBluetoothAlwaysUsageDescription = "Fonos connects to your throat band over Bluetooth to receive the microphone and vibration signals it uses to speak for you.";
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -559,6 +572,7 @@
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = Fonos;
+				INFOPLIST_KEY_NSBluetoothAlwaysUsageDescription = "Fonos connects to your throat band over Bluetooth to receive the microphone and vibration signals it uses to speak for you.";
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
 				LD_RUNPATH_SEARCH_PATHS = (

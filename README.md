@@ -4,7 +4,7 @@ iOS companion app for the Fonos throat band. The band measures throat vibration 
 
 The person with ALS operates the app themselves, often with declining hand control. Every action is a single large tap, and the Speak button is never more than one tap away.
 
-> **Current phase: toy data only.** There is no Bluetooth connection to the band yet. A simulated band (`ToyBand`) generates speech-shaped signals at the real band's sample rates, and a toy translator returns scripted phrases that are spoken aloud. Every screen that shows numbers labels them as sample data. Fonos is not a medical device and does not diagnose.
+> **Current phase: real band link, toy translation.** Fonos connects to the ESP32 throat band over Bluetooth LE (firmware in [`firmware/`](firmware/README.md)) and streams its microphone and piezo signals live. Until a band is connected, a simulated band (`ToyBand`) generates speech-shaped signals at the same rates. The translator is still a toy that returns scripted phrases, which are spoken aloud. The session and check histories are synthetic. Every screen that shows numbers labels them as sample data. Fonos is not a medical device and does not diagnose.
 
 ## Run it
 
@@ -33,7 +33,7 @@ xcodebuild -project Fonos.xcodeproj -scheme Fonos -destination 'platform=iOS Sim
 | **Speak** | The live throat signal (the Fold view), a 132 pt Speak button, the translated phrase with a replay button and its clarity score, quick-phrase buttons, and phrases said today. |
 | **Progress** | Clarity, Strength, and Pace rings for the selected range (week, month, or 3 months), a plain-language insight against the user's own baseline, the weekly Speech check card, a voice-banking prompt once speech starts to change, and all 14 measures grouped by speech system (breathing, voice, articulation, rhythm and intelligibility). Each card opens a detail chart. |
 | **Speech check** (Progress → Start check) | A guided weekly check of about 3 minutes: a long “ahh”, “pa-pa-pa”, “pa-ta-ka”, and a read passage. Large Start and Skip buttons, instructions that can be read aloud, auto-stop on silence or time, and a results screen that compares with last week. |
-| **Band** | Band status and battery, a live trace and skin-contact state for each sensor, and the live left/right balance. |
+| **Band** | Connecting the band: one Connect action, a four-step setup guide, troubleshooting, and the bands found nearby (Fonos connects on its own when there's only one). Once connected: battery, signal strength, a live trace for each sensor, and the left/right balance. Fonos remembers the band and reconnects whenever it's in range. The simulated band stays available for trying Fonos without hardware. |
 | **Clinic summary** (report icon on Progress, or Settings → Care team) | A two-page PDF for the neurologist or speech therapist. Page 1: a summary and every measure grouped by speech system, with baseline, period mean, change, slope per 30 days with a 95% confidence interval, and status. Page 2: a trend chart per measure, data quality (sessions and weekly checks), and methods. Covers everything since the last summary was shared. Optional name and date of birth stay on the phone. Shared through the system share sheet (Mail, Messages, Files, Print). |
 | **Settings** (sliders icon) | Voice and Personal Voice, speaking speed, when listening stops, whether to speak automatically, quick phrases, the clinic summary, and appearance (Light by default, Dark, or match iPhone). |
 
@@ -82,7 +82,7 @@ A change under 5% from baseline is reported as steady. Reading stamina sits near
 Fonos/
   App/          FonosApp, RootView, FonosEngine (coordinator: streaming, sessions, Speak flow)
   Design/       Theme tokens, Typography, Icons, shared components, FoldView
-  Signal/       ToyBand (simulated sensors), StreamStore (display buffers), DSP, SpeechAnalyzer
+  Signal/       BandProtocol (BLE wire format), BluetoothBand (real band), ToyBand (simulated), StreamStore, DSP, SpeechAnalyzer
   Speech/       SpeechTranslator protocol + ToyTranslator, VoiceOutput (Personal Voice aware)
   Check/        Speech check tasks, TaskAnalysis (MPT, HNR, DDK, reading), check records + ToyCheckHistory, CheckStore
   Data/         SessionRecord, Metric, Measure (all measures, grouped by SpeechSystem), SessionStore + ToyHistory, Insights
@@ -92,6 +92,7 @@ Fonos/
 .claude/skills/ unslop-ui design-review skill for Claude Code (not part of the app build)
 FonosTests/     Unit tests: DSP, pitch tracking, syllable detection, analyzer, baseline, trends, task analysis, report statistics and PDF
 Docs/           Data handling, UI design, hardware integration notes
+firmware/       ESP32 band firmware (Arduino) and its flashing and wiring guide
 ```
 
 ## Documentation
@@ -99,12 +100,15 @@ Docs/           Data handling, UI design, hardware integration notes
 - [Methods paper](https://claude.ai/artifact/PhYCk7ncK86W6gCAn5yFjg): how each measure is derived, the synthetic signal model, verification, limitations, and a validation plan.
 - [Docs/DATA.md](Docs/DATA.md): the three streams, how toy data is generated, and the data pipeline.
 - [Docs/UI-DESIGN.md](Docs/UI-DESIGN.md): design direction, typography, icons, accessibility, and performance.
-- [Docs/HARDWARE-INTEGRATION.md](Docs/HARDWARE-INTEGRATION.md): where the real band will plug in (`FrameSource`). The Bluetooth layer is intentionally not built yet.
+- [Docs/HARDWARE-INTEGRATION.md](Docs/HARDWARE-INTEGRATION.md): how the band connects (`BluetoothBand` behind `FrameSource`), reconnection, lost frames, and what's left.
+- [firmware/README.md](firmware/README.md): flashing the ESP32, wiring, gains, and the Bluetooth protocol.
 - [PRODUCT.md](PRODUCT.md): users, purpose, principles, and constraints.
 
 ## Known limitations
 
-- No hardware link yet. All signals and history are synthetic.
+- The Bluetooth link and firmware are untested on hardware so far: the protocol is covered by unit tests, but nothing has been run against a real board (the iOS Simulator has no Bluetooth).
+- The band doesn't sense skin contact or measure its battery unless wired for it, so the app shows those as not reported.
+- The translator is still the toy: with the real band, Fonos speaks scripted phrases, not your words. Session and check histories are synthetic.
 - Clarity reflects the toy translator, not the user's speech.
 - Pace and Pauses count the quiet gaps inside syllables, so their absolute values run higher than published articulation-rate and pause measures. They are meant for tracking change within one person. See the methods paper, Section 14. The check's reading rate removes only pauses of 250 ms or more, which avoids this for the passage.
 - Check results come from the simulated band performing each task, tuned to land near the end of the sample history. Real task recordings and their analysis on dysarthric speech are untested.
