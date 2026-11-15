@@ -2,7 +2,7 @@ import Foundation
 import os
 
 /// 10 ms of synchronized signal from the three throat-band sensors.
-struct SensorFrame: Sendable {
+struct SensorFrame: Sendable, Equatable {
     /// Contact microphone, 8 kHz, -1...1 (80 samples per frame).
     var mic: [Float]
     /// Left piezo, 1 kHz, -1...1 (10 samples per frame).
@@ -11,16 +11,17 @@ struct SensorFrame: Sendable {
     var right: [Float]
 }
 
-/// What the band reports about itself.
+/// What the band reports about itself. Nil means the band doesn't report it.
 struct BandStatus: Equatable, Sendable {
-    var battery = 82
-    var leftContact = true
-    var rightContact = true
+    var battery: Int? = 82
+    var leftContact: Bool? = true
+    var rightContact: Bool? = true
     var isCharging = false
 }
 
-/// The seam for the real hardware. Today only `ToyBand` conforms; a future
-/// Bluetooth source plugs in here without touching the analyzer or the UI.
+/// The seam between the band and the app: `ToyBand` (simulated) and
+/// `BluetoothBand` (the real band) both conform, and nothing downstream
+/// knows which one is.
 /// Frames are delivered on a background queue, about 100 per second.
 protocol FrameSource: AnyObject {
     var onFrame: (@Sendable (SensorFrame) -> Void)? { get set }
@@ -223,7 +224,7 @@ final class ToyBand: FrameSource, @unchecked Sendable {
         // Battery drains one point every ~3 minutes of streaming.
         ticks += 1
         if ticks % 18_000 == 0 {
-            statusLock.withLock { $0.battery = max(5, $0.battery - 1) }
+            statusLock.withLock { $0.battery = max(5, ($0.battery ?? 82) - 1) }
         }
 
         onFrame?(SensorFrame(mic: mic, left: left, right: right))
