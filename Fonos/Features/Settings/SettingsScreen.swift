@@ -81,6 +81,20 @@ struct SettingsScreen: View {
                 .listRowBackground(Theme.card)
 
                 Section {
+                    NavigationLink {
+                        ClinicSummaryView()
+                    } label: {
+                        Label { Text("Clinic summary") } icon: { FonosIcon(.report, size: 22) }
+                            .frame(minHeight: 44)
+                    }
+                } header: {
+                    Text("Care team").cardTitle()
+                } footer: {
+                    Text("A two-page PDF of your speech trends and weekly checks for your neurologist or speech therapist.")
+                }
+                .listRowBackground(Theme.card)
+
+                Section {
                     Picker("Appearance", selection: $appearance) {
                         ForEach(Appearance.allCases) { Text($0.title).tag($0) }
                     }

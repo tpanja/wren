@@ -8,7 +8,8 @@ enum Icon: String {
     case speak, progress, band, settings
     case clarity, strength, pace, symmetry, variation, pauses
     case replay, stop, chevron, info, check, warning, plus
-    case mic, piezoLeft, piezoRight, slow, fast
+    case mic, piezoLeft, piezoRight, slow, fast, report
+    case breath, ddk, checklist
 
     var image: Image { Image("Icons/\(rawValue)") }
 }

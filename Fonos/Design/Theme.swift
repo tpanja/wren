@@ -75,6 +75,8 @@ enum Theme {
     static let cautionInk = Color(light: 0x666633, dark: 0xF5A524)
     /// Listening: the red wire.
     static let alert = Color(light: 0xFF6666, dark: 0xFF6B5E)
+    /// The red at a shade that carries white text.
+    static let alertInk = Color(light: 0xCC3333, dark: 0xFF6B5E)
 
     /// Primary action (the Speak button): the green wire.
     static let action = left

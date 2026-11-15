@@ -16,6 +16,13 @@ final class FonosEngine {
         case speaking
     }
 
+    /// A Speech check task in progress, or its result.
+    enum TaskState: Equatable {
+        case idle
+        case recording(CheckTask)
+        case done(TaskResult)
+    }
+
     struct Utterance: Identifiable, Equatable {
         let id = UUID()
         let date: Date
@@ -33,6 +40,11 @@ final class FonosEngine {
     private(set) var live = SpeechAnalyzer.Live()
     private(set) var bandStatus = BandStatus()
     private(set) var sessionStart: Date?
+    private(set) var taskState: TaskState = .idle
+    /// Seconds into the current task recording.
+    private(set) var taskElapsed: Double = 0
+    /// 0...1 live voice level during a task, for the meter.
+    private(set) var taskLevel: Double = 0
     var message: String?
 
     var quickPhrases: [String] {
@@ -51,6 +63,7 @@ final class FonosEngine {
     let streams = StreamStore()
     let analyzer = SpeechAnalyzer()
     let store = SessionStore()
+    let checks = CheckStore()
     let voice = VoiceOutput()
 
     @ObservationIgnored private let band = ToyBand()
@@ -59,6 +72,11 @@ final class FonosEngine {
     @ObservationIgnored private var pollTimer: Timer?
     @ObservationIgnored private var listenStarted = Date.distantPast
     @ObservationIgnored private var phrasesThisSession = 0
+    /// Frames of the task being recorded (nil when no task is recording).
+    @ObservationIgnored private let taskFrames = OSAllocatedUnfairLock<[SensorFrame]?>(initialState: nil)
+    @ObservationIgnored private var taskStarted = Date.distantPast
+    @ObservationIgnored private var taskVoiceSeen = false
+    @ObservationIgnored private var taskLastVoice = Date.distantPast
 
     static let defaultPhrases = [
         "Yes", "No", "Thank you", "Please wait, I'm still talking",
@@ -71,10 +89,16 @@ final class FonosEngine {
         autoStopSeconds = d.object(forKey: "fonos.autostop") as? Double ?? 3
         speakAutomatically = d.object(forKey: "fonos.autospeak") as? Bool ?? true
 
-        let streams = streams, analyzer = analyzer, listening = listening, translator = translator
+        let streams = streams, analyzer = analyzer, listening = listening, translator = translator, taskFrames = taskFrames
         band.onFrame = { frame in
             streams.append(frame)
-            analyzer.ingest(frame)
+            // Task speech stays out of the conversation session measures.
+            let inTask = taskFrames.withLock { buf -> Bool in
+                guard buf != nil else { return false }
+                buf!.append(frame)
+                return true
+            }
+            if !inTask { analyzer.ingest(frame) }
             if listening.withLock({ $0 }) {
                 DispatchQueue.main.async { translator.append(mic: frame.mic) }
             }
@@ -98,6 +122,7 @@ final class FonosEngine {
 
     func stopStreaming() {
         if speakState == .listening { cancelListening() }
+        if case .recording = taskState { cancelTask() }
         band.stopStreaming()
         isStreaming = false
         pollTimer?.invalidate()
@@ -115,6 +140,7 @@ final class FonosEngine {
         if s != bandStatus { bandStatus = s }
         // The toy wearer "speaks" for a few seconds, then listening ends on its own,
         // the way silence would end it with a real band.
+        if case .recording(let task) = taskState { pollTask(task) }
         if speakState == .listening, autoStopSeconds > 0,
            Date.now.timeIntervalSince(listenStarted) > autoStopSeconds {
             Task { await finishListening() }
@@ -187,6 +213,70 @@ final class FonosEngine {
             try? await Task.sleep(for: .milliseconds(300))
             while voice.isSpeaking { try? await Task.sleep(for: .milliseconds(150)) }
             if speakState == .speaking { speakState = .idle }
+        }
+    }
+
+    // MARK: Speech check
+
+    /// Starts recording one task. The toy band performs it.
+    func startTask(_ task: CheckTask) {
+        if speakState == .listening { cancelListening() }
+        if !isStreaming { startStreaming() }
+        taskFrames.withLock { $0 = [] }
+        taskStarted = .now
+        taskElapsed = 0
+        taskLevel = 0
+        taskVoiceSeen = false
+        taskLastVoice = .now
+        band.setMode(task.toyMode)
+        taskState = .recording(task)
+        UIAccessibility.post(notification: .announcement, argument: "Recording")
+    }
+
+    /// Ends the recording and measures it.
+    func stopTask() {
+        guard case .recording(let task) = taskState else { return }
+        let frames = taskFrames.withLock { buf -> [SensorFrame] in
+            defer { buf = nil }
+            return buf ?? []
+        }
+        band.setMode(.conversation)
+        taskLevel = 0
+        let result = TaskResult.analyze(task, frames: frames)
+        taskState = .done(result)
+        UIAccessibility.post(notification: .announcement, argument: result.measured ? "Done" : "Fonos couldn't measure that one")
+    }
+
+    func cancelTask() {
+        taskFrames.withLock { $0 = nil }
+        band.setMode(.conversation)
+        taskLevel = 0
+        taskState = .idle
+    }
+
+    func clearTask() { if case .done = taskState { taskState = .idle } }
+
+    func saveCheck(_ record: SpeechCheckRecord) {
+        checks.add(record)
+    }
+
+    /// Live level and the automatic stop: at the task's time limit, or for
+    /// tasks that end with the voice, after a stretch of silence once the
+    /// voice has started.
+    private func pollTask(_ task: CheckTask) {
+        taskElapsed = Date.now.timeIntervalSince(taskStarted)
+        let recent = taskFrames.withLock { buf in (buf ?? []).suffix(10).map { DSP.dbfs(DSP.rms($0.mic)) } }
+        let db = recent.max() ?? -90
+        // Map −50…−10 dBFS onto the meter.
+        taskLevel = Double(min(max((db + 50) / 40, 0), 1))
+        if db > -38 { taskVoiceSeen = true; taskLastVoice = .now }
+
+        let silence = Date.now.timeIntervalSince(taskLastVoice)
+        let silenceLimit: Double = task == .passage ? 3 : 1.5
+        if taskElapsed >= task.maxSeconds
+            || (task.stopsOnSilence && taskVoiceSeen && silence >= silenceLimit)
+            || (!taskVoiceSeen && taskElapsed >= 12) {
+            stopTask()
         }
     }
 

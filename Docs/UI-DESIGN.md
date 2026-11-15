@@ -77,12 +77,16 @@ Fonos draws its own icon set rather than using SF Symbols: 22 SVG template image
 **Progress**
 1. Week / Month / 3 Months segmented control.
 2. Clarity, Strength, and Pace rings; each opens its detail.
-3. Insight card: the most notable change since baseline, explained gently, with the baseline date.
-4. Sample-data notice.
-5. "All measures": six Apple Health–style cards.
-6. Days with sessions in the last week.
+3. Insight card: the most notable change since baseline across all measures, explained gently, with the baseline date.
+4. Weekly speech check card: "Your check is due" with a 54 pt Start check button, or when the next check is due with a secondary "Do a check now".
+5. Voice-banking card, shown once an articulation or rhythm measure trends lower, and hidden once dismissed or once a Personal Voice exists. "How to do it" expands three plain steps for iPhone's Personal Voice.
+6. Sample-data notice.
+7. Four sections, one per speech system (Breathing, Voice, Articulation, Rhythm and intelligibility), each with Apple Health–style cards that say whether the values come from conversation or the weekly check.
+8. Days with sessions in the last week.
 
-**Metric detail**: the average (or the tapped day's value), the trend against baseline, a line chart with a dashed baseline rule and drag-to-inspect, then what the measure means and how it's measured, plus a reminder that Fonos does not diagnose.
+**Measure detail** (one screen for every measure): the average (or the tapped day's value), the trend against baseline, a line chart with a dashed baseline rule and drag-to-inspect (check measures show a point per check and default to 3 months), then what the measure means, how it's measured, and its speech system, plus a reminder that Fonos does not diagnose.
+
+**Speech check** (full-screen cover): intro listing the four tasks and tips for comparable results, then one screen per task with the instruction in Title 3, a "Read instructions aloud" button, a 60 pt Start button, and "Skip this task". While recording, a live level bar, a timer (or countdown for the 6 s tasks), and a Done button for tasks that end with the voice. After each task, the headline number or a plain "couldn't measure that one" with Try again. Then a results screen grouped by speech system that compares with last week in neutral words. Taps in the first 0.8 s after a step changes are ignored, so a double tap or tremor can't skip a task with the button that took the previous one's place. Quitting asks for confirmation.
 
 **Band**: device card with battery and a pause/resume control, a notice that the band is simulated, one card per sensor with a live trace and contact state, and a live left/right balance bar.
 
@@ -109,3 +113,20 @@ Live charts are the only continuous work, so they are built to cost nothing when
 - Paths are decimated to about one point per screen point, and the pitch tracker stops at the first strong peak without allocating.
 
 Measured on a Release build in the iPhone 17 Pro simulator: Speak about 10% CPU, Band about 16%, Progress about 2%. With the Debug baseline before these changes, Progress was at 19% because hidden charts kept drawing.
+
+## Clinic summary (PDF export)
+
+A two-page US Letter report for the care team, generated on the phone (`Fonos/Report`). It is written in a clinical result-sheet register, not the app's dark look: white page, near-black ink, hairline rules, tabular numerals, and one teal accent for trend lines. Status is stated in words ("Stable", "Favorable", "Unfavorable", "Too few data"), with unfavorable rows in bold brick red, so the page still reads in black-and-white print or fax.
+
+**Page 1:** header (period, generated time, report ID) · patient, date of birth, baseline (sessions and checks), period · sample-data notice while data is synthetic · summary naming the affected speech systems · measures table grouped by speech system, with a note on what n and change mean · non-diagnostic statement.
+
+**Page 2:** running header (patient, period, report ID) · a small trend chart for each of the 14 measures, four across (sessions or checks, fitted slope, baseline) · data quality (sessions, coverage, weekly checks, tasks recorded) · methods for every measure and the check tasks · non-diagnostic statement.
+
+**Statistics** (`ClinicReport.swift`):
+
+- **Period** runs from the last time a summary was shared to now. The first summary covers all sessions. The export is only recorded when the share sheet reports success.
+- **Change** compares the period mean with the baseline (mean of the first 5 sessions, or of the first 3 weekly checks). Within ±5% is "Stable"; reading fatigue uses an absolute difference with a 1 dB band.
+- **Slope** is an ordinary least-squares fit of values on time, scaled to 30 days, with a 95% confidence interval from Student's t. It needs 3 values spanning at least 7 days.
+- **Status** needs at least 3 values in the period.
+
+**Export screen:** a live preview of the exact page, what the period covers, optional name and date of birth (blank fields print as lines the clinic can fill in), and one 60 pt Share button. Patient details are stored on the phone only.
