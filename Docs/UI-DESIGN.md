@@ -21,23 +21,25 @@ The light palette is taken from a photo of the Fonos band (exposure-corrected ag
 
 | Role | Light | From the band | Dark |
 |---|---|---|---|
-| Card | `#FFFFFF` | White shell | `#1A2025` |
-| Ground | `#F2F2F2` (wells `#EBEBEB`, rules `#D6D6D6`) | Grey backdrop `#CCCCCC`, tinted | `#0F1316` |
-| Text | `#000000`, `#4D4D4D`, `#666666` | Black strap | `#F1EFEA` |
-| Left piezo / Clarity / Speak | `#339999` | Green wire | `#3CC8B4` |
-| Right piezo / Symmetry | `#6699CC` | Blue wire | `#8E7CF0` |
-| Mic / Strength | `#999966` | Grey-green liner | `#F2B33D` |
-| Pace | `#333333` | Black strap, softened | `#5AA9E6` |
-| Steadiness, Listening | `#FF6666` | Red wire | `#E77FA3`, `#FF6B5E` |
-| Pauses | `#999999` | Grey-green clip | `#A6CE5C` |
+| Card | `#FFFFFF` | White shell | `#18181B` |
+| Ground | `#F2F2F2` (wells `#EBEBEB`, rules `#D6D6D6`) | Grey backdrop `#CCCCCC`, tinted | `#0A0A0C` (strap black) |
+| Text | `#000000`, `#4D4D4D`, `#666666` | Black strap (dark: white shell) | `#F4F4F4`, `#A6A6A6`, `#8C8C8C` |
+| Left piezo / Clarity / Speak | `#339999` | Green wire | `#25BBB5` |
+| Right piezo / Symmetry | `#6699CC` | Blue wire | `#78A7E1` |
+| Mic / Strength | `#999966` | Grey-green liner | `#949F89` |
+| Pace | `#333333` | Black strap, softened (dark: backdrop grey) | `#CCCCCC` |
+| Steadiness, Listening | `#FF6666` | Red wire | `#FF686A` |
+| Pauses | `#999999` | Grey-green clip | `#999999` |
 
 The accents sit near 3:1 on white: fine for fills, rings, and traces, not for small text. Each has a deeper shade of the same hue for labels and links (`leftInk #006666`, `rightInk #336699`, `micInk #666633`, `steadinessInk #CC3333`, `pausesInk #666666`), and the app tint uses `#006666`.
 
-Light is the default. Settings offers Dark and Match iPhone, and every token has a dark variant (`Fonos/Design/Theme.swift`).
+Light is the default. Settings offers Dark and Match iPhone. Dark draws from the same band: strap-black surfaces, shell-white text, and the wire and liner colors at the lighter values measured in the photo (`Fonos/Design/Theme.swift`).
 
-**Surfaces.** Every card is a `Surface`: white, a 1 pt warm edge, a tight contact shadow, and a wide soft lift, all tinted warm brown rather than black. In dark, surfaces separate by tone and cast no shadow. Radii are 22 pt for cards and 18 pt for tiles, always continuous corners.
+**Surfaces.** Every card is a `Surface`: white, a 1 pt edge, a tight contact shadow, and a soft lift. In dark, surfaces separate by tone and cast no shadow. Corners follow one small scale by role, always continuous: 16 pt for cards, 12 pt for buttons, tiles, wells, and banners, and 6 pt for small labels. The status pill is the only pill shape. Spacing runs on a 4 pt scale (4, 8, 12, 16, 20, 24, 32).
 
-**Signature details.** The Speak button is an `Orb`: the state color with a top-left sheen, a bright upper rim, a soft colored glow, and a quiet halo ring at rest. Range pickers are Fonos's own `SegmentedPicker`, a warm well with a white thumb that glides between options. Rings sit on a tinted track of their own color, and Apple Health–style mini bars show history in a 18% tint of the measure's color with the latest bar solid.
+**Design review.** The [unslop-ui](../.claude/skills/unslop-ui/SKILL.md) skill's catalog of "AI-made" tells was applied to the app: no unprompted glow, decorative gradients, uniform large radii, or off-scale spacing; motion only where it reports state, with every press effect respecting Reduce Motion. Its scanner reads web files only, so review Swift changes by eye against [tells.md](../.claude/skills/unslop-ui/references/tells.md). The band-sampled grey-green is marked `unslop-ignore` in `Theme.swift` because it is a deliberate choice, not the catalog's default sage.
+
+**Signature details.** The Speak button is a solid circle in the state color, with no sheen or glow; the only extra is the ripple while listening, because it reports state. The Fold view's fill is the app's one gradient; every other surface is a solid fill. Range pickers are Fonos's own `SegmentedPicker`, a well with a white thumb that glides between options. Rings sit on a tinted track of their own color, and Apple Health–style mini bars show history in a 18% tint of the measure's color with the latest bar solid.
 
 ## Type
 

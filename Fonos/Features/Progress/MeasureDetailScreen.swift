@@ -91,7 +91,7 @@ struct MeasureDetailScreen: View {
                     .foregroundStyle(Theme.inkTertiary)
             }
             .padding(.horizontal, Theme.gutter)
-            .padding(.bottom, 28)
+            .padding(.bottom, 32)
         }
         .fonosScreen()
         .navigationTitle(measure.title)
@@ -125,8 +125,7 @@ struct MeasureDetailScreen: View {
                          yStart: .value("Floor", yDomain.lowerBound),
                          yEnd: .value(measure.title, p.value))
                     .interpolationMethod(.monotone)
-                    .foregroundStyle(.linearGradient(colors: [color.opacity(0.25), color.opacity(0)],
-                                                     startPoint: .top, endPoint: .bottom))
+                    .foregroundStyle(color.opacity(0.12))
                 LineMark(x: .value("Day", p.day, unit: .day), y: .value(measure.title, p.value))
                     .interpolationMethod(measure.isCheck ? .linear : .monotone)
                     .foregroundStyle(color)

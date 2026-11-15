@@ -48,7 +48,7 @@ struct TrendsScreen: View {
                     practiceCard.padding(.top, 8)
                 }
                 .padding(.horizontal, Theme.gutter)
-                .padding(.bottom, 28)
+                .padding(.bottom, 32)
             }
             .fonosScreen()
             .navigationTitle("Progress")
@@ -96,7 +96,7 @@ struct TrendsScreen: View {
                 HStack(alignment: .top, spacing: 0) {
                     ForEach(Metric.rings) { m in ringLink(m, value: values[m] ?? nil, stacked: true) }
                 }
-                .padding(.vertical, 22)
+                .padding(.vertical, 24)
                 .padding(.horizontal, 6)
                 .background { Surface() }
             }
@@ -200,15 +200,7 @@ struct TrendsScreen: View {
             }
             .padding(20)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .background {
-                ZStack {
-                    Surface()
-                    // A faint jade wash from the top corner marks the one card that interprets.
-                    RoundedRectangle(cornerRadius: Theme.cardRadius, style: .continuous)
-                        .fill(LinearGradient(colors: [Theme.action.opacity(0.08), Theme.action.opacity(0)],
-                                             startPoint: .topLeading, endPoint: .center))
-                }
-            }
+            .background { Surface() }
             .accessibilityElement(children: .combine)
         }
     }

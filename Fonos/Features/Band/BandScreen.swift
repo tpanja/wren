@@ -41,7 +41,7 @@ struct BandScreen: View {
                     BalanceCard()
                 }
                 .padding(.horizontal, Theme.gutter)
-                .padding(.bottom, 28)
+                .padding(.bottom, 32)
             }
             .fonosScreen()
             .navigationTitle("Band")
@@ -53,7 +53,7 @@ struct BandScreen: View {
             HStack(spacing: 14) {
                 ZStack {
                     if engine.isStreaming {
-                        Orb(color: Theme.action, glow: false)
+                        Orb(color: Theme.action)
                     } else {
                         Circle().fill(Theme.well)
                     }
@@ -142,7 +142,7 @@ struct SensorCard<Trace: View, Trailing: View>: View {
             trace
                 .frame(height: 64)
                 .padding(.vertical, 4)
-                .background(color.opacity(0.05), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+                .background(color.opacity(0.05), in: RoundedRectangle(cornerRadius: Theme.controlRadius, style: .continuous))
             HStack(spacing: 8) {
                 if contact {
                     CheckDisc(color: Theme.good, size: 20)

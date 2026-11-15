@@ -52,9 +52,9 @@ struct FoldView: View {
             .tracking(1.2)
             .foregroundStyle(color)
             .dynamicTypeSize(...DynamicTypeSize.xxLarge)
-            .padding(.horizontal, 7)
-            .padding(.vertical, 3)
-            .background(Theme.card.opacity(0.88), in: Capsule())
+            .padding(.horizontal, 8)
+            .padding(.vertical, 4)
+            .background(Theme.card.opacity(0.88), in: RoundedRectangle(cornerRadius: Theme.chipRadius, style: .continuous))
             .accessibilityHidden(true)
     }
 
