@@ -30,8 +30,7 @@ struct SpeakScreen: View {
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
                     Button { showSettings = true } label: {
-                        Image(systemName: "person.crop.circle")
-                            .font(.title2)
+                        FonosIcon(.settings, size: 24, relativeTo: .title3)
                             .frame(width: 44, height: 44)
                     }
                     .accessibilityLabel("Settings")
@@ -83,7 +82,7 @@ struct SpeakScreen: View {
             FoldView(streams: engine.streams)
                 .frame(height: 150)
             Text("Sample signal from a simulated band")
-                .font(.caption)
+                .font(.ui(.caption))
                 .foregroundStyle(Theme.inkTertiary)
         }
         .card()
@@ -96,7 +95,7 @@ struct SpeakScreen: View {
             switch engine.speakState {
             case .listening, .translating:
                 Text(engine.partialText.isEmpty ? "…" : engine.partialText)
-                    .font(.title2.weight(.semibold))
+                    .font(.ui(.title2, .semibold))
                     .foregroundStyle(Theme.ink)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .contentTransition(.opacity)
@@ -105,12 +104,11 @@ struct SpeakScreen: View {
                 if let last = engine.utterances.first {
                     HStack(alignment: .top, spacing: 12) {
                         Text(last.text)
-                            .font(.title2.weight(.semibold))
+                            .font(.ui(.title2, .semibold))
                             .foregroundStyle(Theme.ink)
                             .frame(maxWidth: .infinity, alignment: .leading)
                         Button { engine.say(last.text) } label: {
-                            Image(systemName: "speaker.wave.2.fill")
-                                .font(.title3)
+                            FonosIcon(.replay, size: 26, relativeTo: .title3)
                                 .frame(width: 52, height: 52)
                                 .background(Theme.well, in: Circle())
                         }
@@ -119,12 +117,12 @@ struct SpeakScreen: View {
                     }
                     if let c = last.confidence {
                         Text("Clarity \(Int(c * 100))%")
-                            .font(.footnote.weight(.medium))
+                            .font(.ui(.footnote, .medium))
                             .foregroundStyle(Theme.clarity)
                     }
                 } else {
                     Text("Tap Speak and talk normally. Fonos will say your words clearly.")
-                        .font(.title3)
+                        .font(.ui(.title3))
                         .foregroundStyle(Theme.inkSecondary)
                         .frame(maxWidth: .infinity, alignment: .leading)
                 }
@@ -144,7 +142,7 @@ struct SpeakScreen: View {
                 ForEach(engine.quickPhrases, id: \.self) { phrase in
                     Button { engine.say(phrase, asPhrase: true) } label: {
                         Text(phrase)
-                            .font(.body.weight(.medium))
+                            .font(.ui(.body, .medium))
                             .foregroundStyle(Theme.ink)
                             .multilineTextAlignment(.leading)
                             .frame(maxWidth: .infinity, minHeight: 60, alignment: .leading)
@@ -165,7 +163,7 @@ struct SpeakScreen: View {
                 Button { engine.say(u.text) } label: {
                     HStack {
                         Text(u.text).foregroundStyle(Theme.ink).frame(maxWidth: .infinity, alignment: .leading)
-                        Text(u.date, style: .time).font(.footnote).foregroundStyle(Theme.inkTertiary)
+                        Text(u.date, style: .time).font(.ui(.footnote)).foregroundStyle(Theme.inkTertiary)
                     }
                     .frame(minHeight: 48)
                     .contentShape(Rectangle())
@@ -202,9 +200,7 @@ struct SpeakButton: View {
                     }
                     Circle().fill(fill(state))
                     icon(state)
-                        .font(.system(size: 44, weight: .semibold))
                         .foregroundStyle(state == .listening ? .white : Theme.onAction)
-                        .contentTransition(.symbolEffect(.replace))
                 }
                 .frame(width: 132, height: 132)
                 .contentShape(Circle())
@@ -216,7 +212,7 @@ struct SpeakButton: View {
             .onChange(of: state) { _, s in breathe = s == .listening }
 
             Text(caption(state))
-                .font(.headline)
+                .font(.ui(.headline))
                 .foregroundStyle(Theme.ink)
                 .accessibilityHidden(true)
         }
@@ -226,10 +222,10 @@ struct SpeakButton: View {
 
     @ViewBuilder private func icon(_ s: FonosEngine.SpeakState) -> some View {
         switch s {
-        case .idle: Image(systemName: "waveform")
-        case .listening: Image(systemName: "stop.fill")
+        case .idle: FonosIcon(.speak, size: 52, relativeTo: .largeTitle)
+        case .listening: FonosIcon(.stop, size: 46, relativeTo: .largeTitle)
         case .translating: ProgressView().controlSize(.large).tint(Theme.onAction)
-        case .speaking: Image(systemName: "speaker.wave.3.fill")
+        case .speaking: FonosIcon(.replay, size: 52, relativeTo: .largeTitle)
         }
     }
 
@@ -283,7 +279,7 @@ struct Legend: View {
             ForEach(items, id: \.0) { item in
                 HStack(spacing: 4) {
                     Circle().fill(item.1).frame(width: 7, height: 7)
-                    Text(item.0).font(.caption.weight(.medium)).foregroundStyle(Theme.inkSecondary)
+                    Text(item.0).font(.ui(.caption, .medium)).foregroundStyle(Theme.inkSecondary)
                         .fixedSize()
                 }
             }

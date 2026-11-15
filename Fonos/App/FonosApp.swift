@@ -6,10 +6,16 @@ struct FonosApp: App {
     @AppStorage("fonos.appearance") private var appearance: Appearance = .dark
     @Environment(\.scenePhase) private var phase
 
+    init() {
+        FonosType.register()
+        FonosType.applyAppearance()
+    }
+
     var body: some Scene {
         WindowGroup {
             RootView()
                 .environment(engine)
+                .font(.ui(.body))
                 .preferredColorScheme(appearance.scheme)
                 .tint(Theme.action)
                 .onChange(of: phase) { _, newPhase in

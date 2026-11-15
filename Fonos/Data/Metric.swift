@@ -20,14 +20,14 @@ enum Metric: String, CaseIterable, Identifiable, Codable {
         }
     }
 
-    var symbol: String {
+    var icon: Icon {
         switch self {
-        case .clarity: "text.bubble"
-        case .strength: "speaker.wave.2"
-        case .pace: "metronome"
-        case .symmetry: "arrow.left.and.right"
-        case .steadiness: "waveform.path.ecg"
-        case .pauses: "pause"
+        case .clarity: .clarity
+        case .strength: .strength
+        case .pace: .pace
+        case .symmetry: .symmetry
+        case .steadiness: .variation
+        case .pauses: .pauses
         }
     }
 

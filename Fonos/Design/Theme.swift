@@ -57,20 +57,13 @@ enum Theme {
     static let stack: CGFloat = 12
 }
 
-// MARK: - Type
-
-extension Font {
-    /// Rounded numerals for headline values (rings, big stats).
-    static func metric(_ style: Font.TextStyle, weight: Font.Weight = .semibold) -> Font {
-        .system(style, design: .rounded, weight: weight)
-    }
-}
+// MARK: - Type (see Typography.swift)
 
 extension View {
     /// Small tracked uppercase title used on cards, after the WHOOP references.
     func cardTitle(_ color: Color = Theme.ink) -> some View {
         self
-            .font(.footnote.weight(.semibold))
+            .font(.metric(.footnote, weight: .semibold))
             .textCase(.uppercase)
             .tracking(1.1)
             .foregroundStyle(color)

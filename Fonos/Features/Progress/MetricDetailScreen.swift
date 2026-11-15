@@ -51,11 +51,11 @@ struct MetricDetailScreen: View {
                             .font(.metric(.largeTitle, weight: .bold))
                             .foregroundStyle(Theme.ink)
                             .contentTransition(.numericText())
-                        Text(metric.unit).font(.headline).foregroundStyle(Theme.inkSecondary)
+                        Text(metric.unit).font(.ui(.headline)).foregroundStyle(Theme.inkSecondary)
                     }
                     if let trend = Insights.trends(engine.store.visible, baseline: engine.store.baseline).first(where: { $0.metric == metric }) {
                         Text(trend.phrase + " vs baseline")
-                            .font(.subheadline.weight(.medium))
+                            .font(.ui(.subheadline, .medium))
                             .foregroundStyle(trend.direction == .lower ? Theme.caution : Theme.inkSecondary)
                     }
                 }
@@ -66,19 +66,19 @@ struct MetricDetailScreen: View {
                     .card()
 
                 VStack(alignment: .leading, spacing: 10) {
-                    Text("About \(metric.title.lowercased())").font(.headline).foregroundStyle(Theme.ink)
+                    Text("About \(metric.title.lowercased())").font(.ui(.headline)).foregroundStyle(Theme.ink)
                     Text(metric.explanation).foregroundStyle(Theme.inkSecondary)
                         .fixedSize(horizontal: false, vertical: true)
                     Divider().overlay(Theme.hairline)
-                    Label(metric.howMeasured, systemImage: "sensor.tag.radiowaves.forward")
-                        .font(.subheadline)
+                    Label { Text(metric.howMeasured) } icon: { FonosIcon(.band, size: 20, relativeTo: .subheadline) }
+                        .font(.ui(.subheadline))
                         .foregroundStyle(Theme.inkSecondary)
                 }
                 .card()
 
                 SampleBanner()
                 Text("Fonos describes changes in your speech. It does not diagnose. Talk with your care team about what these trends mean for you.")
-                    .font(.footnote)
+                    .font(.ui(.footnote))
                     .foregroundStyle(Theme.inkTertiary)
             }
             .padding(.horizontal, Theme.gutter)
@@ -97,7 +97,7 @@ struct MetricDetailScreen: View {
                     .foregroundStyle(Theme.inkTertiary)
                     .lineStyle(StrokeStyle(lineWidth: 1, dash: [4, 4]))
                     .annotation(position: .top, alignment: .leading) {
-                        Text("Baseline").font(.caption2.weight(.semibold)).foregroundStyle(Theme.inkTertiary)
+                        Text("Baseline").font(.ui(.caption2, .semibold)).foregroundStyle(Theme.inkTertiary)
                     }
             }
             ForEach(pts) { p in

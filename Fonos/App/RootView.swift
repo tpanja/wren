@@ -10,13 +10,13 @@ struct RootView: View {
     var body: some View {
         TabView(selection: $tab) {
             SpeakScreen(showSettings: $showSettings)
-                .tabItem { Label("Speak", systemImage: "waveform") }
+                .tabItem { Label { Text("Speak") } icon: { Icon.speak.image } }
                 .tag(Tab.speak)
             TrendsScreen(showSettings: $showSettings)
-                .tabItem { Label("Progress", systemImage: "chart.line.uptrend.xyaxis") }
+                .tabItem { Label { Text("Progress") } icon: { Icon.progress.image } }
                 .tag(Tab.progress)
             BandScreen()
-                .tabItem { Label("Band", systemImage: "dot.radiowaves.left.and.right") }
+                .tabItem { Label { Text("Band") } icon: { Icon.band.image } }
                 .tag(Tab.band)
         }
         .sheet(isPresented: $showSettings) {

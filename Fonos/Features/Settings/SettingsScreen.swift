@@ -17,7 +17,7 @@ struct SettingsScreen: View {
                         ForEach(voice.voices) { v in
                             VStack(alignment: .leading) {
                                 Text(v.name)
-                                Text(v.detail).font(.footnote).foregroundStyle(.secondary)
+                                Text(v.detail).font(.ui(.footnote)).foregroundStyle(.secondary)
                             }
                             .tag(Optional(v.id))
                         }
@@ -33,9 +33,9 @@ struct SettingsScreen: View {
                         Slider(value: $voice.rate, in: 0.3...0.7) {
                             Text("Speaking speed")
                         } minimumValueLabel: {
-                            Image(systemName: "tortoise").accessibilityLabel("Slower")
+                            FonosIcon(.slow, size: 18).foregroundStyle(Theme.inkSecondary)
                         } maximumValueLabel: {
-                            Image(systemName: "hare").accessibilityLabel("Faster")
+                            FonosIcon(.fast, size: 18).foregroundStyle(Theme.inkSecondary)
                         }
                     }
                     .padding(.vertical, 4)

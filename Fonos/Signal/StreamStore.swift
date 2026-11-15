@@ -6,19 +6,6 @@ import os
 /// lock-protected and never published through Observation.
 final class StreamStore: @unchecked Sendable {
 
-    struct Snapshot {
-        /// Mic waveform, decimated to 800 Hz, -1...1.
-        var micWave: [Float] = []
-        /// Per-10 ms RMS, 0...1.
-        var micLevel: [Float] = []
-        var leftLevel: [Float] = []
-        var rightLevel: [Float] = []
-        /// Left piezo waveform at 1 kHz.
-        var leftWave: [Float] = []
-        var rightWave: [Float] = []
-        var hasPiezo = false
-    }
-
     static let seconds = 5.0
     private let frameCapacity = Int(seconds * 100)
     private let micDecimation = 10 // 8 kHz → 800 Hz
@@ -97,17 +84,6 @@ final class StreamStore: @unchecked Sendable {
             case .left: leftWave.suffix(Int(seconds * 1_000))
             case .right: rightWave.suffix(Int(seconds * 1_000))
             }
-        }
-    }
-
-    func snapshot() -> Snapshot {
-        lock.withLock {
-            Snapshot(
-                micWave: micWave.ordered(), micLevel: micLevel.ordered(),
-                leftLevel: leftLevel.ordered(), rightLevel: rightLevel.ordered(),
-                leftWave: leftWave.ordered(), rightWave: rightWave.ordered(),
-                hasPiezo: hasPiezo
-            )
         }
     }
 }

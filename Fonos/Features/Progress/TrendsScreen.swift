@@ -36,7 +36,7 @@ struct TrendsScreen: View {
                     SampleBanner()
 
                     Text("All measures")
-                        .font(.title2.weight(.bold))
+                        .font(.metric(.title2, weight: .bold))
                         .foregroundStyle(Theme.ink)
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .padding(.top, 16)
@@ -57,7 +57,7 @@ struct TrendsScreen: View {
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
                     Button { showSettings = true } label: {
-                        Image(systemName: "person.crop.circle").font(.title2).frame(width: 44, height: 44)
+                        FonosIcon(.settings, size: 24, relativeTo: .title3).frame(width: 44, height: 44)
                     }
                     .accessibilityLabel("Settings")
                 }
@@ -76,7 +76,7 @@ struct TrendsScreen: View {
                         MetricRing(metric: m, value: Insights.mean(m, in: sessions, baseline: baseline, days: range.rawValue))
                         HStack(spacing: 2) {
                             Text(m.title).cardTitle()
-                            Image(systemName: "chevron.right").font(.caption2.weight(.bold)).foregroundStyle(Theme.inkSecondary)
+                            FonosIcon(.chevron, size: 12, relativeTo: .caption2).foregroundStyle(Theme.inkSecondary)
                         }
                     }
                     .frame(maxWidth: .infinity)
@@ -99,15 +99,15 @@ struct TrendsScreen: View {
         if let h = Insights.headline(trends) {
             VStack(alignment: .leading, spacing: 8) {
                 Text(h.title)
-                    .font(.headline)
+                    .font(.ui(.headline))
                     .foregroundStyle(Theme.ink)
                 Text(h.body)
-                    .font(.body)
+                    .font(.ui(.body))
                     .foregroundStyle(Theme.inkSecondary)
                     .fixedSize(horizontal: false, vertical: true)
                 if let since = baseline?.establishedOn {
                     Text("Baseline from your first sessions, through \(since.formatted(date: .abbreviated, time: .omitted))")
-                        .font(.footnote)
+                        .font(.ui(.footnote))
                         .foregroundStyle(Theme.inkTertiary)
                         .padding(.top, 4)
                 }
@@ -129,7 +129,7 @@ struct TrendsScreen: View {
                 Text("Days with sessions").cardTitle()
                 Spacer()
                 Text("\(days.filter(used.contains).count) of 7")
-                    .font(.footnote.weight(.semibold)).foregroundStyle(Theme.inkSecondary)
+                    .font(.ui(.footnote, .semibold)).foregroundStyle(Theme.inkSecondary)
             }
             HStack {
                 ForEach(days, id: \.self) { d in
@@ -137,14 +137,14 @@ struct TrendsScreen: View {
                     let isToday = d == today
                     VStack(spacing: 8) {
                         Text(d.formatted(.dateTime.weekday(.abbreviated)))
-                            .font(.caption.weight(.semibold))
+                            .font(.ui(.caption, .semibold))
                             .textCase(.uppercase)
                             .foregroundStyle(isToday ? Theme.ink : Theme.inkSecondary)
                         ZStack {
                             Circle().fill(on ? Theme.good : Color.clear)
                             Circle().stroke(on ? Color.clear : Theme.hairline, lineWidth: 1.5)
                             if on {
-                                Image(systemName: "checkmark").font(.caption.weight(.bold)).foregroundStyle(Theme.ground)
+                                FonosIcon(.check, size: 15, relativeTo: .caption).foregroundStyle(Theme.ground)
                             }
                         }
                         .frame(width: 26, height: 26)
@@ -171,7 +171,7 @@ struct MetricSummaryCard: View {
         let recent = sessions.suffix(7).compactMap { s in metric.value(s, baseline: baseline).map { (s.date, $0) } }
         let latest = sessions.last
         VStack(alignment: .leading, spacing: 14) {
-            CardHeader(title: metric.title, symbol: metric.symbol, color: metric.color,
+            CardHeader(title: metric.title, icon: metric.icon, color: metric.color,
                        detail: latest.map { relative($0.date) }, chevron: true)
             HStack(alignment: .bottom) {
                 if let v = recent.last?.1 {
@@ -179,10 +179,10 @@ struct MetricSummaryCard: View {
                         Text(metric.format(v))
                             .font(.metric(.largeTitle, weight: .semibold))
                             .foregroundStyle(Theme.ink)
-                        Text(metric.unit).font(.subheadline.weight(.medium)).foregroundStyle(Theme.inkSecondary)
+                        Text(metric.unit).font(.ui(.subheadline, .medium)).foregroundStyle(Theme.inkSecondary)
                     }
                 } else {
-                    Text("No data yet").font(.title3).foregroundStyle(Theme.inkTertiary)
+                    Text("No data yet").font(.ui(.title3)).foregroundStyle(Theme.inkTertiary)
                 }
                 Spacer()
                 MiniBars(values: recent.map(\.1), color: metric.color, highlightLast: true)

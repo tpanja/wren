@@ -2,6 +2,10 @@ import SwiftUI
 
 /// The band's state and its three raw streams. Driven by the simulated band
 /// until the hardware link is built.
+///
+/// Performance note: this view never reads `engine.live` (which changes
+/// 10 times a second). Only `MicLevel` and `BalanceCard` do, so only they
+/// re-render; the live traces redraw themselves through their own timelines.
 struct BandScreen: View {
     @Environment(FonosEngine.self) private var engine
 
@@ -13,22 +17,27 @@ struct BandScreen: View {
                     SampleBanner(text: "Simulated band. The Bluetooth link to the real band isn't built yet.")
 
                     Text("Sensors")
-                        .font(.title2.weight(.bold))
+                        .font(.metric(.title2, weight: .bold))
                         .foregroundStyle(Theme.ink)
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .padding(.top, 16)
+                        .accessibilityAddTraits(.isHeader)
 
-                    SensorCard(title: "Contact microphone", symbol: "mic", color: Theme.mic,
-                               rate: "8 kHz", level: engine.live.micDb, contact: true,
-                               trace: StreamTrace(streams: engine.streams, channel: .mic, color: Theme.mic))
-                    SensorCard(title: "Left piezo", symbol: "l.circle", color: Theme.left,
-                               rate: "1 kHz", level: nil, contact: engine.bandStatus.leftContact,
-                               trace: StreamTrace(streams: engine.streams, channel: .left, color: Theme.left))
-                    SensorCard(title: "Right piezo", symbol: "r.circle", color: Theme.right,
-                               rate: "1 kHz", level: nil, contact: engine.bandStatus.rightContact,
-                               trace: StreamTrace(streams: engine.streams, channel: .right, color: Theme.right))
+                    SensorCard(title: "Contact microphone", icon: .mic, color: Theme.mic, rate: "8 kHz", contact: true) {
+                        StreamTrace(streams: engine.streams, channel: .mic, color: Theme.mic)
+                    } trailing: {
+                        MicLevel()
+                    }
+                    SensorCard(title: "Left piezo", icon: .piezoLeft, color: Theme.left, rate: "1 kHz",
+                               contact: engine.bandStatus.leftContact) {
+                        StreamTrace(streams: engine.streams, channel: .left, color: Theme.left)
+                    }
+                    SensorCard(title: "Right piezo", icon: .piezoRight, color: Theme.right, rate: "1 kHz",
+                               contact: engine.bandStatus.rightContact) {
+                        StreamTrace(streams: engine.streams, channel: .right, color: Theme.right)
+                    }
 
-                    balanceCard
+                    BalanceCard()
                 }
                 .padding(.horizontal, Theme.gutter)
                 .padding(.bottom, 24)
@@ -42,17 +51,20 @@ struct BandScreen: View {
     private var deviceCard: some View {
         VStack(alignment: .leading, spacing: 16) {
             HStack(spacing: 14) {
-                Image(systemName: "waveform.circle.fill")
-                    .font(.system(size: 44))
-                    .foregroundStyle(engine.isStreaming ? Theme.action : Theme.inkTertiary)
-                    .accessibilityHidden(true)
+                ZStack {
+                    Circle().fill(engine.isStreaming ? Theme.action : Theme.well)
+                    FonosIcon(.band, size: 28, relativeTo: .title3)
+                        .foregroundStyle(engine.isStreaming ? Theme.onAction : Theme.inkTertiary)
+                }
+                .frame(width: 52, height: 52)
+                .accessibilityHidden(true)
                 VStack(alignment: .leading, spacing: 2) {
-                    Text("Fonos band").font(.title3.weight(.semibold)).foregroundStyle(Theme.ink)
+                    Text("Fonos band").font(.metric(.title3, weight: .semibold)).foregroundStyle(Theme.ink)
                     Text(engine.isStreaming ? "Streaming sample data" : "Paused")
-                        .font(.subheadline)
+                        .font(.ui(.subheadline, .medium))
                         .foregroundStyle(engine.isStreaming ? Theme.good : Theme.inkSecondary)
                 }
-                Spacer()
+                Spacer(minLength: 8)
                 BatteryBadge(percent: engine.bandStatus.battery, charging: engine.bandStatus.isCharging)
             }
             Button(engine.isStreaming ? "Pause signal" : "Resume signal") {
@@ -62,16 +74,33 @@ struct BandScreen: View {
         }
         .card(padding: 20)
     }
+}
 
-    private var balanceCard: some View {
+/// Live mic level in dBFS. Isolated so only this text refreshes at 10 Hz.
+private struct MicLevel: View {
+    @Environment(FonosEngine.self) private var engine
+    var body: some View {
+        Text("\(Int(engine.live.micDb)) dBFS")
+            .font(.ui(.subheadline, .medium))
+            .monospacedDigit()
+            .foregroundStyle(Theme.inkSecondary)
+    }
+}
+
+/// Live left/right share. Isolated so only this card refreshes at 10 Hz.
+private struct BalanceCard: View {
+    @Environment(FonosEngine.self) private var engine
+
+    var body: some View {
         let l = engine.live.leftLevel, r = engine.live.rightLevel
         let total = l + r
         let leftShare = total > 0.005 ? Double(l / total) : 0.5
-        return VStack(alignment: .leading, spacing: 12) {
-            CardHeader(title: "Left / right balance", symbol: "arrow.left.and.right", color: Theme.symmetry)
+        let leftPct = Int((leftShare * 100).rounded())
+        VStack(alignment: .leading, spacing: 12) {
+            CardHeader(title: "Left / right balance", icon: .symmetry, color: Theme.symmetry)
             GeometryReader { geo in
                 HStack(spacing: 2) {
-                    Rectangle().fill(Theme.left).frame(width: geo.size.width * leftShare)
+                    Rectangle().fill(Theme.left).frame(width: max(0, geo.size.width * leftShare - 1))
                     Rectangle().fill(Theme.right)
                 }
                 .clipShape(Capsule())
@@ -79,47 +108,53 @@ struct BandScreen: View {
             }
             .frame(height: 14)
             HStack {
-                Text("Left \(Int(leftShare * 100))%").foregroundStyle(Theme.left)
+                Text("Left \(leftPct)%").foregroundStyle(Theme.left)
                 Spacer()
-                Text("Right \(100 - Int(leftShare * 100))%").foregroundStyle(Theme.right)
+                Text("Right \(100 - leftPct)%").foregroundStyle(Theme.right)
             }
-            .font(.subheadline.weight(.semibold))
+            .font(.ui(.subheadline, .bold))
             .monospacedDigit()
         }
         .card()
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("Left right balance")
-        .accessibilityValue("Left \(Int(leftShare * 100)) percent, right \(100 - Int(leftShare * 100)) percent")
+        .accessibilityValue("Left \(leftPct) percent, right \(100 - leftPct) percent")
     }
 }
 
-struct SensorCard<Trace: View>: View {
+struct SensorCard<Trace: View, Trailing: View>: View {
     let title: String
-    let symbol: String
+    let icon: Icon
     let color: Color
     let rate: String
-    let level: Float?
     let contact: Bool
-    let trace: Trace
+    @ViewBuilder let trace: Trace
+    @ViewBuilder let trailing: Trailing
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            CardHeader(title: title, symbol: symbol, color: color, detail: rate)
+            CardHeader(title: title, icon: icon, color: color, detail: rate)
             trace.frame(height: 64)
-            HStack(spacing: 6) {
-                Image(systemName: contact ? "checkmark.circle.fill" : "exclamationmark.triangle.fill")
-                    .foregroundStyle(contact ? Theme.good : Theme.caution)
-                Text(contact ? "Good skin contact" : "No contact. Adjust the band.")
-                    .font(.subheadline)
-                    .foregroundStyle(Theme.inkSecondary)
-                Spacer()
-                if let level {
-                    Text("\(Int(level)) dB").font(.subheadline.weight(.medium)).monospacedDigit()
-                        .foregroundStyle(Theme.inkSecondary)
+            HStack(spacing: 8) {
+                if contact {
+                    CheckDisc(color: Theme.good, size: 20)
+                } else {
+                    FonosIcon(.warning, size: 20, relativeTo: .subheadline).foregroundStyle(Theme.caution)
                 }
+                Text(contact ? "Good skin contact" : "No contact. Adjust the band.")
+                    .font(.ui(.subheadline))
+                    .foregroundStyle(Theme.inkSecondary)
+                Spacer(minLength: 8)
+                trailing
             }
         }
         .card()
         .accessibilityElement(children: .combine)
+    }
+}
+
+extension SensorCard where Trailing == EmptyView {
+    init(title: String, icon: Icon, color: Color, rate: String, contact: Bool, @ViewBuilder trace: () -> Trace) {
+        self.init(title: title, icon: icon, color: color, rate: rate, contact: contact, trace: trace, trailing: { EmptyView() })
     }
 }

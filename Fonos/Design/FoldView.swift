@@ -1,5 +1,23 @@
 import SwiftUI
 
+/// Drives a live view only while it is on screen and the app is active.
+/// Hidden tabs in a TabView stay alive, so without this every live chart
+/// keeps redrawing at full rate behind whatever the patient is looking at.
+private struct LiveVisibility: ViewModifier {
+    @Binding var visible: Bool
+    @Environment(\.scenePhase) private var phase
+    @State private var onScreen = false
+
+    func body(content: Content) -> some View {
+        content
+            .onAppear { onScreen = true; update() }
+            .onDisappear { onScreen = false; update() }
+            .onChange(of: phase) { _, _ in update() }
+    }
+
+    private func update() { visible = onScreen && phase == .active }
+}
+
 /// The signature view. The contact-mic waveform runs along the midline; the
 /// left piezo's vibration envelope rises above it and the right piezo's falls
 /// below it, so left/right throat symmetry reads as a shape: a mirror image
@@ -8,45 +26,45 @@ struct FoldView: View {
     let streams: StreamStore
     var showsLabels = true
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @State private var visible = false
 
     var body: some View {
-        TimelineView(.animation(minimumInterval: reduceMotion ? 1.0 / 10 : 1.0 / 30)) { timeline in
-            Canvas { ctx, size in
-                // Reading the date ties each redraw to the timeline tick.
-                _ = timeline.date
-                draw(streams.snapshot(), in: &ctx, size: size)
-            }
+        TimelineView(.animation(minimumInterval: reduceMotion ? 1.0 / 10 : 1.0 / 30, paused: !visible)) { timeline in
+            // One snapshot per tick feeds both the drawing and VoiceOver.
+            let s = streams.fold()
+            let _ = timeline.date
+            Canvas { ctx, size in draw(s, in: &ctx, size: size) }
+                .accessibilityElement()
+                .accessibilityLabel("Live throat signal")
+                .accessibilityValue(summary(s))
         }
         .overlay(alignment: .topLeading) { if showsLabels { sideLabel("Left", Theme.left) } }
         .overlay(alignment: .bottomLeading) { if showsLabels { sideLabel("Right", Theme.right) } }
-        .accessibilityElement()
-        .accessibilityLabel("Live throat signal")
-        .accessibilityValue(accessibilitySummary)
+        .modifier(LiveVisibility(visible: $visible))
     }
 
     private func sideLabel(_ text: String, _ color: Color) -> some View {
         Text(text)
-            .font(.caption2.weight(.semibold))
+            .font(.metric(.caption2, weight: .semibold))
             .textCase(.uppercase)
-            .tracking(1)
+            .tracking(1.2)
             .foregroundStyle(color)
             .dynamicTypeSize(...DynamicTypeSize.xxLarge)
             .padding(4)
+            .accessibilityHidden(true)
     }
 
-    private var accessibilitySummary: String {
-        let s = streams.snapshot()
+    private func summary(_ s: StreamStore.Fold) -> String {
         let l = s.leftLevel.suffix(50).reduce(0, +), r = s.rightLevel.suffix(50).reduce(0, +)
         guard l + r > 0.01 else { return "Quiet" }
         let balance = 1 - abs(l - r) / (l + r)
         return "Voice detected. Left and right are \(Int(balance * 100)) percent balanced."
     }
 
-    private func draw(_ s: StreamStore.Snapshot, in ctx: inout GraphicsContext, size: CGSize) {
+    private func draw(_ s: StreamStore.Fold, in ctx: inout GraphicsContext, size: CGSize) {
         let mid = size.height / 2
         let half = size.height / 2 - 2
 
-        // Midline.
         var line = Path()
         line.move(to: CGPoint(x: 0, y: mid)); line.addLine(to: CGPoint(x: size.width, y: mid))
         ctx.stroke(line, with: .color(Theme.hairline), lineWidth: 1)
@@ -60,10 +78,12 @@ struct FoldView: View {
             var p = Path()
             let n = smooth.count
             guard n > 1 else { return p }
+            // At most one point per horizontal point; the buffer holds 500.
+            let step = max(1, n / Int(max(size.width, 1)))
             p.move(to: CGPoint(x: 0, y: mid))
-            for (i, v) in smooth.enumerated() {
+            for i in stride(from: 0, to: n, by: step) {
                 let x = size.width * CGFloat(i) / CGFloat(n - 1)
-                let dy = CGFloat(min(Double(v) * gain, Double(half)))
+                let dy = CGFloat(min(Double(smooth[i]) * gain, Double(half)))
                 p.addLine(to: CGPoint(x: x, y: up ? mid - dy : mid + dy))
             }
             p.addLine(to: CGPoint(x: size.width, y: mid))
@@ -84,60 +104,58 @@ struct FoldView: View {
             ctx.stroke(bottom, with: .color(Theme.right), lineWidth: 1.5)
         }
 
-        // Mic waveform: one min/max bar per 2 pt column, on top of the fold.
+        // Mic waveform: one min/max bar per 3 pt column, on top of the fold.
         let wave = s.micWave
         guard !wave.isEmpty else { return }
-        let columns = max(Int(size.width / 2), 1)
+        let columns = max(Int(size.width / 3), 1)
         let per = max(wave.count / columns, 1)
-        let micPeak = max(wave.map(abs).max() ?? 0, 0.05)
-        let micGain = Double(half) * 0.55 / Double(micPeak)
+        var micPeak: Float = 0.05
+        for v in wave where abs(v) > micPeak { micPeak = abs(v) }
+        let micGain = Double(half) * 0.5 / Double(micPeak)
         var bars = Path()
         for c in 0..<columns {
             let start = c * per
             guard start < wave.count else { break }
-            let slice = wave[start..<min(start + per, wave.count)]
-            let lo = Double(slice.min() ?? 0) * micGain, hi = Double(slice.max() ?? 0) * micGain
-            let x = CGFloat(c) * 2 + 1
-            bars.move(to: CGPoint(x: x, y: mid - CGFloat(hi)))
-            bars.addLine(to: CGPoint(x: x, y: mid - CGFloat(lo) + 0.5))
+            var lo: Float = 0, hi: Float = 0
+            for k in start..<min(start + per, wave.count) { lo = min(lo, wave[k]); hi = max(hi, wave[k]) }
+            let x = CGFloat(c) * 3 + 1.5
+            bars.move(to: CGPoint(x: x, y: mid - CGFloat(Double(hi) * micGain)))
+            bars.addLine(to: CGPoint(x: x, y: mid - CGFloat(Double(lo) * micGain) + 0.5))
         }
-        ctx.stroke(bars, with: .color(Theme.mic), style: StrokeStyle(lineWidth: 1.2, lineCap: .round))
+        ctx.stroke(bars, with: .color(Theme.mic), style: StrokeStyle(lineWidth: 1.4, lineCap: .round))
     }
 }
 
 /// A single stream drawn as an oscilloscope trace, for the Band screen.
 struct StreamTrace: View {
-    enum Channel { case mic, left, right }
     let streams: StreamStore
-    let channel: Channel
+    let channel: StreamStore.Channel
     let color: Color
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @State private var visible = false
 
     var body: some View {
-        TimelineView(.animation(minimumInterval: reduceMotion ? 1.0 / 10 : 1.0 / 30)) { timeline in
+        TimelineView(.animation(minimumInterval: reduceMotion ? 1.0 / 10 : 1.0 / 30, paused: !visible)) { timeline in
+            // Last 1.5 s only, so individual syllables are visible.
+            let data = streams.trace(channel, seconds: 1.5)
+            let _ = timeline.date
             Canvas { ctx, size in
-                _ = timeline.date
-                let s = streams.snapshot()
-                let raw: [Float] = switch channel {
-                case .mic: s.micWave
-                case .left: s.leftWave
-                case .right: s.rightWave
-                }
-                // Last 1.5 s only, so individual syllables are visible.
-                let rate = channel == .mic ? 800 : 1_000
-                let data = Array(raw.suffix(Int(1.5 * Double(rate))))
                 guard data.count > 1 else { return }
                 let mid = size.height / 2
-                let peak = max(data.map(abs).max() ?? 0, 0.05)
+                var peak: Float = 0.05
+                for v in data where abs(v) > peak { peak = abs(v) }
                 let gain = (size.height / 2 - 2) / CGFloat(peak)
+                // About two points per horizontal point.
+                let step = max(1, data.count / Int(max(size.width * 2, 1)))
                 var p = Path()
-                for (i, v) in data.enumerated() {
-                    let pt = CGPoint(x: size.width * CGFloat(i) / CGFloat(data.count - 1), y: mid - CGFloat(v) * gain)
+                for i in stride(from: 0, to: data.count, by: step) {
+                    let pt = CGPoint(x: size.width * CGFloat(i) / CGFloat(data.count - 1), y: mid - CGFloat(data[i]) * gain)
                     i == 0 ? p.move(to: pt) : p.addLine(to: pt)
                 }
                 ctx.stroke(p, with: .color(color), lineWidth: 1.2)
             }
         }
         .accessibilityHidden(true)
+        .modifier(LiveVisibility(visible: $visible))
     }
 }

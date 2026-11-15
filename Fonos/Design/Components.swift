@@ -19,26 +19,24 @@ extension View {
 /// Apple Health–style card header: colored symbol and title, optional trailing detail and chevron.
 struct CardHeader: View {
     let title: String
-    let symbol: String
+    let icon: Icon
     let color: Color
     var detail: String? = nil
     var chevron = false
 
     var body: some View {
         HStack(spacing: 6) {
-            Label(title, systemImage: symbol)
-                .font(.subheadline.weight(.semibold))
+            Label { Text(title) } icon: { FonosIcon(icon, size: 19, relativeTo: .subheadline) }
+                .font(.ui(.subheadline, .bold))
                 .foregroundStyle(color)
                 .labelStyle(.titleAndIcon)
             Spacer(minLength: 8)
             if let detail {
-                Text(detail).font(.footnote).foregroundStyle(Theme.inkSecondary)
+                Text(detail).font(.ui(.footnote)).foregroundStyle(Theme.inkSecondary)
             }
             if chevron {
-                Image(systemName: "chevron.right")
-                    .font(.footnote.weight(.semibold))
+                FonosIcon(.chevron, size: 14, relativeTo: .footnote)
                     .foregroundStyle(Theme.inkTertiary)
-                    .accessibilityHidden(true)
             }
         }
     }
@@ -112,7 +110,7 @@ struct StatusPill: View {
                 .opacity(pulsing && !reduceMotion ? (on ? 1 : 0.35) : 1)
                 .animation(pulsing && !reduceMotion ? .easeInOut(duration: 0.8).repeatForever() : nil, value: on)
             Text(text)
-                .font(.footnote.weight(.semibold))
+                .font(.metric(.footnote, weight: .semibold))
                 .textCase(.uppercase)
                 .tracking(1)
                 .foregroundStyle(Theme.ink)
@@ -135,27 +133,13 @@ struct BatteryBadge: View {
     var body: some View {
         HStack(spacing: 4) {
             if let percent {
-                Text("\(percent)%").font(.footnote.weight(.medium)).monospacedDigit()
+                Text("\(percent)%").font(.ui(.footnote, .medium)).monospacedDigit()
                     .foregroundStyle(Theme.inkSecondary)
             }
-            Image(systemName: symbol)
-                .font(.body)
-                .foregroundStyle(color)
+            BatteryGlyph(percent: percent, color: color)
         }
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(percent.map { "Band battery \($0) percent\(charging ? ", charging" : "")" } ?? "Band battery unknown")
-    }
-
-    private var symbol: String {
-        guard let percent else { return "battery.0percent" }
-        if charging { return "battery.100percent.bolt" }
-        switch percent {
-        case ..<13: return "battery.0percent"
-        case ..<38: return "battery.25percent"
-        case ..<63: return "battery.50percent"
-        case ..<88: return "battery.75percent"
-        default: return "battery.100percent"
-        }
     }
 
     private var color: Color {
@@ -189,7 +173,7 @@ struct WellButtonStyle: ButtonStyle {
     var tint: Color = Theme.ink
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .font(.subheadline.weight(.semibold))
+            .font(.metric(.subheadline, weight: .semibold))
             .textCase(.uppercase)
             .tracking(1)
             .foregroundStyle(tint)
@@ -209,8 +193,8 @@ extension ButtonStyle where Self == WellButtonStyle {
 struct SampleBanner: View {
     var text = "Sample data. These numbers show what Fonos will look like with a real band."
     var body: some View {
-        Label(text, systemImage: "info.circle")
-            .font(.footnote)
+        Label { Text(text) } icon: { FonosIcon(.info, size: 18, relativeTo: .footnote) }
+            .font(.ui(.footnote))
             .foregroundStyle(Theme.inkSecondary)
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(.horizontal, 14).padding(.vertical, 10)
