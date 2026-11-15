@@ -81,7 +81,7 @@ struct ClinicReportPage: View {
         }
         .padding(.vertical, 8)
         .overlay(alignment: .top) { Paper.rule(0.75) }
-        .overlay(alignment: .bottom) { Paper.rule(0.5) }
+        .overlay(alignment: .bottom) { Paper.rule(0.6) }
     }
 
     private func field(_ label: String, _ value: String?, width: CGFloat?) -> some View {
@@ -92,7 +92,7 @@ struct ClinicReportPage: View {
                 Text(value).font(Paper.text(9.5, .semibold)).foregroundStyle(Paper.ink).lineLimit(1)
             } else {
                 // Blank line the clinic can fill in by hand.
-                Rectangle().fill(Paper.ink3).frame(height: 0.6).padding(.top, 11).padding(.trailing, 14)
+                Rectangle().fill(Paper.ink3).frame(height: 0.75).padding(.top, 11).padding(.trailing, 14)
             }
         }
         .frame(width: width, alignment: .leading)
@@ -163,7 +163,7 @@ struct ClinicReportPage: View {
             Paper.rule(0.75)
             ForEach(Array(report.rows.enumerated()), id: \.element.id) { i, row in
                 tableRow(row)
-                if i < report.rows.count - 1 { Paper.rule(0.5) }
+                if i < report.rows.count - 1 { Paper.rule(0.6) }
             }
             Paper.rule(0.75)
         }

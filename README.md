@@ -33,7 +33,8 @@ xcodebuild -project Fonos.xcodeproj -scheme Fonos -destination 'platform=iOS Sim
 | **Speak** | The live throat signal (the Fold view), a 132 pt Speak button, the translated phrase with a replay button and its clarity score, quick-phrase buttons, and phrases said today. |
 | **Progress** | Clarity, Strength, and Pace rings for the selected range (week, month, or 3 months), a plain-language insight against the user's own baseline, and a card for each of the six measures. Each card opens a detail chart. |
 | **Band** | Band status and battery, a live trace and skin-contact state for each sensor, and the live left/right balance. |
-| **Settings** (sliders icon) | Voice and Personal Voice, speaking speed, when listening stops, whether to speak automatically, quick phrases, and appearance (Dark by default, Light, or match iPhone). |
+| **Clinic summary** (report icon on Progress, or Settings → Care team) | A one-page PDF for the neurologist or speech therapist: each measure's baseline, period mean, change, slope per 30 days with a 95% confidence interval, and status against the ±5% band; six small trend charts; data quality; and methods. Covers everything since the last summary was shared. Optional name and date of birth stay on the phone. Shared through the system share sheet (Mail, Messages, Files, Print). |
+| **Settings** (sliders icon) | Voice and Personal Voice, speaking speed, when listening stops, whether to speak automatically, quick phrases, the clinic summary, and appearance (Dark by default, Light, or match iPhone). |
 
 The **Fold view** is the app's signature. The mic waveform runs along a midline, the left piezo's vibration rises above it, and the right piezo's falls below, at one shared scale. Balanced vibration draws a mirror image. A weaker side draws a visibly shorter half.
 
@@ -69,9 +70,10 @@ Fonos/
   Signal/       ToyBand (simulated sensors), StreamStore (display buffers), DSP, SpeechAnalyzer
   Speech/       SpeechTranslator protocol + ToyTranslator, VoiceOutput (Personal Voice aware)
   Data/         SessionRecord, Metric, SessionStore + ToyHistory, Insights (baseline and trends)
-  Features/     Speak, Progress, Band, Settings screens
+  Report/       ClinicReport (period, slopes, status, data quality), ClinicReportPage (the PDF page), ReportRenderer
+  Features/     Speak, Progress, Band, Settings, and Clinic summary screens
   Resources/    Asset catalog (app icon, custom icons), bundled fonts
-FonosTests/     Unit tests: DSP, pitch tracking, syllable detection, analyzer, baseline, trends
+FonosTests/     Unit tests: DSP, pitch tracking, syllable detection, analyzer, baseline, trends, report statistics
 Docs/           Data handling, UI design, hardware integration notes
 ```
 

@@ -99,3 +99,18 @@ Live charts are the only continuous work, so they are built to cost nothing when
 - Paths are decimated to about one point per screen point, and the pitch tracker stops at the first strong peak without allocating.
 
 Measured on a Release build in the iPhone 17 Pro simulator: Speak about 10% CPU, Band about 16%, Progress about 2%. With the Debug baseline before these changes, Progress was at 19% because hidden charts kept drawing.
+
+## Clinic summary (PDF export)
+
+A one-page US Letter report for the care team, generated on the phone (`Fonos/Report`). It is written in a clinical result-sheet register, not the app's dark look: white page, near-black ink, hairline rules, tabular numerals, and one teal accent for trend lines. Status is stated in words ("Stable", "Favorable", "Unfavorable", "Too few sessions"), with unfavorable rows in bold brick red, so the page still reads in black-and-white print or fax.
+
+**Page order:** header (period, generated time, report ID) · patient, date of birth, baseline, period · sample-data notice while data is synthetic · one-sentence summary · measures table · six small trend charts (sessions, fitted slope, baseline) · data quality · methods · non-diagnostic statement.
+
+**Statistics** (`ClinicReport.swift`):
+
+- **Period** runs from the last time a summary was shared to now. The first summary covers all sessions. The export is only recorded when the share sheet reports success.
+- **Change** compares the period mean with the baseline (mean of the first 5 sessions). Within ±5% is "Stable".
+- **Slope** is an ordinary least-squares fit of session values on time, scaled to 30 days, with a 95% confidence interval from Student's t. It needs 3 sessions spanning at least 7 days.
+- **Status** needs at least 3 sessions in the period.
+
+**Export screen:** a live preview of the exact page, what the period covers, optional name and date of birth (blank fields print as lines the clinic can fill in), and one 60 pt Share button. Patient details are stored on the phone only.
