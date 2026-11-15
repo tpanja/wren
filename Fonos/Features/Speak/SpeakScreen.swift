@@ -117,7 +117,7 @@ struct SpeakScreen: View {
                     if let c = last.confidence {
                         Text("Clarity \(Int(c * 100))%")
                             .font(.ui(.footnote, .medium))
-                            .foregroundStyle(Theme.clarity)
+                            .foregroundStyle(Theme.leftInk)
                     }
                 } else {
                     Text("Tap Speak and talk normally. Fonos will say your words clearly.")

@@ -17,7 +17,7 @@ struct FonosApp: App {
                 .environment(engine)
                 .font(.ui(.body))
                 .preferredColorScheme(appearance.scheme)
-                .tint(Theme.action)
+                .tint(Theme.actionInk)
                 .onChange(of: phase) { _, newPhase in
                     switch newPhase {
                     case .active: engine.didBecomeActive()

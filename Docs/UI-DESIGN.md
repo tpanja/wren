@@ -17,15 +17,21 @@ The screenshots supplied for inspiration set the look:
 
 Each stream and measure keeps its color everywhere it appears.
 
-| Role | Light | Dark |
-|---|---|---|
-| Ground | `#F5F3EF` warm porcelain, brightening to `#FBFAF8` at the top | `#0F1316` |
-| Card | `#FFFFFF` with a `#EAE6DF` edge | `#1A2025` |
-| Mic / Strength | `#B0740A` ochre | `#F2B33D` amber |
-| Left piezo / Clarity / Speak | `#0C7F70` jade | `#3CC8B4` teal |
-| Right piezo / Symmetry | `#5A49C8` violet | `#8E7CF0` |
-| Pace | `#1F6AAB` | `#5AA9E6` sky |
-| Listening | `#C4372E` | `#FF6B5E` |
+The light palette is taken from a photo of the Fonos band (exposure-corrected against the white shell, then snapped to web-safe values). Surfaces use light tints of the backdrop grey.
+
+| Role | Light | From the band | Dark |
+|---|---|---|---|
+| Card | `#FFFFFF` | White shell | `#1A2025` |
+| Ground | `#F2F2F2` (wells `#EBEBEB`, rules `#D6D6D6`) | Grey backdrop `#CCCCCC`, tinted | `#0F1316` |
+| Text | `#000000`, `#4D4D4D`, `#666666` | Black strap | `#F1EFEA` |
+| Left piezo / Clarity / Speak | `#339999` | Green wire | `#3CC8B4` |
+| Right piezo / Symmetry | `#6699CC` | Blue wire | `#8E7CF0` |
+| Mic / Strength | `#999966` | Grey-green liner | `#F2B33D` |
+| Pace | `#333333` | Black strap, softened | `#5AA9E6` |
+| Steadiness, Listening | `#FF6666` | Red wire | `#E77FA3`, `#FF6B5E` |
+| Pauses | `#999999` | Grey-green clip | `#A6CE5C` |
+
+The accents sit near 3:1 on white: fine for fills, rings, and traces, not for small text. Each has a deeper shade of the same hue for labels and links (`leftInk #006666`, `rightInk #336699`, `micInk #666633`, `steadinessInk #CC3333`, `pausesInk #666666`), and the app tint uses `#006666`.
 
 Light is the default. Settings offers Dark and Match iPhone, and every token has a dark variant (`Fonos/Design/Theme.swift`).
 

@@ -54,7 +54,7 @@ struct MetricDetailScreen: View {
                     if let trend = Insights.trends(engine.store.visible, baseline: engine.store.baseline).first(where: { $0.metric == metric }) {
                         Text(trend.phrase + " vs baseline")
                             .font(.ui(.subheadline, .medium))
-                            .foregroundStyle(trend.direction == .lower ? Theme.caution : Theme.inkSecondary)
+                            .foregroundStyle(trend.direction == .lower ? Theme.cautionInk : Theme.inkSecondary)
                     }
                 }
                 .padding(.top, 8)

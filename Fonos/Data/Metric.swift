@@ -42,6 +42,18 @@ enum Metric: String, CaseIterable, Identifiable, Codable {
         }
     }
 
+    /// The measure's color at a shade dark enough for text on white.
+    var inkColor: Color {
+        switch self {
+        case .clarity: Theme.leftInk
+        case .strength: Theme.micInk
+        case .pace: Theme.pace
+        case .symmetry: Theme.rightInk
+        case .steadiness: Theme.steadinessInk
+        case .pauses: Theme.pausesInk
+        }
+    }
+
     var unit: String {
         switch self {
         case .clarity, .strength, .symmetry, .pauses: "%"

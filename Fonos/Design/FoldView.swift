@@ -40,8 +40,8 @@ struct FoldView: View {
                 .accessibilityLabel("Live throat signal")
                 .accessibilityValue(summary(s))
         }
-        .overlay(alignment: .topLeading) { if showsLabels { sideLabel("Left", Theme.left) } }
-        .overlay(alignment: .bottomLeading) { if showsLabels { sideLabel("Right", Theme.right) } }
+        .overlay(alignment: .topLeading) { if showsLabels { sideLabel("Left", Theme.leftInk) } }
+        .overlay(alignment: .bottomLeading) { if showsLabels { sideLabel("Right", Theme.rightInk) } }
         .modifier(LiveVisibility(visible: $visible))
     }
 

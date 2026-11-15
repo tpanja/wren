@@ -24,16 +24,16 @@ struct BandScreen: View {
                         .padding(.top, 16)
                         .accessibilityAddTraits(.isHeader)
 
-                    SensorCard(title: "Contact microphone", icon: .mic, color: Theme.mic, rate: "8 kHz", contact: true) {
+                    SensorCard(title: "Contact microphone", icon: .mic, color: Theme.mic, ink: Theme.micInk, rate: "8 kHz", contact: true) {
                         StreamTrace(streams: engine.streams, channel: .mic, color: Theme.mic)
                     } trailing: {
                         MicLevel()
                     }
-                    SensorCard(title: "Left piezo", icon: .piezoLeft, color: Theme.left, rate: "1 kHz",
+                    SensorCard(title: "Left piezo", icon: .piezoLeft, color: Theme.left, ink: Theme.leftInk, rate: "1 kHz",
                                contact: engine.bandStatus.leftContact) {
                         StreamTrace(streams: engine.streams, channel: .left, color: Theme.left)
                     }
-                    SensorCard(title: "Right piezo", icon: .piezoRight, color: Theme.right, rate: "1 kHz",
+                    SensorCard(title: "Right piezo", icon: .piezoRight, color: Theme.right, ink: Theme.rightInk, rate: "1 kHz",
                                contact: engine.bandStatus.rightContact) {
                         StreamTrace(streams: engine.streams, channel: .right, color: Theme.right)
                     }
@@ -67,7 +67,7 @@ struct BandScreen: View {
                     Text("Fonos band").font(.metric(.title3, weight: .semibold)).tracking(-0.2).foregroundStyle(Theme.ink)
                     Text(engine.isStreaming ? "Streaming sample data" : "Paused")
                         .font(.ui(.subheadline, .medium))
-                        .foregroundStyle(engine.isStreaming ? Theme.good : Theme.inkSecondary)
+                        .foregroundStyle(engine.isStreaming ? Theme.goodInk : Theme.inkSecondary)
                 }
                 Spacer(minLength: 8)
                 BatteryBadge(percent: engine.bandStatus.battery, charging: engine.bandStatus.isCharging)
@@ -102,7 +102,7 @@ private struct BalanceCard: View {
         let leftShare = total > 0.005 ? Double(l / total) : 0.5
         let leftPct = Int((leftShare * 100).rounded())
         VStack(alignment: .leading, spacing: 12) {
-            CardHeader(title: "Left / right balance", icon: .symmetry, color: Theme.symmetry)
+            CardHeader(title: "Left / right balance", icon: .symmetry, color: Theme.symmetry, ink: Theme.rightInk)
             GeometryReader { geo in
                 HStack(spacing: 3) {
                     Capsule().fill(Theme.left).frame(width: max(0, geo.size.width * leftShare - 1.5))
@@ -112,9 +112,9 @@ private struct BalanceCard: View {
             }
             .frame(height: 12)
             HStack {
-                Text("Left \(leftPct)%").foregroundStyle(Theme.left)
+                Text("Left \(leftPct)%").foregroundStyle(Theme.leftInk)
                 Spacer()
-                Text("Right \(100 - leftPct)%").foregroundStyle(Theme.right)
+                Text("Right \(100 - leftPct)%").foregroundStyle(Theme.rightInk)
             }
             .font(.ui(.subheadline, .bold))
             .monospacedDigit()
@@ -130,6 +130,7 @@ struct SensorCard<Trace: View, Trailing: View>: View {
     let title: String
     let icon: Icon
     let color: Color
+    let ink: Color
     let rate: String
     let contact: Bool
     @ViewBuilder let trace: Trace
@@ -137,7 +138,7 @@ struct SensorCard<Trace: View, Trailing: View>: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            CardHeader(title: title, icon: icon, color: color, detail: rate)
+            CardHeader(title: title, icon: icon, color: color, ink: ink, detail: rate)
             trace
                 .frame(height: 64)
                 .padding(.vertical, 4)
@@ -161,7 +162,7 @@ struct SensorCard<Trace: View, Trailing: View>: View {
 }
 
 extension SensorCard where Trailing == EmptyView {
-    init(title: String, icon: Icon, color: Color, rate: String, contact: Bool, @ViewBuilder trace: () -> Trace) {
-        self.init(title: title, icon: icon, color: color, rate: rate, contact: contact, trace: trace, trailing: { EmptyView() })
+    init(title: String, icon: Icon, color: Color, ink: Color, rate: String, contact: Bool, @ViewBuilder trace: () -> Trace) {
+        self.init(title: title, icon: icon, color: color, ink: ink, rate: rate, contact: contact, trace: trace, trailing: { EmptyView() })
     }
 }

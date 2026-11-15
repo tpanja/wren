@@ -120,7 +120,7 @@ struct TrendsScreen: View {
         if let h = Insights.headline(trends) {
             VStack(alignment: .leading, spacing: 8) {
                 Label { Text("Insight") } icon: { FonosIcon(.clarity, size: 15, relativeTo: .footnote) }
-                    .cardTitle(Theme.action)
+                    .cardTitle(Theme.actionInk)
                     .padding(.bottom, 2)
                 Text(h.title)
                     .font(.metric(.title3, weight: .semibold))
@@ -205,7 +205,7 @@ struct MetricSummaryCard: View {
         let recent = sessions.suffix(7).compactMap { s in metric.value(s, baseline: baseline).map { (s.date, $0) } }
         let latest = sessions.last
         VStack(alignment: .leading, spacing: 14) {
-            CardHeader(title: metric.title, icon: metric.icon, color: metric.color,
+            CardHeader(title: metric.title, icon: metric.icon, color: metric.color, ink: metric.inkColor,
                        detail: latest.map { relative($0.date) }, chevron: true)
             HStack(alignment: .bottom) {
                 if let v = recent.last?.1 {

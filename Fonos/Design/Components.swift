@@ -59,18 +59,20 @@ struct CardHeader: View {
     let title: String
     let icon: Icon
     let color: Color
+    /// Title color; defaults to `color`. Pass the `…Ink` shade so small text stays readable.
+    var ink: Color? = nil
     var detail: String? = nil
     var chevron = false
 
     var body: some View {
         HStack(spacing: 8) {
-            Label { Text(title) } icon: {
+            Label { Text(title).foregroundStyle(ink ?? color) } icon: {
                 FonosIcon(icon, size: 16, relativeTo: .subheadline)
+                    .foregroundStyle(color)
                     .padding(5)
-                    .background(color.opacity(0.12), in: Circle())
+                    .background(color.opacity(0.14), in: Circle())
             }
             .font(.ui(.subheadline, .bold))
-            .foregroundStyle(color)
             .labelStyle(.titleAndIcon)
             Spacer(minLength: 8)
             if let detail {
