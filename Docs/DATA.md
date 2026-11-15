@@ -30,6 +30,12 @@ While the Speak button is listening, `ToyBand.setTalking(true)` keeps the toy we
 
 `Fonos/Data/SessionStore.swift` seeds 12 weeks of sessions (one or two most days, a few gap days) from a fixed random seed, so the Progress screen looks the same on every launch. Over the window the trends drift gently the way progressive dysarthria might: pace and strength go down, pauses and pitch variation go up, symmetry and clarity drop a little. These numbers are illustrative only and come from no patient.
 
+**Speech check tasks.** `ToyBand.setMode` switches the toy wearer to a task: a held vowel of 11–13 s with breath noise (harmonics-to-noise ratio near 14.5 dB), “pa-pa-pa” at 5.3 and “pa-ta-ka” at 4.4 syllables per second with timing jitter, or the reading passage at 3.4–3.7 syllables per second in breath groups of about 7 syllables, about 40% weaker by the end. These are tuned so a live check lands near the end of the sample check history (`TaskAnalysisTests.testToyBandTasksMatchRecentSampleHistory`). `ToyBand.render(_:seconds:)` produces the same frames synchronously for tests.
+
+### Check history: `ToyCheckHistory`
+
+`Fonos/Check/SpeechCheckRecord.swift` seeds 13 weekly checks, the last one a week ago so a new check is due. Every task measure drifts slowly in the direction ALS speech changes, and the self-rated speech drops from 4 to 3 partway through. Labeled as sample data wherever shown.
+
 ### Translation: `ToyTranslator`
 
 `Fonos/Speech/SpeechTranslator.swift` reveals a scripted phrase about two words per second while listening, then returns it with a confidence of 0.74–0.90. `VoiceOutput` speaks it with `AVSpeechSynthesizer`, using the patient's Personal Voice when they have one and allow it.
@@ -49,6 +55,8 @@ ToyBand ──frame──▶ StreamStore     (display ring buffers, lock-protect
 
 `FonosEngine` owns the pipeline. Display views read `StreamStore.snapshot()` at 30 fps (10 fps with Reduce Motion), so frame-rate data never goes through SwiftUI's observation system.
 
+During a Speech check task, frames are also copied into a task buffer and kept out of `SpeechAnalyzer`, so task speech doesn't mix into conversation measures. When the task stops (Done, silence after voicing, or its time limit), `TaskAnalysis` measures the buffer and the buffer is dropped.
+
 A **session** runs from when the app becomes active to when it goes to the background. When it ends, `SpeechAnalyzer.summary` produces a `SessionRecord` if there were at least half a second of voiced frames. Raw signals are never stored; only the summary is kept, in memory.
 
 ## Measures
@@ -66,7 +74,9 @@ All measures are descriptive. They are shown against the patient's own **baselin
 
 **Voicing.** A frame counts as voiced when its level is more than 12 dB above an adaptive noise floor. The floor follows quiet frames down immediately and rises slowly (0.02 dB per frame), so it tracks a changing environment without treating speech as noise.
 
-**Trend wording** (`Insights.swift`). A change under 5% from baseline is called "steady". The Progress headline picks the largest change in the worse direction and explains it in plain language, without diagnosing.
+**Weekly check measures** (`TaskAnalysis.swift`). Each task's voicing threshold is 12 dB above the 10th percentile of that task's own frame levels. Syllable peaks need 4 dB prominence; DDK peaks are at least 80 ms apart and refined to a fraction of a frame by a parabola, since a whole 10 ms frame is about 6% of a DDK interval. Baseline is the mean of the first three checks. See the README for the list.
+
+**Trend wording** (`Measure.swift`, `MeasureTrend`). A change under 5% from baseline is called "steady"; reading stamina and the 0–4 self-ratings use absolute bands of 1 dB and half a point. The Progress headline picks the largest change in the worse direction across all measures, scaling absolute changes so they rank alongside relative ones, and explains it in plain language, without diagnosing.
 
 ## Privacy
 
