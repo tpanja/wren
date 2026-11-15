@@ -41,6 +41,8 @@ final class SpeechAnalyzer: @unchecked Sendable {
     private var piezoFrames = 0
     private var pitches: [Float] = []
     private var pitchDeltas: [Float] = []
+    private var pitchSum: Float = 0
+    private var pitchCount = 0
     private var micWindow: [Float] = []
     private var clarity: [Double] = []
     private var live = Live()
@@ -51,7 +53,7 @@ final class SpeechAnalyzer: @unchecked Sendable {
             envelope.removeAll(keepingCapacity: true)
             firstVoiced = nil; lastVoiced = nil
             leftEnergy = 0; rightEnergy = 0; piezoFrames = 0
-            pitches.removeAll(); pitchDeltas.removeAll()
+            pitches.removeAll(); pitchDeltas.removeAll(); pitchSum = 0; pitchCount = 0
             micWindow.removeAll(); clarity.removeAll()
             live = Live()
         }
@@ -90,6 +92,7 @@ final class SpeechAnalyzer: @unchecked Sendable {
                 if let f0 {
                     if let last = pitches.last { pitchDeltas.append(abs(f0 - last)) }
                     pitches.append(f0)
+                    pitchSum += f0; pitchCount += 1
                 }
             } else if !voiced, !pitches.isEmpty {
                 // Do not count the jump across a pause as instability.
@@ -117,7 +120,7 @@ final class SpeechAnalyzer: @unchecked Sendable {
             let spanSeconds = Double(span.count) / 100
             let syllables = DSP.syllablePeaks(span, floorDb: noiseFloor + voicingMargin)
             let pauseRatio = 1 - Double(voicedFrames) / Double(max(span.count, 1))
-            let meanF0 = pitchDeltas.isEmpty ? 0 : (pitches.reduce(0, +) / Float(max(pitches.count, 1)))
+            let meanF0 = pitchCount > 0 ? pitchSum / Float(pitchCount) : 0
             let variation: Double? = (pitchDeltas.count > 10 && meanF0 > 0)
                 ? Double(pitchDeltas.reduce(0, +) / Float(pitchDeltas.count) / meanF0 * 100) : nil
             let symmetry: Double? = piezoFrames > 20
