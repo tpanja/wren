@@ -137,6 +137,7 @@
 		ECEC8F7462FFDA1B44322D1D /* clip01.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = clip01.wav; sourceTree = "<group>"; };
 		EDFBDAFDD82A726815A6CB00 /* SignalTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignalTests.swift; sourceTree = "<group>"; };
 		F0C09A73442A0299DEC8CAF1 /* FoldView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FoldView.swift; sourceTree = "<group>"; };
+		F57B4795D729F11E109FEBCA /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		F7292F3FC5C4A3BAD048E82E /* SessionStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionStore.swift; sourceTree = "<group>"; };
 		F778175CE4EF855E3B7A0CB0 /* Sora.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = Sora.ttf; sourceTree = "<group>"; };
 		F8825132E7B75E8F4C1961E7 /* BandScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BandScreen.swift; sourceTree = "<group>"; };
@@ -224,6 +225,7 @@
 		753F14A7F26C17E33BB10F46 /* Fonos */ = {
 			isa = PBXGroup;
 			children = (
+				F57B4795D729F11E109FEBCA /* Info.plist */,
 				9EC6A97ECA1E561F481AEB67 /* App */,
 				9C45CDE1F673223A9CDB2DBD /* Check */,
 				92B1FBC3112ACF3D92E2A5D7 /* Data */,
@@ -552,7 +554,9 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Fonos/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = Fonos;
+				INFOPLIST_KEY_LSSupportsOpeningDocumentsInPlace = YES;
 				INFOPLIST_KEY_NSBluetoothAlwaysUsageDescription = "Fonos connects to your throat band over Bluetooth to receive the microphone and vibration signals it uses to speak for you.";
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Fonos listens through the microphone to recognize speech and say it clearly.";
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -640,7 +644,9 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Fonos/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = Fonos;
+				INFOPLIST_KEY_LSSupportsOpeningDocumentsInPlace = YES;
 				INFOPLIST_KEY_NSBluetoothAlwaysUsageDescription = "Fonos connects to your throat band over Bluetooth to receive the microphone and vibration signals it uses to speak for you.";
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Fonos listens through the microphone to recognize speech and say it clearly.";
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;

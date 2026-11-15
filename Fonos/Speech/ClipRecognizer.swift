@@ -24,6 +24,29 @@ struct DemoClip: Codable, Identifiable, Sendable {
         let name = (file as NSString).deletingPathExtension
         return Bundle.main.url(forResource: name, withExtension: "wav")
     }
+
+    /// "01 It was a good win for us.wav": the number, then the sentence.
+    var shareName: String {
+        let number = id.filter(\.isNumber)
+        let sentence = text.filter { !"/\\:?*\"<>|".contains($0) }
+            .trimmingCharacters(in: CharacterSet(charactersIn: ". "))
+        return "\(number) \(sentence).wav"
+    }
+
+    /// Copies the recordings into Documents/Demo recordings, which the Files
+    /// app shows under On My iPhone > Fonos, so they can be played or
+    /// AirDropped to another device for the demo. Leaves existing copies alone.
+    static func copyToFiles() {
+        let fm = FileManager.default
+        guard let docs = fm.urls(for: .documentDirectory, in: .userDomainMask).first else { return }
+        let folder = docs.appendingPathComponent("Demo recordings", isDirectory: true)
+        try? fm.createDirectory(at: folder, withIntermediateDirectories: true)
+        for clip in bundled {
+            let target = folder.appendingPathComponent(clip.shareName)
+            guard let source = clip.url, !fm.fileExists(atPath: target.path) else { continue }
+            try? fm.copyItem(at: source, to: target)
+        }
+    }
 }
 
 /// Recognizes which demo recording is playing near the microphone.

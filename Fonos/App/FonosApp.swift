@@ -9,6 +9,7 @@ struct FonosApp: App {
     init() {
         FonosType.register()
         FonosType.applyAppearance()
+        DispatchQueue.global(qos: .utility).async { DemoClip.copyToFiles() }
     }
 
     var body: some Scene {
