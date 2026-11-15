@@ -69,10 +69,11 @@ A change under 5% from baseline is reported as steady. Reading stamina sits near
 
 ## Design
 
-- **Look.** Warm porcelain ground with soft-shadowed white cards, WHOOP-style rings, and Apple Health–style summary cards. Each stream keeps one color everywhere: mic amber, left piezo teal, right piezo violet.
+- **Look.** Light by default, with colors sampled from the band itself: white-shell cards on a pale grey ground, black-strap text, WHOOP-style rings, and Apple Health–style summary cards. Each stream keeps one color everywhere: mic grey-green (the liner), left piezo green and right piezo blue (the sensor wires).
 - **Type.** Atkinson Hyperlegible Next (Braille Institute) for all reading text, chosen for low-vision legibility. Sora for numerals, titles, and tracked caps. Both are in `Fonos/Resources/Fonts` with their licenses and scale with Dynamic Type.
 - **Icons.** A custom SVG set in `Assets.xcassets/Icons` on a 24 pt grid with a 1.8 pt rounded stroke. No SF Symbols.
 - **Accessibility.** Targets of 60 pt or larger for primary actions, full VoiceOver labels, Dynamic Type through accessibility sizes (the Speak button moves to the top at the largest sizes), Reduce Motion respected, and no gesture-only or timed actions.
+- **Design review skill.** The repo carries the [unslop-ui](.claude/skills/unslop-ui/SKILL.md) Claude skill (vendored unchanged from [vibecoded-design-tells](https://github.com/JCarterJohnson/vibecoded-design-tells), MIT). Claude Code loads it automatically in this repo when you ask it to build, restyle, or review UI, and uses it to avoid default "AI-made" looks. Its scanner (`python3 .claude/skills/unslop-ui/scripts/devibe_scan.py <path>`) reads web files only (HTML, CSS, JS/TS, and similar), so it finds nothing in the Swift sources; for this app, audit by eye against [references/tells.md](.claude/skills/unslop-ui/references/tells.md).
 - **Performance.** Live charts pause when off screen, and views copy only the buffers they draw. In a Release build on the simulator, the app uses about 10% of one core on the Speak screen and about 2% on Progress.
 
 ## Layout
@@ -88,6 +89,7 @@ Fonos/
   Report/       ClinicReport (period, slopes, status, data quality), ClinicReportPage (the two PDF pages), ReportRenderer
   Features/     Speak, Progress, Speech check, Band, Settings, and Clinic summary screens
   Resources/    Asset catalog (app icon, custom icons), bundled fonts
+.claude/skills/ unslop-ui design-review skill for Claude Code (not part of the app build)
 FonosTests/     Unit tests: DSP, pitch tracking, syllable detection, analyzer, baseline, trends, task analysis, report statistics and PDF
 Docs/           Data handling, UI design, hardware integration notes
 ```
