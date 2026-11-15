@@ -1,42 +1,45 @@
 # Fonos band firmware
 
-`fonos_band/fonos_band.ino` turns an ESP32 into the Fonos band: it samples the contact microphone at 8 kHz and both piezos at 1 kHz, and streams them to the Fonos app over Bluetooth Low Energy. The app side of the protocol is `Fonos/Signal/BandProtocol.swift`; change both together.
+`fonos_band/fonos_band.ino` runs the Fonos band (an ESP32-S3 with an I2S throat microphone and two piezos): it streams the mic at 8 kHz and both piezos at 1 kHz to the Fonos app over Bluetooth Low Energy. The app side of the protocol is `Fonos/Signal/BandProtocol.swift`; change both together.
 
 ## Flash it
 
-1. Install the [Arduino IDE](https://www.arduino.cc/en/software).
-2. In **Boards Manager**, install **esp32 by Espressif Systems** (2.x or 3.x).
-3. Open `firmware/fonos_band/fonos_band.ino`.
-4. Check the pin settings at the top of the file against your wiring (see below).
-5. **Tools → Board**: pick your board, for example **ESP32 Dev Module** or **ESP32S3 Dev Module**.
-6. Connect the board by USB, pick its port under **Tools → Port**, and click **Upload**.
-7. Open **Tools → Serial Monitor** at 115200 baud. You should see `advertising as Fonos Band`, and the onboard light starts blinking.
+From the repo root, with the board on USB (the port name may differ):
+
+```bash
+arduino-cli core install esp32:esp32
+arduino-cli compile --fqbn "esp32:esp32:esp32s3:USBMode=hwcdc,CDCOnBoot=cdc,FlashSize=4M,PSRAM=enabled,PartitionScheme=huge_app" firmware/fonos_band
+arduino-cli upload -p /dev/cu.usbmodem1101 --fqbn "esp32:esp32:esp32s3:USBMode=hwcdc,CDCOnBoot=cdc,FlashSize=4M,PSRAM=enabled,PartitionScheme=huge_app" firmware/fonos_band
+```
+
+In the Arduino IDE the same settings are: board **ESP32S3 Dev Module**, USB Mode **Hardware CDC and JTAG**, USB CDC On Boot **Enabled**, Flash Size **4MB**, PSRAM **Enabled**, Partition Scheme **Huge APP**. The Bluetooth stack doesn't fit the default partition.
+
+The serial console (115200 baud) prints `advertising as Fonos Band, waiting for the app` once a second, then `streaming: 100 frames/s, 0 dropped` while the app is connected.
 
 ## Connect it to the app
 
-On the iPhone, open Fonos → **Band** → **Connect your band**, and allow Bluetooth. Fonos finds the band and connects; the light stays on, and the Serial Monitor prints `streaming: 100 frames/s, 0 dropped` once a second. After that, Fonos reconnects on its own whenever the band is on and in range.
-
-Don't pair the band in iPhone Settings → Bluetooth. Bluetooth LE devices like this connect from the app, and won't show up there.
+Open Fonos → **Band** → **Connect your band**, and allow Bluetooth. Fonos finds the band and connects, and after that reconnects on its own whenever the band is on and in range. Don't pair the band in iPhone Settings → Bluetooth; it connects from the app only.
 
 ## Wiring
 
-| Signal | Default pin | Notes |
-|---|---|---|
-| Contact microphone | GPIO 34 | Through its preamp |
-| Left piezo | GPIO 32 | |
-| Right piezo | GPIO 33 | |
-| Status light | GPIO 2 | Onboard LED on most DevKits; `-1` for none |
-| Battery | none | Optional: an ADC1 pin on a 1:2 divider from the cell |
+Read from the board's previous firmware (`dys_node` 0.1.0) by inspecting its pin routing over the ESP32-S3's built-in debug port:
 
-- Use **ADC1 pins only**. ADC2 can't be read while the radio is on. On an ESP32-S3, ADC1 is GPIO 1–10.
-- Each signal must sit around **mid-supply (about 1.65 V)** and stay within 0–3.3 V. The firmware removes the DC offset itself, but it can't recover a signal that is clipped at 0 V or 3.3 V.
-- A dual-core chip is assumed (the sampler has core 1 to itself). An ESP32-C3 or other single-core chip needs the sampler moved to core 0.
+| Signal | GPIO | Notes |
+|---|---|---|
+| Mic I2S bit clock (BCLK) | 13 | I2S digital mic, e.g. INMP441 |
+| Mic I2S word select (WS) | 9 | |
+| Mic I2S data (SD) | 11 | Left slot (mic L/R pin to ground) |
+| Left piezo | 1 | ADC1 channel 0, 0–3.1 V |
+| Right piezo | 2 | ADC1 channel 1, 0–3.1 V |
+
+Piezos must use ADC1 pins (GPIO 1–10 on the S3); ADC2 can't be read while the radio is on. Each piezo signal should sit around mid-supply and stay within the ADC range; the firmware removes the DC offset itself. The previous firmware is backed up in `firmware/backup/` on the Mac that flashed it (not in git); restore it with `esptool write-flash 0 original-firmware.bin`.
 
 ## Tuning
 
-- **`MIC_GAIN`, `PIEZO_GAIN`** (default 16, which is unity from 12 bits to 16 bits). If the traces on the app's Band page look small while you speak, raise the gain. If they flatten against the top and bottom, lower it.
-- **Battery**: set `BATTERY_PIN` to show the band's charge in the app. Without it, the app shows the battery as unknown.
-- **Skin contact**: the firmware doesn't sense contact yet, so the app doesn't show a contact state. When a contact sensor exists, set bits 0–2 of `flags` (see the protocol below).
+- **`MIC_GAIN`** (default 4) scales the mic's top 16 bits; **`PIEZO_GAIN`** (default 16, unity from 12 bits). Raise a gain if the app's traces look small while speaking, lower it if they flatten at the edges.
+- **Battery**: set `BATTERY_PIN` to an ADC1 pin on a 1:2 divider to show the charge in the app.
+- **Skin contact** isn't sensed yet, so the app doesn't show a contact state. Bits 0–2 of `flags` carry it when a sensor exists.
+- **Left and right**: GPIO 1 is sent as the left piezo. If the app's balance looks mirrored, swap `LEFT_PIN` and `RIGHT_PIN`.
 
 ## Protocol (version 1)
 
@@ -57,6 +60,6 @@ Don't pair the band in iPhone Settings → Bluetooth. Bluetooth LE devices like 
 
 That's 12.6 KB/s. A frame needs an MTU of at least 129; iPhones negotiate 185 or more. The firmware asks for a 15–30 ms connection interval, the fastest iOS allows, and several frames go out per interval.
 
-## Not tested yet
+## Verified
 
-This firmware was written against the ESP32 Arduino core's BLE library but hasn't been compiled or run on a board here. If it doesn't build for your board or core version, the likely spots are `analogSetAttenuation(ADC_11db)` (renamed in some 3.x releases) and the `onConnect` callback signature.
+On the band (ESP32-S3, 4 MB flash, 2 MB PSRAM), with Espressif core 3.3.12: the firmware compiles (615 KB, 19% of the app partition), flashes, and streams. A Mac test client using the app's `BandProtocol` decoder over real Bluetooth received 100.0 frames a second for 10 seconds with no lost or undecodable frames, with live levels on the mic (−24 dBFS RMS) and both piezos (−38 and −46 dBFS).

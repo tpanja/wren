@@ -37,7 +37,7 @@ Two sources conform: `ToyBand` (simulated) and `BluetoothBand` (the real band). 
 
 ## Still to do
 
-- Run the firmware and app together on real hardware. Nothing here has been tested against a board yet, and the iOS Simulator has no Bluetooth, so the connection flow has only been checked down to the "No Bluetooth here" state.
+- Run the app itself against the band. The firmware and protocol are verified on the real board (100 frames a second, no losses, decoded by `BandProtocol` over Bluetooth from a Mac), but the app's connection flow has only run in the iOS Simulator, which has no Bluetooth.
 - Skin-contact sensing and battery measurement on the band (the protocol already has fields for both).
 - A real translator: `SpeechTranslator` is the seam. `ToyTranslator` still returns scripted phrases even when the real band is connected.
 

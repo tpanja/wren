@@ -320,7 +320,7 @@ private struct SetupGuide: View {
     @State private var troubleOpen = false
 
     private let steps: [(String, String)] = [
-        ("Power the band", "Charge it, or plug it into a USB power bank. The small light on its board blinks while it waits for your iPhone."),
+        ("Power the band", "Charge it, or plug it into a USB power bank. It's ready to connect a few seconds after it powers on."),
         ("Keep your iPhone close", "Within about an arm's length while connecting. After that, across a room is fine."),
         ("Tap Connect band", "Allow Bluetooth when your iPhone asks. Fonos finds the band and connects."),
         ("Put the band on", "Center the microphone at the front of your throat with a sensor on each side. Snug, but comfortable."),
@@ -364,7 +364,7 @@ private struct SetupGuide: View {
                     tip("Turn the band off and on again, then tap Connect band.")
                     tip("Check that Bluetooth is on in Control Center.")
                     tip("Don't pair the band in iPhone Settings. It connects from Fonos only, and won't appear there.")
-                    tip("If the light on the band isn't blinking, it isn't powered, or its firmware needs flashing.")
+                    tip("Check the band has power: unplug it and plug it back in. If it still doesn't appear, its firmware may need flashing.")
                     tip("Still stuck? Ask whoever set up your band to check it against the Fonos firmware guide.")
                 }
                 .padding(.top, 12)
