@@ -2,7 +2,7 @@ import SwiftUI
 
 @main
 struct FonosApp: App {
-    @State private var engine = FonosEngine()
+    @State private var engine = CoachEngine()
     @AppStorage("fonos.appearance") private var appearance: Appearance = .dark
     @Environment(\.scenePhase) private var phase
 

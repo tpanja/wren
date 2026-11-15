@@ -226,7 +226,7 @@ struct MeasureCard: View {
                     if metric.status == .exploratory { ExploratoryTag() }
                 }
                 Spacer()
-                MiniBars(values: recent, color: metric.color == Theme.ink ? Theme.action : metric.color)
+                MiniBars(values: recent, color: metric.hasHue ? metric.color : Theme.action)
                     .frame(width: 92, height: 44)
             }
         }

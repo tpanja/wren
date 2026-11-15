@@ -180,5 +180,5 @@ struct MetricDetailScreen: View {
         .accessibilityLabel("\(metric.title) by day")
     }
 
-    private var lineColor: Color { metric.color == Theme.ink ? Theme.action : metric.color }
+    private var lineColor: Color { metric.hasHue ? metric.color : Theme.action }
 }

@@ -1,13 +1,14 @@
 import SwiftUI
 
-/// The band's state and its three raw streams. Driven by the simulated band
-/// until the hardware link is built.
+/// The band's state, its three raw streams, and the fit check. Driven by the
+/// simulated band until the hardware link is built.
 ///
-/// Performance note: this view never reads `engine.live` (which changes
-/// 10 times a second). Only `MicLevel` and `BalanceCard` do, so only they
-/// re-render; the live traces redraw themselves through their own timelines.
+/// Performance: this view never reads `engine.live` (which changes 20 times a
+/// second). Only `MicLevel` and `BalanceCard` do, so only they re-render; the
+/// live traces redraw through their own timelines.
 struct BandScreen: View {
-    @Environment(FonosEngine.self) private var engine
+    @Environment(CoachEngine.self) private var engine
+    @State private var showFitCheck = false
 
     var body: some View {
         NavigationStack {
@@ -17,22 +18,22 @@ struct BandScreen: View {
                     SampleBanner(text: "Simulated band. The Bluetooth link to the real band isn't built yet.")
 
                     Text("Sensors")
-                        .font(.metric(.title2, weight: .bold))
+                        .font(.metric(.title3, weight: .bold))
                         .foregroundStyle(Theme.ink)
                         .frame(maxWidth: .infinity, alignment: .leading)
-                        .padding(.top, 16)
+                        .padding(.top, 14)
                         .accessibilityAddTraits(.isHeader)
 
-                    SensorCard(title: "Contact microphone", icon: .mic, color: Theme.mic, rate: "8 kHz", contact: true) {
+                    SensorCard(title: "Microphone", icon: .mic, color: Theme.mic, rate: "16 kHz", contact: true) {
                         StreamTrace(streams: engine.streams, channel: .mic, color: Theme.mic)
                     } trailing: {
                         MicLevel()
                     }
-                    SensorCard(title: "Left piezo", icon: .piezoLeft, color: Theme.left, rate: "1 kHz",
+                    SensorCard(title: "Left accelerometer", icon: .accelLeft, color: Theme.left, rate: "4 kHz",
                                contact: engine.bandStatus.leftContact) {
                         StreamTrace(streams: engine.streams, channel: .left, color: Theme.left)
                     }
-                    SensorCard(title: "Right piezo", icon: .piezoRight, color: Theme.right, rate: "1 kHz",
+                    SensorCard(title: "Right accelerometer", icon: .accelRight, color: Theme.right, rate: "4 kHz",
                                contact: engine.bandStatus.rightContact) {
                         StreamTrace(streams: engine.streams, channel: .right, color: Theme.right)
                     }
@@ -45,6 +46,7 @@ struct BandScreen: View {
             .background(Theme.ground)
             .navigationTitle("Band")
             .toolbarBackground(Theme.ground, for: .navigationBar)
+            .sheet(isPresented: $showFitCheck) { FitCheckView() }
         }
     }
 
@@ -67,18 +69,22 @@ struct BandScreen: View {
                 Spacer(minLength: 8)
                 BatteryBadge(percent: engine.bandStatus.battery, charging: engine.bandStatus.isCharging)
             }
-            Button(engine.isStreaming ? "Pause signal" : "Resume signal") {
-                engine.isStreaming ? engine.stopStreaming() : engine.startStreaming()
+            HStack(spacing: 10) {
+                Button("Check fit") { showFitCheck = true }
+                    .buttonStyle(.well(Theme.action))
+                Button(engine.isStreaming ? "Pause" : "Resume") {
+                    engine.isStreaming ? engine.stopStreaming() : engine.startStreaming()
+                }
+                .buttonStyle(.well)
             }
-            .buttonStyle(.well)
         }
         .card(padding: 20)
     }
 }
 
-/// Live mic level in dBFS. Isolated so only this text refreshes at 10 Hz.
+/// Live mic level. Isolated so only this text refreshes at 20 Hz.
 private struct MicLevel: View {
-    @Environment(FonosEngine.self) private var engine
+    @Environment(CoachEngine.self) private var engine
     var body: some View {
         Text("\(Int(engine.live.micDb)) dBFS")
             .font(.ui(.subheadline, .medium))
@@ -87,9 +93,10 @@ private struct MicLevel: View {
     }
 }
 
-/// Live left/right share. Isolated so only this card refreshes at 10 Hz.
-private struct BalanceCard: View {
-    @Environment(FonosEngine.self) private var engine
+/// Live left/right share. Isolated so only this card refreshes at 20 Hz.
+struct BalanceCard: View {
+    @Environment(CoachEngine.self) private var engine
+    var title = "Left / right balance"
 
     var body: some View {
         let l = engine.live.leftLevel, r = engine.live.rightLevel
@@ -97,7 +104,8 @@ private struct BalanceCard: View {
         let leftShare = total > 0.005 ? Double(l / total) : 0.5
         let leftPct = Int((leftShare * 100).rounded())
         VStack(alignment: .leading, spacing: 12) {
-            CardHeader(title: "Left / right balance", icon: .symmetry, color: Theme.symmetry)
+            // Neutral title: the balance belongs to neither side's color.
+            CardHeader(title: title, icon: .symmetry, color: Theme.ink)
             GeometryReader { geo in
                 HStack(spacing: 2) {
                     Rectangle().fill(Theme.left).frame(width: max(0, geo.size.width * leftShare - 1))
@@ -117,7 +125,7 @@ private struct BalanceCard: View {
         }
         .card()
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel("Left right balance")
+        .accessibilityLabel(title)
         .accessibilityValue("Left \(leftPct) percent, right \(100 - leftPct) percent")
     }
 }
@@ -156,5 +164,61 @@ struct SensorCard<Trace: View, Trailing: View>: View {
 extension SensorCard where Trailing == EmptyView {
     init(title: String, icon: Icon, color: Color, rate: String, contact: Bool, @ViewBuilder trace: () -> Trace) {
         self.init(title: title, icon: icon, color: color, rate: rate, contact: contact, trace: trace, trailing: { EmptyView() })
+    }
+}
+
+/// "Hum any comfortable note": live left/right balance, then a verdict.
+struct FitCheckView: View {
+    @Environment(CoachEngine.self) private var engine
+    @Environment(\.dismiss) private var dismiss
+    @State private var seconds = 0
+
+    var body: some View {
+        NavigationStack {
+            VStack(alignment: .leading, spacing: 18) {
+                Text("Hum any comfortable note for a few seconds.")
+                    .font(.ui(.title3, .medium))
+                    .foregroundStyle(Theme.ink)
+                FoldView(streams: engine.streams)
+                    .frame(height: 110)
+                    .card()
+                BalanceCard(title: "How evenly the band feels your voice")
+                verdict
+                Spacer()
+            }
+            .padding(Theme.gutter)
+            .background(Theme.ground)
+            .navigationTitle("Check fit")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() } } }
+            .onAppear { engine.startFitCheck() }
+            .onDisappear { engine.stopFitCheck() }
+            .task {
+                while seconds < 4 {
+                    try? await Task.sleep(for: .seconds(1))
+                    seconds += 1
+                }
+            }
+        }
+    }
+
+    @ViewBuilder private var verdict: some View {
+        let l = engine.live.leftLevel, r = engine.live.rightLevel
+        let even = l + r > 0.01 && 1 - abs(l - r) / (l + r) >= 0.8
+        if seconds >= 3 {
+            HStack(alignment: .top, spacing: 10) {
+                if even {
+                    CheckDisc(color: Theme.good, size: 24)
+                    Text("Good fit. Both sides feel your voice evenly.").font(.ui(.body, .medium)).foregroundStyle(Theme.ink)
+                } else {
+                    FonosIcon(.warning, size: 24, relativeTo: .body).foregroundStyle(Theme.caution)
+                    Text(l < r ? "Move the band a little to the left." : "Move the band a little to the right.")
+                        .font(.ui(.body, .medium)).foregroundStyle(Theme.ink)
+                }
+            }
+            .accessibilityElement(children: .combine)
+        } else {
+            Text("Listening…").font(.ui(.body)).foregroundStyle(Theme.inkSecondary)
+        }
     }
 }

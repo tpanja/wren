@@ -136,6 +136,14 @@ enum MetricID: String, CaseIterable, Identifiable, Codable, Sendable {
         }
     }
 
+    /// Whether this measure has its own hue (ring metrics and their family).
+    var hasHue: Bool {
+        switch self {
+        case .pitchAccuracy, .pitchError, .sustainStability, .vibratoRate, .vibratoExtent, .vibratoRegularity, .range: true
+        default: false
+        }
+    }
+
     /// Ring metrics carry their own hue; every other measure is ink with its icon.
     var color: Color {
         switch self {
