@@ -326,6 +326,17 @@ enum SpeechSystem: String, CaseIterable, Identifiable {
         }
     }
 
+    /// Where the system's measures come from, for the report's group rows.
+    var reportNote: String {
+        switch self {
+        case .breathing: "Sustained /a/, reading passage, conversation level"
+        case .voice: "Sustained /a/, conversation pitch, piezo balance"
+        case .articulation: "Diadochokinetic tasks"
+        case .rhythm: "Reading passage, conversation, translator"
+        case .selfReport: "Weekly self-rating, 4 = normal, 0 = most affected"
+        }
+    }
+
     var color: Color {
         switch self {
         case .breathing: Theme.pauses

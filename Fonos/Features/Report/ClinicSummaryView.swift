@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// Builds, previews, and shares the one-page clinic summary.
+/// Builds, previews, and shares the two-page clinic summary.
 ///
 /// The period runs from the last time a summary was shared (or from the
 /// first session, the first time). Patient details are optional and stay
@@ -21,6 +21,7 @@ struct ClinicSummaryView: View {
     private var report: ClinicReport {
         ClinicReport.make(
             sessions: engine.store.visible,
+            checks: engine.checks.visible,
             patient: .init(name: name.trimmingCharacters(in: .whitespaces), dateOfBirth: dob),
             lastExport: lastExport
         )
@@ -30,12 +31,12 @@ struct ClinicSummaryView: View {
         let r = report
         ScrollView {
             VStack(alignment: .leading, spacing: Theme.stack) {
-                Text("A one-page report of your speech measures for your neurologist or speech therapist.")
+                Text("A two-page report of your speech measures and weekly checks for your neurologist or speech therapist.")
                     .font(.ui(.body))
                     .foregroundStyle(Theme.inkSecondary)
                     .fixedSize(horizontal: false, vertical: true)
 
-                PagePreview(report: r)
+                ForEach(1...ClinicReportPage.pageCount, id: \.self) { PagePreview(report: r, page: $0) }
 
                 coverage(r)
                 patientCard
@@ -71,17 +72,22 @@ struct ClinicSummaryView: View {
                 .font(.metric(.title3, weight: .semibold))
                 .foregroundStyle(Theme.ink)
             Text(r.sinceLastExport
-                 ? "Everything since your last summary. \(r.quality.sessions) session\(r.quality.sessions == 1 ? "" : "s")."
-                 : "All your sessions so far. \(r.quality.sessions) session\(r.quality.sessions == 1 ? "" : "s").")
+                 ? "Everything since your last summary. \(counts(r))."
+                 : "Everything so far. \(counts(r)).")
                 .font(.ui(.subheadline))
                 .foregroundStyle(Theme.inkSecondary)
             if r.sinceLastExport {
-                Button("Include all sessions instead") { lastExportStamp = 0; justShared = nil }
+                Button("Include everything instead") { lastExportStamp = 0; justShared = nil }
                     .font(.ui(.subheadline, .semibold))
                     .frame(minHeight: 44)
             }
         }
         .card()
+    }
+
+    private func counts(_ r: ClinicReport) -> String {
+        let s = r.quality.sessions, c = r.quality.checks
+        return "\(s) session\(s == 1 ? "" : "s") and \(c) weekly check\(c == 1 ? "" : "s")"
     }
 
     private var patientCard: some View {
@@ -166,11 +172,12 @@ struct ClinicSummaryView: View {
 /// The real page, scaled to fit the screen width, on a paper card.
 private struct PagePreview: View {
     let report: ClinicReport
+    let page: Int
 
     var body: some View {
         GeometryReader { geo in
             let scale = geo.size.width / ClinicReportPage.size.width
-            ClinicReportPage(report: report)
+            ClinicReportPage(report: report, page: page)
                 .scaleEffect(scale, anchor: .topLeading)
                 .frame(width: geo.size.width, height: ClinicReportPage.size.height * scale, alignment: .topLeading)
                 .clipShape(RoundedRectangle(cornerRadius: 4, style: .continuous))
@@ -178,7 +185,7 @@ private struct PagePreview: View {
         }
         .aspectRatio(ClinicReportPage.size.width / ClinicReportPage.size.height, contentMode: .fit)
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel("Preview of the clinic summary")
-        .accessibilityValue(report.summary)
+        .accessibilityLabel("Preview of the clinic summary, page \(page) of \(ClinicReportPage.pageCount)")
+        .accessibilityValue(page == 1 ? report.summary : "Trend charts, data quality, and methods")
     }
 }

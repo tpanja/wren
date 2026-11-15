@@ -69,7 +69,7 @@ struct TrendsScreen: View {
                         FonosIcon(.report, size: 24, relativeTo: .title3).frame(width: 44, height: 44)
                     }
                     .accessibilityLabel("Clinic summary")
-                    .accessibilityHint("Creates a one-page report for your care team")
+                    .accessibilityHint("Creates a two-page report for your care team")
                 }
             }
             .toolbarBackground(Theme.ground, for: .navigationBar)

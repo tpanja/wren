@@ -46,7 +46,7 @@ final class ReportTests: XCTestCase {
         // Toy history schedules some of today's sessions later than `now`; those are not in the report yet.
         XCTAssertEqual(r.quality.sessions, history.filter { $0.date <= now }.count)
         XCTAssertTrue(r.isSample)
-        XCTAssertEqual(r.rows.map(\.metric), ClinicReport.order)
+        XCTAssertEqual(r.rows.map(\.measure), ClinicReport.order)
     }
 
     func testLaterReportCoversOnlyNewSessions() {
@@ -61,7 +61,7 @@ final class ReportTests: XCTestCase {
     func testDecliningHistoryIsReportedUnfavorably() throws {
         let history = ToyHistory.make(now: now)
         let r = ClinicReport.make(sessions: history, patient: .init(), lastExport: now.addingTimeInterval(-30 * day), now: now)
-        let pace = try XCTUnwrap(r.rows.first { $0.metric == .pace })
+        let pace = try XCTUnwrap(r.rows.first { $0.measure == .session(.pace) })
         XCTAssertEqual(pace.status, .unfavorable)
         XCTAssertLessThan(try XCTUnwrap(pace.change), -0.05)
         XCTAssertTrue(r.summary.contains("unfavorable direction"))
@@ -71,6 +71,37 @@ final class ReportTests: XCTestCase {
         let history = ToyHistory.make(now: now)
         let r = ClinicReport.make(sessions: history, patient: .init(), lastExport: now.addingTimeInterval(-3600), now: now)
         XCTAssertTrue(r.rows.allSatisfy { $0.status == .insufficient })
-        XCTAssertTrue(r.summary.hasPrefix("Not enough sessions"))
+        XCTAssertTrue(r.summary.hasPrefix("Not enough data"))
+    }
+
+    // MARK: Weekly checks in the report
+
+    func testReportIncludesCheckMeasuresGroupedBySystem() throws {
+        let r = ClinicReport.make(sessions: ToyHistory.make(now: now), checks: ToyCheckHistory.make(now: now),
+                                  patient: .init(), lastExport: nil, now: now)
+        // Rows follow the speech systems in order.
+        let systems = r.rows.map(\.system)
+        XCTAssertEqual(systems, systems.sorted { SpeechSystem.allCases.firstIndex(of: $0)! < SpeechSystem.allCases.firstIndex(of: $1)! })
+        let mpt = try XCTUnwrap(r.rows.first { $0.measure == .check(.mpt) })
+        XCTAssertEqual(mpt.n, 13)
+        XCTAssertEqual(mpt.status, .unfavorable)
+        XCTAssertEqual(r.quality.checks, 13)
+        XCTAssertEqual(r.quality.checkTasks, 52)
+        XCTAssertEqual(r.quality.selfReports, 13)
+        XCTAssertNotNil(r.checkBaselineEnd)
+    }
+
+    func testFatigueChangeIsInDecibels() throws {
+        let r = ClinicReport.make(sessions: [], checks: ToyCheckHistory.make(now: now), patient: .init(), lastExport: nil, now: now)
+        let row = try XCTUnwrap(r.rows.first { $0.measure == .check(.fatigue) })
+        // Absolute dB difference, not a percentage of a near-zero baseline.
+        XCTAssertLessThan(abs(try XCTUnwrap(row.change)), 3)
+        XCTAssertTrue(ClinicReport.changePhrase(-1.2, .check(.fatigue)).hasPrefix("1.2 dB"))
+    }
+
+    func testChecksOnlyReportStillDescribesChange() {
+        let r = ClinicReport.make(sessions: [], checks: ToyCheckHistory.make(now: now), patient: .init(), lastExport: nil, now: now)
+        XCTAssertTrue(r.summary.contains("unfavorable direction"), r.summary)
+        XCTAssertTrue(r.rows.filter { !$0.measure.isCheck }.allSatisfy { $0.status == .insufficient })
     }
 }

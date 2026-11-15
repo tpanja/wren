@@ -1,8 +1,8 @@
 import Foundation
 
-/// Everything the one-page clinic summary shows, computed from session
-/// records. Pure and deterministic so it can be unit tested; the page view
-/// only lays it out.
+/// Everything the clinic summary shows, computed from conversation
+/// sessions and weekly Speech checks. Pure and deterministic so it can be
+/// unit tested; the page views only lay it out.
 struct ClinicReport: Equatable {
 
     struct Patient: Equatable {
@@ -11,18 +11,18 @@ struct ClinicReport: Equatable {
     }
 
     enum Status: Equatable {
-        /// Fewer than 3 sessions in the period, or no baseline yet.
+        /// Fewer than 3 values in the period, or no baseline yet.
         case insufficient
-        /// Period mean within ±5% of baseline.
+        /// Period mean within the measure's stable band of baseline.
         case stable
-        /// Beyond ±5% in the measure's good direction.
+        /// Beyond the stable band in the measure's good direction.
         case favorable
-        /// Beyond ±5% in the measure's worse direction.
+        /// Beyond the stable band in the measure's worse direction.
         case unfavorable
 
         var label: String {
             switch self {
-            case .insufficient: "Too few sessions"
+            case .insufficient: "Too few data"
             case .stable: "Stable"
             case .favorable: "Favorable"
             case .unfavorable: "Unfavorable"
@@ -40,17 +40,19 @@ struct ClinicReport: Equatable {
     }
 
     struct Row: Equatable, Identifiable {
-        let metric: Metric
+        let measure: Measure
         var baseline: Double?
         var periodMean: Double?
         var n: Int
-        /// Relative change of the period mean against baseline.
+        /// Change of the period mean against baseline: relative, or an
+        /// absolute difference for `measure.changeIsAbsolute`.
         var change: Double?
         var slope: Slope?
         var status: Status
-        /// Session values in the period, for the small chart.
+        /// Values in the period, for the small chart.
         var points: [Point]
-        var id: Metric { metric }
+        var id: String { measure.id }
+        var system: SpeechSystem { SpeechSystem.of(measure) }
     }
 
     struct Point: Equatable {
@@ -67,6 +69,10 @@ struct ClinicReport: Equatable {
         var piezoSessions: Int
         var translatedSessions: Int
         var longestGapDays: Int
+        var checks: Int = 0
+        /// Tasks recorded across the checks, out of 4 per check.
+        var checkTasks: Int = 0
+        var selfReports: Int = 0
     }
 
     var patient: Patient
@@ -77,52 +83,65 @@ struct ClinicReport: Equatable {
     var sinceLastExport: Bool
     var baselineStart: Date?
     var baselineEnd: Date?
+    var checkBaselineStart: Date?
+    var checkBaselineEnd: Date?
     var rows: [Row]
     var quality: Quality
     var isSample: Bool
     var reportID: String
 
-    static let steadyBand = 0.05
-
-    /// Measures in the order a clinician reads them: outcome first, then
-    /// rate and timing, then voice production.
-    static let order: [Metric] = [.clarity, .pace, .pauses, .strength, .steadiness, .symmetry]
+    /// Measures grouped by speech system: breathing, voice, articulation,
+    /// rhythm and intelligibility, then the patient's own rating.
+    static let order: [Measure] = SpeechSystem.allCases.flatMap(\.measures)
 
     // MARK: Build
 
     static func make(
         sessions all: [SessionRecord],
+        checks allChecks: [SpeechCheckRecord] = [],
         patient: Patient,
         lastExport: Date?,
         now: Date = .now,
         calendar: Calendar = .current
     ) -> ClinicReport {
         let sorted = all.sorted { $0.date < $1.date }
+        let sortedChecks = allChecks.sorted { $0.date < $1.date }
         let baseline = Baseline.from(sorted)
         let baselineSessions = Array(sorted.prefix(5))
+        let baselineChecks = Array(sortedChecks.prefix(3))
 
-        let start = lastExport ?? sorted.first?.date ?? now
+        let first = [sorted.first?.date, sortedChecks.first?.date].compactMap { $0 }.min()
+        let start = lastExport ?? first ?? now
         // First summary: everything so far. Later ones: only what is new since the last share.
-        let inPeriod = lastExport == nil
-            ? sorted.filter { $0.date <= now }
-            : sorted.filter { $0.date > start && $0.date <= now }
+        func inRange(_ d: Date) -> Bool { lastExport == nil ? d <= now : d > start && d <= now }
+        let inPeriod = sorted.filter { inRange($0.date) }
+        let checksInPeriod = sortedChecks.filter { inRange($0.date) }
 
         let rows: [Row] = order.map { m in
-            let pts = inPeriod.compactMap { s in m.value(s, baseline: baseline).map { Point(date: s.date, value: $0) } }
-            let baseValues = baselineSessions.compactMap { m.value($0, baseline: baseline) }
-            let base = baseline == nil || baseValues.isEmpty ? nil : mean(baseValues)
+            let all = m.series(sessions: sorted, checks: sortedChecks, baseline: baseline)
+            let pts = all.filter { inRange($0.date) }
+            let base: Double? = {
+                switch m {
+                case .session(let metric):
+                    let v = baselineSessions.compactMap { metric.value($0, baseline: baseline) }
+                    return baseline == nil || v.isEmpty ? nil : mean(v)
+                case .check: return m.baselineValue(all)
+                }
+            }()
             let pm = pts.isEmpty ? nil : mean(pts.map(\.value))
             var change: Double?
-            if let base, let pm, base != 0 { change = (pm - base) / abs(base) }
+            if let base, let pm {
+                if m.changeIsAbsolute { change = pm - base } else if base != 0 { change = (pm - base) / abs(base) }
+            }
             let status: Status
             if pts.count < 3 || change == nil {
                 status = .insufficient
-            } else if abs(change!) < steadyBand {
+            } else if abs(change!) < m.steadyBand {
                 status = .stable
             } else {
                 status = (change! > 0) == m.higherIsBetter ? .favorable : .unfavorable
             }
-            return Row(metric: m, baseline: base, periodMean: pm, n: pts.count, change: change,
+            return Row(measure: m, baseline: base, periodMean: pm, n: pts.count, change: change,
                        slope: slope(pts), status: status, points: pts)
         }
 
@@ -143,32 +162,48 @@ struct ClinicReport: Equatable {
             medianVoicedSeconds: median(voiced),
             piezoSessions: inPeriod.filter { $0.symmetry != nil }.count,
             translatedSessions: inPeriod.filter { $0.clarity != nil }.count,
-            longestGapDays: gap
+            longestGapDays: gap,
+            checks: checksInPeriod.count,
+            checkTasks: checksInPeriod.map(\.completedTasks).reduce(0, +),
+            selfReports: checksInPeriod.filter { $0.selfReport != nil }.count
         )
 
         return ClinicReport(
             patient: patient, periodStart: start, periodEnd: now, generated: now,
             sinceLastExport: lastExport != nil,
             baselineStart: baselineSessions.first?.date, baselineEnd: baseline?.establishedOn,
+            checkBaselineStart: baselineChecks.first?.date,
+            checkBaselineEnd: baselineChecks.count >= 2 ? baselineChecks.last?.date : nil,
             rows: rows, quality: quality,
-            isSample: inPeriod.contains(where: \.isSample) || inPeriod.isEmpty,
-            reportID: reportID(now: now, count: inPeriod.count)
+            isSample: inPeriod.contains(where: \.isSample) || checksInPeriod.contains(where: \.isSample)
+                || (inPeriod.isEmpty && checksInPeriod.isEmpty),
+            reportID: reportID(now: now, count: inPeriod.count + checksInPeriod.count)
         )
     }
 
-    /// The one-sentence summary at the top of the page. Factual, never diagnostic.
+    /// The summary at the top of the page. Factual, never diagnostic.
     var summary: String {
         let measured = rows.filter { $0.status != .insufficient }
         guard !measured.isEmpty else {
-            return "Not enough sessions in this period to describe a change. At least 3 sessions are needed per measure."
+            return "Not enough data in this period to describe a change. Each measure needs at least 3 sessions or weekly checks."
         }
         let unfavorable = measured.filter { $0.status == .unfavorable }
-        if let top = unfavorable.max(by: { abs($0.change ?? 0) < abs($1.change ?? 0) }), let c = top.change {
-            let pct = Int((abs(c) * 100).rounded())
-            return "\(unfavorable.count) of \(measured.count) measures moved beyond ±5% of baseline in the unfavorable direction. "
-                + "The largest is \(top.metric.reportName.lowercased()), \(pct)% \(c > 0 ? "higher" : "lower") than baseline."
+        if let top = unfavorable.max(by: { Self.severity($0) < Self.severity($1) }), let c = top.change {
+            let systems = SpeechSystem.allCases.filter { sys in unfavorable.contains { $0.system == sys } }
+            return "\(unfavorable.count) of \(measured.count) measures moved beyond their stable band in the unfavorable direction"
+                + " (\(systems.map { $0.title.lowercased() }.joined(separator: ", "))). "
+                + "The largest is \(top.measure.reportName), \(Self.changePhrase(c, top.measure)) than baseline."
         }
-        return "All \(measured.count) measures with enough data are within ±5% of baseline or changed in the favorable direction."
+        return "All \(measured.count) measures with enough data are within their stable band of baseline or changed in the favorable direction."
+    }
+
+    static func severity(_ r: Row) -> Double { abs(r.change ?? 0) / r.measure.severityScale }
+
+    /// "12% lower" or "1.5 dB lower".
+    static func changePhrase(_ c: Double, _ m: Measure) -> String {
+        let dir = c > 0 ? "higher" : "lower"
+        if m.changeIsAbsolute { return "\(m.reportFormat(abs(c))) \(m.unit == "of 4" ? "points" : m.unit) \(dir)" }
+        return "\(Int((abs(c) * 100).rounded()))% \(dir)"
     }
 
     // MARK: Statistics

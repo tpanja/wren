@@ -88,7 +88,7 @@ struct SettingsScreen: View {
                 } header: {
                     Text("Care team")
                 } footer: {
-                    Text("A one-page PDF of your speech trends for your neurologist or speech therapist.")
+                    Text("A two-page PDF of your speech trends and weekly checks for your neurologist or speech therapist.")
                 }
                 .listRowBackground(Theme.card)
 

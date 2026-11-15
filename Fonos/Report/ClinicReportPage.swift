@@ -1,26 +1,35 @@
 import Charts
 import SwiftUI
 
-/// The printed page. US Letter (612 × 792 pt), always light, fixed point
+/// The printed pages. US Letter (612 × 792 pt), always light, fixed point
 /// sizes: this is a document for a clinic chart, not an app screen, so it
 /// ignores Dynamic Type and dark mode on purpose.
+///
+/// Page 1: summary and the measures table, grouped by speech system.
+/// Page 2: a trend chart per measure, data quality, and methods.
 struct ClinicReportPage: View {
     let report: ClinicReport
+    var page = 1
 
     static let size = CGSize(width: 612, height: 792)
     static let margin: CGFloat = 40
+    static let pageCount = 2
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            header
-            patientBlock.padding(.top, 12)
-            if report.isSample { sampleNotice.padding(.top, 10) }
-            summaryBlock.padding(.top, 12)
-            measuresTable.padding(.top, 12)
-            trendGrid.padding(.top, 12)
+            if page == 1 {
+                header
+                patientBlock.padding(.top, 12)
+                if report.isSample { sampleNotice.padding(.top, 10) }
+                summaryBlock.padding(.top, 12)
+                measuresTable.padding(.top, 12)
+            } else {
+                runningHeader
+                trendGrid.padding(.top, 14)
+                footBlocks.padding(.top, 14)
+            }
             Spacer(minLength: 10)
-            footBlocks
-            footer.padding(.top, 10)
+            footer
         }
         .padding(.horizontal, Self.margin)
         .padding(.top, 34)
@@ -43,7 +52,7 @@ struct ClinicReportPage: View {
                     Text("Speech Monitoring Summary")
                         .font(Paper.display(18, .semibold))
                         .foregroundStyle(Paper.ink)
-                    Text("Throat-band speech measures between clinic visits")
+                    Text("Throat-band speech measures and weekly speech checks between clinic visits")
                         .font(Paper.text(8.5)).foregroundStyle(Paper.ink2)
                 }
                 Spacer()
@@ -54,6 +63,22 @@ struct ClinicReportPage: View {
                 }
             }
             .padding(.top, 10)
+        }
+    }
+
+    /// Smaller header on page 2, so a loose page can still be identified.
+    private var runningHeader: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            Rectangle().fill(Paper.accent).frame(height: 1.5)
+            HStack(alignment: .firstTextBaseline) {
+                Text("FONOS").font(Paper.display(7.5, .semibold)).tracking(2).foregroundStyle(Paper.accent)
+                Text("Speech Monitoring Summary").font(Paper.display(10, .semibold)).foregroundStyle(Paper.ink)
+                Spacer()
+                Text([report.patient.name.isEmpty ? nil : report.patient.name, periodText, report.reportID]
+                        .compactMap { $0 }.joined(separator: "  ·  "))
+                    .font(Paper.text(7.5)).monospacedDigit().foregroundStyle(Paper.ink2)
+            }
+            .padding(.top, 6)
         }
     }
 
@@ -74,9 +99,9 @@ struct ClinicReportPage: View {
 
     private var patientBlock: some View {
         HStack(alignment: .top, spacing: 0) {
-            field("Patient", report.patient.name.isEmpty ? nil : report.patient.name, width: 158)
-            field("Date of birth", report.patient.dateOfBirth.map(Paper.date), width: 92)
-            field("Baseline", baselineText, width: 150)
+            field("Patient", report.patient.name.isEmpty ? nil : report.patient.name, width: 140)
+            field("Date of birth", report.patient.dateOfBirth.map(Paper.date), width: 80)
+            field("Baseline", baselineText, width: 200)
             field("Period", periodLength, width: nil)
         }
         .padding(.vertical, 8)
@@ -89,7 +114,8 @@ struct ClinicReportPage: View {
             Text(label.uppercased())
                 .font(Paper.text(6.5, .semibold)).tracking(0.8).foregroundStyle(Paper.ink3)
             if let value {
-                Text(value).font(Paper.text(9.5, .semibold)).foregroundStyle(Paper.ink).lineLimit(1)
+                Text(value).font(Paper.text(9, .semibold)).foregroundStyle(Paper.ink)
+                    .fixedSize(horizontal: false, vertical: true)
             } else {
                 // Blank line the clinic can fill in by hand.
                 Rectangle().fill(Paper.ink3).frame(height: 0.75).padding(.top, 11).padding(.trailing, 14)
@@ -100,16 +126,23 @@ struct ClinicReportPage: View {
     }
 
     private var baselineText: String {
-        guard let s = report.baselineStart, let e = report.baselineEnd else { return "Not yet set" }
-        let cal = Calendar.current
-        let sameMonth = cal.isDate(s, equalTo: e, toGranularity: .month)
-        let end = sameMonth ? "\(cal.component(.day, from: e))" : Paper.shortDate(e)
-        return "First 5 sessions, \(Paper.shortDate(s))–\(end)"
+        var parts: [String] = []
+        if let s = report.baselineStart, let e = report.baselineEnd { parts.append("First 5 sessions, \(range(s, e))") }
+        if let s = report.checkBaselineStart, let e = report.checkBaselineEnd { parts.append("first 3 checks, \(range(s, e))") }
+        guard !parts.isEmpty else { return "Not yet set" }
+        let text = parts.joined(separator: "; ")
+        return text.prefix(1).uppercased() + text.dropFirst()
+    }
+
+    private func range(_ s: Date, _ e: Date) -> String {
+        let sameMonth = Calendar.current.isDate(s, equalTo: e, toGranularity: .month)
+        let end = sameMonth ? "\(Calendar.current.component(.day, from: e))" : Paper.shortDate(e)
+        return "\(Paper.shortDate(s))–\(end)"
     }
 
     private var periodLength: String {
         let q = report.quality
-        let scope = report.sinceLastExport ? "since last summary" : "all sessions to date"
+        let scope = report.sinceLastExport ? "since last summary" : "all data to date"
         return "\(q.periodDays) days, \(scope)"
     }
 
@@ -118,7 +151,7 @@ struct ClinicReportPage: View {
     private var sampleNotice: some View {
         HStack(alignment: .firstTextBaseline, spacing: 6) {
             Text("SAMPLE DATA").font(Paper.text(7, .bold)).tracking(1).foregroundStyle(Paper.brick)
-            Text("Values come from a simulated band and a synthetic session history. They are not measurements of this patient.")
+            Text("Values come from a simulated band and synthetic session and check histories. They are not measurements of this patient.")
                 .font(Paper.text(8)).foregroundStyle(Paper.ink2)
         }
         .padding(.horizontal, 8).padding(.vertical, 5)
@@ -140,33 +173,51 @@ struct ClinicReportPage: View {
     // MARK: Measures table
 
     private enum Col {
-        static let measure: CGFloat = 124
-        static let baseline: CGFloat = 62
-        static let mean: CGFloat = 78
-        static let change: CGFloat = 66
-        static let slope: CGFloat = 112
-        // status takes the rest (~90)
+        static let measure: CGFloat = 150
+        static let baseline: CGFloat = 56
+        static let mean: CGFloat = 72
+        static let change: CGFloat = 64
+        static let slope: CGFloat = 108
+        // status takes the rest (~80)
     }
 
     private var measuresTable: some View {
         VStack(alignment: .leading, spacing: 0) {
-            Paper.sectionTitle("Measures").padding(.bottom, 5)
+            Paper.sectionTitle("Measures by speech system").padding(.bottom, 5)
             HStack(alignment: .bottom, spacing: 0) {
                 headerCell("Measure", Col.measure, .leading)
                 headerCell("Baseline", Col.baseline, .trailing)
                 headerCell("Period mean (n)", Col.mean, .trailing)
                 headerCell("Change", Col.change, .trailing)
                 headerCell("Slope / 30 days (95% CI)", Col.slope, .trailing)
-                headerCell("Status (±5%)", nil, .leading).padding(.leading, 14)
+                headerCell("Status", nil, .leading).padding(.leading, 12)
             }
             .padding(.bottom, 4)
             Paper.rule(0.75)
-            ForEach(Array(report.rows.enumerated()), id: \.element.id) { i, row in
-                tableRow(row)
-                if i < report.rows.count - 1 { Paper.rule(0.6) }
+            ForEach(SpeechSystem.allCases) { sys in
+                let rows = report.rows.filter { $0.system == sys }
+                if !rows.isEmpty {
+                    groupRow(sys)
+                    ForEach(Array(rows.enumerated()), id: \.element.id) { i, row in
+                        tableRow(row)
+                        if i < rows.count - 1 { Paper.rule(0.5) }
+                    }
+                }
             }
             Paper.rule(0.75)
+            Text("n counts sessions for conversation measures and weekly checks for check measures. Change is relative to baseline, except reading fatigue (dB) and self-ratings (points), which are absolute differences.")
+                .font(Paper.text(6.5)).foregroundStyle(Paper.ink3)
+                .fixedSize(horizontal: false, vertical: true)
+                .padding(.top, 4)
         }
+    }
+
+    private func groupRow(_ sys: SpeechSystem) -> some View {
+        HStack(alignment: .firstTextBaseline, spacing: 6) {
+            Text(sys.title.uppercased()).font(Paper.text(7, .bold)).tracking(0.9).foregroundStyle(Paper.accent)
+            Text(sys.reportNote).font(Paper.text(6.5)).foregroundStyle(Paper.ink3)
+        }
+        .padding(.top, 7).padding(.bottom, 2)
     }
 
     private func headerCell(_ title: String, _ width: CGFloat?, _ align: Alignment) -> some View {
@@ -177,34 +228,37 @@ struct ClinicReportPage: View {
     }
 
     private func tableRow(_ r: ClinicReport.Row) -> some View {
-        let m = r.metric
+        let m = r.measure
         return HStack(alignment: .firstTextBaseline, spacing: 0) {
             HStack(alignment: .firstTextBaseline, spacing: 4) {
-                Text(m.reportName).font(Paper.text(9, .semibold)).foregroundStyle(Paper.ink)
-                Text(m.reportUnit).font(Paper.text(6.5)).foregroundStyle(Paper.ink3)
+                Text(m.reportName).font(Paper.text(8.5, .semibold)).foregroundStyle(Paper.ink)
+                Text(m.reportUnit).font(Paper.text(6)).foregroundStyle(Paper.ink3)
             }
             .lineLimit(1)
+            .minimumScaleFactor(0.85)
             .frame(width: Col.measure, alignment: .leading)
 
             num(r.baseline.map(m.reportFormat) ?? "—", Col.baseline)
             num(r.periodMean.map { "\(m.reportFormat($0)) (\(r.n))" } ?? "— (\(r.n))", Col.mean)
-            num(r.change.map { Paper.signedPercent($0) } ?? "—", Col.change, bold: r.status == .unfavorable)
+            num(r.change.map { Paper.change($0, m) } ?? "—", Col.change, bold: r.status == .unfavorable)
             num(r.slope.map { "\(Paper.signed($0.perMonth, m)) ± \(m.reportFormat($0.ci95))" } ?? "—", Col.slope)
 
             Text(r.status.label)
-                .font(Paper.text(8.5, r.status == .unfavorable ? .bold : .regular))
+                .font(Paper.text(8, r.status == .unfavorable ? .bold : .regular))
                 .foregroundStyle(statusColor(r.status))
                 .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(.leading, 14)
+                .padding(.leading, 12)
         }
-        .padding(.vertical, 4.5)
+        .padding(.vertical, 3.5)
     }
 
     private func num(_ s: String, _ width: CGFloat, bold: Bool = false) -> some View {
         Text(s)
-            .font(Paper.display(8.5, bold ? .semibold : .regular))
+            .font(Paper.display(8, bold ? .semibold : .regular))
             .monospacedDigit()
             .foregroundStyle(Paper.ink)
+            .lineLimit(1)
+            .minimumScaleFactor(0.85)
             .frame(width: width, alignment: .trailing)
     }
 
@@ -226,12 +280,14 @@ struct ClinicReportPage: View {
                 Spacer()
                 legend
             }
-            Grid(horizontalSpacing: 14, verticalSpacing: 8) {
-                GridRow {
-                    ForEach(report.rows.prefix(3)) { MiniTrend(row: $0) }
-                }
-                GridRow {
-                    ForEach(report.rows.dropFirst(3)) { MiniTrend(row: $0) }
+            // A plain Grid, not LazyVGrid: lazy containers don't draw in ImageRenderer.
+            let rows = stride(from: 0, to: report.rows.count, by: 4).map { Array(report.rows[$0..<min($0 + 4, report.rows.count)]) }
+            Grid(alignment: .topLeading, horizontalSpacing: 12, verticalSpacing: 8) {
+                ForEach(rows.indices, id: \.self) { i in
+                    GridRow {
+                        ForEach(rows[i]) { MiniTrend(row: $0) }
+                        ForEach(0..<(4 - rows[i].count), id: \.self) { _ in Color.clear.frame(height: 1) }
+                    }
                 }
             }
         }
@@ -241,7 +297,7 @@ struct ClinicReportPage: View {
         HStack(spacing: 10) {
             HStack(spacing: 3) {
                 Circle().fill(Paper.ink3).frame(width: 4, height: 4)
-                Text("session").font(Paper.text(7)).foregroundStyle(Paper.ink2)
+                Text("session or check").font(Paper.text(7)).foregroundStyle(Paper.ink2)
             }
             HStack(spacing: 3) {
                 Rectangle().fill(Paper.accent).frame(width: 12, height: 1.5)
@@ -257,24 +313,24 @@ struct ClinicReportPage: View {
     // MARK: Foot blocks
 
     private var footBlocks: some View {
-        HStack(alignment: .top, spacing: 22) {
+        HStack(alignment: .top, spacing: 20) {
             VStack(alignment: .leading, spacing: 5) {
                 Paper.sectionTitle("Data quality")
                 qualityGrid
             }
-            .frame(width: 210, alignment: .leading)
+            .frame(width: 176, alignment: .leading)
             VStack(alignment: .leading, spacing: 5) {
                 Paper.sectionTitle("Methods")
-                VStack(alignment: .leading, spacing: 2.5) {
-                    ForEach(ClinicReport.order, id: \.self) { m in
-                        (Text(m.reportName + ". ").font(Paper.text(7, .semibold)) + Text(m.reportDefinition).font(Paper.text(7)))
+                VStack(alignment: .leading, spacing: 2) {
+                    ForEach(ClinicReport.order) { m in
+                        (Text(m.reportName + ". ").font(Paper.text(6.5, .semibold)) + Text(m.reportDefinition).font(Paper.text(6.5)))
                             .foregroundStyle(Paper.ink2)
                             .fixedSize(horizontal: false, vertical: true)
                     }
-                    Text("Baseline is the mean of the first 5 sessions. Change compares the period mean with baseline; ±5% is treated as stable. Slope is an ordinary least-squares fit of session values over time, scaled to 30 days, with a 95% confidence interval. Status needs at least 3 sessions; slope needs 3 sessions spanning 7 days.")
-                        .font(Paper.text(7)).foregroundStyle(Paper.ink2)
+                    Text("Weekly check tasks: sustained /a/, /pa/ and /pataka/ repetition for 6 s, and a fixed reading passage (about 75 syllables). Baseline is the mean of the first 5 sessions, or of the first 3 weekly checks. Stable band: ±5% of baseline; 1 dB for reading fatigue; 0.5 points for self-ratings. Slope is an ordinary least-squares fit over time, scaled to 30 days, with a 95% confidence interval. Status needs 3 values in the period; slope needs 3 values spanning 7 days.")
+                        .font(Paper.text(6.5)).foregroundStyle(Paper.ink2)
                         .fixedSize(horizontal: false, vertical: true)
-                        .padding(.top, 2)
+                        .padding(.top, 3)
                 }
             }
         }
@@ -288,11 +344,14 @@ struct ClinicReportPage: View {
             qrow("Sessions", "\(q.sessions)")
             qrow("Days with a session", "\(q.activeDays) of \(q.periodDays)")
             qrow("Voiced speech, total", String(format: "%.0f min", q.voicedMinutes))
-            qrow("Voiced speech, median", String(format: "%.0f s per session", q.medianVoicedSeconds))
+            qrow("Voiced speech, median", String(format: "%.0f s / session", q.medianVoicedSeconds))
             qrow("Longest gap", "\(q.longestGapDays) day\(q.longestGapDays == 1 ? "" : "s")")
-            qrow("Piezo coverage", "\(q.piezoSessions) of \(q.sessions) sessions")
-            qrow("Translated speech", "\(q.translatedSessions) of \(q.sessions) sessions")
-            qrow("Translator", report.isSample ? "Toy translator (scripted)" : "On-device")
+            qrow("Piezo coverage", "\(q.piezoSessions) of \(q.sessions)")
+            qrow("Translated speech", "\(q.translatedSessions) of \(q.sessions)")
+            qrow("Weekly checks", "\(q.checks)")
+            qrow("Check tasks recorded", "\(q.checkTasks) of \(q.checks * CheckTask.allCases.count)")
+            qrow("Self-ratings", "\(q.selfReports) of \(q.checks)")
+            qrow("Translator", report.isSample ? "Toy (scripted)" : "On-device")
         }
     }
 
@@ -309,11 +368,12 @@ struct ClinicReportPage: View {
         VStack(alignment: .leading, spacing: 4) {
             Paper.rule(0.5)
             HStack(alignment: .firstTextBaseline) {
-                Text("Descriptive measures from a wearable throat sensor. Not diagnostic, and not validated against clinical scales. Interpret alongside clinical assessment.")
+                Text("Descriptive measures from a wearable throat sensor and patient self-report. Not diagnostic, and not validated against clinical scales. Interpret alongside clinical assessment.")
                     .font(Paper.text(7)).foregroundStyle(Paper.ink2)
                 Spacer(minLength: 12)
-                Text("Fonos \(Paper.appVersion) · Page 1 of 1")
+                Text("Fonos \(Paper.appVersion) · Page \(page) of \(Self.pageCount)")
                     .font(Paper.text(7)).foregroundStyle(Paper.ink3)
+                    .fixedSize()
             }
         }
     }
@@ -325,18 +385,20 @@ private struct MiniTrend: View {
     let row: ClinicReport.Row
 
     var body: some View {
-        let m = row.metric
-        VStack(alignment: .leading, spacing: 3) {
+        let m = row.measure
+        VStack(alignment: .leading, spacing: 2) {
+            Text(m.reportName).font(Paper.text(7, .semibold)).foregroundStyle(Paper.ink)
+                .lineLimit(1).minimumScaleFactor(0.8)
             HStack(alignment: .firstTextBaseline, spacing: 4) {
-                Text(m.reportName).font(Paper.text(7.5, .semibold)).foregroundStyle(Paper.ink)
-                Text(m.reportUnit).font(Paper.text(6.5)).foregroundStyle(Paper.ink3)
-                Spacer()
+                Text(m.reportUnit).font(Paper.text(6)).foregroundStyle(Paper.ink3).lineLimit(1)
+                Spacer(minLength: 2)
                 if let s = row.slope {
                     Text("\(Paper.signed(s.perMonth, m)) / 30 d")
-                        .font(Paper.display(6.5)).monospacedDigit().foregroundStyle(Paper.ink2)
+                        .font(Paper.display(6)).monospacedDigit().foregroundStyle(Paper.ink2)
+                        .fixedSize()
                 }
             }
-            chart.frame(height: 56)
+            chart.frame(height: 44)
         }
         .frame(maxWidth: .infinity)
     }
@@ -379,14 +441,14 @@ private struct MiniTrend: View {
             }
             .chartPlotStyle { $0.border(Paper.rule, width: 0.4) }
         } else {
-            Text("Not enough sessions in this period")
+            Text("Too few values in this period")
                 .font(Paper.text(7)).foregroundStyle(Paper.ink3)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .overlay(Rectangle().stroke(Paper.rule, lineWidth: 0.4))
         }
     }
 
-    private var m: Metric { row.metric }
+    private var m: Measure { row.measure }
 
     /// Two points of the fitted line, drawn across the period.
     private func fitLine(first: Date, last: Date) -> [ClinicReport.Point]? {
@@ -459,8 +521,13 @@ enum Paper {
         return (p >= 0 ? "+" : "−") + String(format: "%.1f%%", abs(p))
     }
 
-    static func signed(_ v: Double, _ m: Metric) -> String {
+    static func signed(_ v: Double, _ m: Measure) -> String {
         (v >= 0 ? "+" : "−") + m.reportFormat(abs(v))
+    }
+
+    /// Relative change as a percentage, or an absolute difference with its unit.
+    static func change(_ v: Double, _ m: Measure) -> String {
+        m.changeIsAbsolute ? signed(v, m) + (m.unit == "of 4" ? " pt" : " " + m.unit) : signedPercent(v)
     }
 
     static var appVersion: String {

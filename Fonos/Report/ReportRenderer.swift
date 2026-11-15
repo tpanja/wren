@@ -1,7 +1,7 @@
 import SwiftUI
 import UIKit
 
-/// Renders the clinic summary page to a one-page vector PDF.
+/// Renders the clinic summary to a vector PDF.
 @MainActor
 enum ReportRenderer {
 
@@ -15,12 +15,9 @@ enum ReportRenderer {
         return "Fonos speech summary \(f.string(from: report.generated)).pdf"
     }
 
-    /// Writes the PDF to a temporary file and returns its URL.
+    /// Writes the PDF (one page per `ClinicReportPage`) to a temporary file and returns its URL.
     static func pdf(_ report: ClinicReport) -> URL? {
         let size = ClinicReportPage.size
-        let renderer = ImageRenderer(content: ClinicReportPage(report: report))
-        renderer.proposedSize = ProposedViewSize(size)
-
         let url = FileManager.default.temporaryDirectory.appendingPathComponent(fileName(for: report))
         try? FileManager.default.removeItem(at: url)
         var box = CGRect(origin: .zero, size: size)
@@ -30,10 +27,14 @@ enum ReportRenderer {
             kCGPDFContextSubject: "Speech measures \(Paper.date(report.periodStart)) to \(Paper.date(report.periodEnd))",
         ]
         guard let ctx = CGContext(url as CFURL, mediaBox: &box, info as CFDictionary) else { return nil }
-        renderer.render { _, draw in
-            ctx.beginPDFPage(nil)
-            draw(ctx)
-            ctx.endPDFPage()
+        for page in 1...ClinicReportPage.pageCount {
+            let renderer = ImageRenderer(content: ClinicReportPage(report: report, page: page))
+            renderer.proposedSize = ProposedViewSize(size)
+            renderer.render { _, draw in
+                ctx.beginPDFPage(nil)
+                draw(ctx)
+                ctx.endPDFPage()
+            }
         }
         ctx.closePDF()
         return url
