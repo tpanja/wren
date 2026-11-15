@@ -1,36 +1,40 @@
-# Hardware integration (not built yet)
+# Hardware integration
 
-The Bluetooth connection to the ESP32 throat band is intentionally out of scope for this phase. The app runs on toy data so the experience can be designed and reviewed before the hardware link exists. This note records where the real band will plug in, so that work stays small when it starts.
+The Bluetooth link to the ESP32 throat band is not built yet. This note records what the singing coach needs from the band and where it plugs into the app, so the firmware and app work can proceed in parallel.
 
-## The seam: `FrameSource`
+## What the band must provide
 
-`Fonos/Signal/ToyBand.swift` defines:
+| Stream | Sensor | Proposed rate | Notes |
+|---|---|---|---|
+| Mic | Microphone at the front of the neck | 16 kHz | 16 kHz keeps the 2–4 kHz "ring" band measurable; µ-law to 8 bits over BLE |
+| Left accel | 3-axis accelerometer, left of the larynx | 4 kHz voice band | Send the dominant axis or vector magnitude; ±8 g range |
+| Right accel | Same, right side | 4 kHz voice band | |
+| Left/right motion | Same accelerometers, low-pass | 100 Hz | Slow laryngeal movement under 15 Hz |
+| Status | — | On change and every 5 s | Battery, charging, per-side contact, firmware version |
 
-```swift
-protocol FrameSource: AnyObject {
-    var onFrame: (@Sendable (SensorFrame) -> Void)? { get set }
-    var status: BandStatus { get }
-    func startStreaming()
-    func stopStreaming()
-}
-```
+- All streams are packed into 10 ms frames with a shared timestamp and a sequence number, so the phone can align them and detect drops.
+- **Throughput:** about 16 KB/s for the mic plus about 16 KB/s for both accelerometers (16-bit, one axis each), roughly 32 KB/s in total. That needs BLE 2M PHY and data-length extension. If the link can't sustain it, the fallback is 12 kHz mic and 3 kHz accelerometers.
+- **Contact detection** happens on the phone (vibration present while the mic hears voicing); the band only reports gross contact if it can.
 
-`ToyBand` is the only conforming type today. A future `BluetoothBand` would:
+## Where it plugs in
 
-1. Use CoreBluetooth to find and connect to the band, and remember it for automatic reconnection.
-2. Decode each notification into a `SensorFrame` (80 mic samples at 8 kHz, 10 samples per piezo at 1 kHz, normalized to −1…1).
-3. Report battery and sensor contact through `BandStatus`.
-4. Call `onFrame` on a background queue.
+The app reads frames through one protocol (`FrameSource`, today in `Fonos/Signal/ToyBand.swift`):
 
-`FonosEngine` would then hold a `FrameSource` instead of a concrete `ToyBand`. Nothing in `StreamStore`, `SpeechAnalyzer`, the translator, or any screen needs to change.
+- `onFrame` delivers each 10 ms frame on a background queue.
+- `status` reports battery and contact.
+- `startStreaming()` and `stopStreaming()`.
+
+Today only the toy band conforms. A future `BluetoothBand` will:
+
+1. Use CoreBluetooth to find the band, connect, and remember it for automatic reconnection.
+2. Decode notifications into frames at the rates above.
+3. Report status.
+
+Nothing in the analysis or UI changes when it is swapped in.
 
 ## Still to decide with the firmware
 
-- GATT service and characteristic layout, and how frames are packed. The rates above need about 16 KB/s of 16-bit audio; 8-bit µ-law for the mic would halve that and fit a 10 ms frame in one notification at the default iOS MTU.
-- How sensor contact is detected on the band.
-- Connection UX: first-time pairing screen, reconnect behavior, and what the Band tab shows while disconnected.
-- Permissions to add at that point: `NSBluetoothAlwaysUsageDescription` and, for background streaming, the `bluetooth-central` background mode.
-
-## Translation
-
-`SpeechTranslator` is the matching seam for translation. `ToyTranslator` returns scripted phrases. A real translator (on-device speech recognition, or a model fine-tuned on the patient's own recordings) conforms to the same protocol and receives the mic stream through `append(mic:)`.
+- GATT service and characteristic layout, frame packing, MTU
+- Accelerometer part, axis choice, and on-band filtering
+- Pairing and reconnect UX (the Band tab's fit check doubles as the connection check)
+- App permissions at that point: `NSBluetoothAlwaysUsageDescription`, and `bluetooth-central` for background streaming if needed

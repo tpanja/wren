@@ -1,57 +1,40 @@
 # Fonos
 
-iOS companion app for the Fonos throat band. The band will measure throat vibration with one contact microphone and two piezo sensors, and the phone will turn dysarthric speech from people living with ALS into clear speech.
+A singing coach for iPhone and the Fonos throat band. The band hears the voice through a microphone and feels it through two accelerometers on either side of the larynx. The phone analyzes both on-device, and after each take Fonos gives one clear thing to work on, with a drill.
 
-**Current phase: toy data only.** There is no Bluetooth connection yet. A simulated band generates speech-shaped signals at the real band's sample rates, and a toy translator returns scripted phrases that are spoken aloud. This shows how the app will look and behave in real use before the hardware link exists. Every screen that shows numbers says it is sample data.
+## Status
 
-## Run it
+- **Specification:** drafted and awaiting approval. Start with [Docs/SPEC.md](Docs/SPEC.md).
+- **iOS code:** a toy-data SwiftUI prototype from an earlier product direction. It is rebuilt to this spec next; [Docs/SPEC.md § 9](Docs/SPEC.md#9-migration-plan-from-the-current-prototype) lists the changes. The visual world (palette, type, icons, rings, cards) carries over.
+- **Hardware link:** the Bluetooth connection to the ESP32 band is not built yet.
 
-Requirements: Xcode 15 or later, iOS 17 or later. No third-party packages. The two bundled fonts (Atkinson Hyperlegible Next and Sora) are OFL-licensed assets, not code dependencies.
+## Documentation
+
+| Document | What it covers |
+|---|---|
+| [PRODUCT.md](PRODUCT.md) | Who Fonos is for, what it does, principles |
+| [Docs/SPEC.md](Docs/SPEC.md) | App specification: flows, metrics, LLM feedback summary, privacy, migration plan |
+| [Docs/SINGING-ANALYSIS.md](Docs/SINGING-ANALYSIS.md) | Outline of the speech and singing analysis documentation: data collection, processing, interpretation |
+| [Docs/LLM-FEEDBACK.md](Docs/LLM-FEEDBACK.md) | Feedback server, Claude request, system prompt, payload, output schema, sample feedback |
+| [Docs/UI-REDESIGN.md](Docs/UI-REDESIGN.md) | Screen-by-screen mock-up descriptions |
+| [Docs/HARDWARE-INTEGRATION.md](Docs/HARDWARE-INTEGRATION.md) | What the band must provide, and where it plugs into the app |
+
+## Run the prototype
+
+Requirements: Xcode 15 or later, iOS 17 or later. No third-party Swift packages. The bundled fonts (Atkinson Hyperlegible Next and Sora) are OFL-licensed assets in `Fonos/Resources/Fonts`.
 
 ```bash
 open Fonos.xcodeproj
 ```
 
-Pick an iPhone simulator and press Run. The project is generated from `project.yml` with [XcodeGen](https://github.com/yonaskolb/XcodeGen). After adding or moving files, regenerate it:
+The project is generated from `project.yml` with [XcodeGen](https://github.com/yonaskolb/XcodeGen). After adding or moving files:
 
 ```bash
 xcodegen generate
 ```
 
-Run the unit tests (signal processing, metrics, insights):
+## Privacy
 
-```bash
-xcodebuild -project Fonos.xcodeproj -scheme Fonos -destination 'platform=iOS Simulator,name=iPhone 17 Pro' test
-```
-
-## What's in the app
-
-| Tab | What it does |
-|---|---|
-| **Speak** | Live throat signal (the Fold view), a 132 pt Speak button, the translated phrase with replay, and large quick-phrase buttons. |
-| **Progress** | Three headline rings (Clarity, Strength, Pace), a plain-language insight against the patient's own baseline, and Apple Health–style cards for all six measures, each with a detail chart. |
-| **Band** | Simulated band status, each sensor's live trace and contact state, and the left/right balance. |
-| **Settings** (sliders icon) | Voice and Personal Voice, speaking speed, listening behavior, quick phrases, appearance. |
-
-## Layout
-
-```
-Fonos/
-  App/          FonosApp, RootView, FonosEngine (coordinator)
-  Design/       Theme tokens, Typography, Icons, shared components, FoldView
-  Signal/       ToyBand (simulated sensors), StreamStore, DSP, SpeechAnalyzer
-  Speech/       SpeechTranslator protocol + ToyTranslator, VoiceOutput
-  Data/         SessionRecord, Metric, SessionStore + ToyHistory, Insights
-  Features/     Speak, Progress, Band, Settings screens
-FonosTests/     Unit tests
-Docs/           Data handling, UI design, hardware integration notes
-```
-
-## Documentation
-
-- [Docs/DATA.md](Docs/DATA.md): the three streams, how toy data is generated, and how each measure is computed.
-- [Docs/UI-DESIGN.md](Docs/UI-DESIGN.md): design direction, accessibility decisions, and screen anatomy.
-- [Docs/HARDWARE-INTEGRATION.md](Docs/HARDWARE-INTEGRATION.md): where the real band will plug in. The Bluetooth layer is intentionally not built yet.
-- [PRODUCT.md](PRODUCT.md) and [DESIGN.md](DESIGN.md): product context and the design system.
+Audio and vibration are analyzed on the phone and never uploaded. With the singer's consent, only computed measurements go to the Fonos feedback server, which asks Claude for coaching. See [Docs/SPEC.md § 7](Docs/SPEC.md#7-privacy-by-design).
 
 Fonos is not a medical device and does not diagnose.
