@@ -120,11 +120,22 @@ enum TaskAnalysis {
         // DDK syllables are fast (5–7 per second): a 30 ms smoother and an
         // 80 ms minimum spacing (caps at 12.5 per second).
         let peaks = DSP.peakIndices(f.db, floorDb: f.threshold, prominence: 4, minGap: 8, smoothing: 3)
-        guard peaks.count >= 4, let first = peaks.first, let last = peaks.last, last > first else { return nil }
-        let intervals = zip(peaks, peaks.dropFirst()).map { Double($1 - $0) }
+        guard peaks.count >= 4 else { return nil }
+        // Refine each peak to a fraction of a frame with a parabola through
+        // its neighbors; at 5–7 syllables per second a whole 10 ms frame is
+        // about 6% of an interval, which would swamp the regularity measure.
+        let smooth = DSP.movingAverage(f.db, width: 3)
+        let times = peaks.map { i -> Double in
+            guard i > 0, i < smooth.count - 1 else { return Double(i) }
+            let a = Double(smooth[i - 1]), b = Double(smooth[i]), c = Double(smooth[i + 1])
+            let d = a - 2 * b + c
+            return Double(i) + (d < 0 ? max(-0.5, min(0.5, 0.5 * (a - c) / d)) : 0)
+        }
+        guard let first = times.first, let last = times.last, last > first else { return nil }
+        let intervals = zip(times, times.dropFirst()).map { $1 - $0 }
         let mean = intervals.reduce(0, +) / Double(intervals.count)
         let sd = (intervals.map { ($0 - mean) * ($0 - mean) }.reduce(0, +) / Double(intervals.count)).squareRoot()
-        return DDK(rate: Double(peaks.count - 1) / (Double(last - first) / 100),
+        return DDK(rate: Double(peaks.count - 1) / ((last - first) / 100),
                    regularity: sd / mean * 100,
                    syllables: peaks.count)
     }
