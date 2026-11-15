@@ -19,6 +19,9 @@ final class PhoneMic: @unchecked Sendable {
 
     /// Called on the audio thread with 80-sample chunks.
     var onSamples: (@Sendable ([Float]) -> Void)?
+    /// Called on the audio thread with each buffer at the mic's own rate,
+    /// for Apple's speech recognizer.
+    var onBuffer: (@Sendable (AVAudioPCMBuffer) -> Void)?
 
     private let engine = AVAudioEngine()
     private let level = OSAllocatedUnfairLock(initialState: Float(-90))
@@ -49,6 +52,7 @@ final class PhoneMic: @unchecked Sendable {
 
         input.installTap(onBus: 0, bufferSize: 2_048, format: format) { [weak self] buffer, _ in
             guard let self else { return }
+            self.onBuffer?(buffer)
             let capacity = AVAudioFrameCount(Double(buffer.frameLength) * 8_000 / format.sampleRate) + 32
             guard let out = AVAudioPCMBuffer(pcmFormat: target, frameCapacity: capacity) else { return }
             var fed = false

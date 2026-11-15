@@ -91,13 +91,19 @@ struct SpeakScreen: View {
     private var transcriptCard: some View {
         VStack(alignment: .leading, spacing: 8) {
             switch engine.speakState {
-            case .listening, .translating:
-                Text(engine.partialText.isEmpty ? "…" : engine.partialText)
+            case .listening:
+                // Words appear only once listening ends.
+                Text("…")
                     .font(.ui(.title2, .semibold))
-                    .foregroundStyle(Theme.ink)
+                    .foregroundStyle(Theme.inkSecondary)
                     .frame(maxWidth: .infinity, alignment: .leading)
-                    .contentTransition(.opacity)
-                    .accessibilityLabel(engine.partialText.isEmpty ? "Waiting for speech" : engine.partialText)
+                    .accessibilityLabel("Listening")
+            case .translating:
+                Text("Translating…")
+                    .font(.ui(.title2, .semibold))
+                    .foregroundStyle(Theme.inkSecondary)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .accessibilityLabel("Translating")
             default:
                 if let last = engine.utterances.first {
                     HStack(alignment: .top, spacing: 12) {
@@ -128,7 +134,7 @@ struct SpeakScreen: View {
         }
         .frame(minHeight: 72, alignment: .topLeading)
         .card()
-        .animation(.easeOut(duration: 0.2), value: engine.partialText)
+        .animation(.easeOut(duration: 0.2), value: engine.speakState)
     }
 
     // MARK: Phrases

@@ -17,6 +17,12 @@ protocol SpeechTranslator: AnyObject {
     var onPartial: ((String) -> Void)? { get set }
     /// True once the words are clear before listening ends, so it can end sooner.
     var isConfident: Bool { get }
+    /// When new words were last heard, if the translator can tell; listening
+    /// ends once no new words arrive for a while.
+    var lastWords: Date? { get }
+    /// True when the translator already has everything it needs, for
+    /// example a recognized recording that has finished playing.
+    var heardEnough: Bool { get }
     func begin() throws
     /// Mic samples, 8 kHz, -1...1. Called off the main thread.
     func append(mic: [Float])

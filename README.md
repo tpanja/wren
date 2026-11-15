@@ -4,7 +4,7 @@ iOS companion app for the Fonos throat band. The band measures throat vibration 
 
 The person with ALS operates the app themselves, often with declining hand control. Every action is a single large tap, and the Speak button is never more than one tap away.
 
-> **Current phase: real band link, demo translation.** Fonos connects to the ESP32 throat band over Bluetooth LE (firmware in [`firmware/`](firmware/README.md)) and streams its microphone and piezo signals live. Until a band is connected, a simulated band (`ToyBand`) generates speech-shaped signals at the same rates. The translator recognizes ten bundled recordings of dysarthric speech (see [Demo recordings](#demo-recordings)) and speaks the sentence each speaker meant to say; it does not understand new speech yet. The session and check histories are synthetic. Fonos is not a medical device and does not diagnose.
+> **Current phase: real band link, demo translation.** Fonos connects to the ESP32 throat band over Bluetooth LE (firmware in [`firmware/`](firmware/README.md)) and streams its microphone and piezo signals live. Until a band is connected, a simulated band (`ToyBand`) generates speech-shaped signals at the same rates. The translator recognizes ten bundled recordings of dysarthric speech (see [Demo recordings](#demo-recordings)) and speaks the sentence each speaker meant to say; anything else goes to Apple's built-in speech recognizer, which transcribes ordinary English (it isn't tuned for dysarthric speech). The session and check histories are synthetic. Fonos is not a medical device and does not diagnose.
 
 ## Run it
 
@@ -83,7 +83,7 @@ Fonos/
   App/          FonosApp, RootView, FonosEngine (coordinator: streaming, sessions, Speak flow)
   Design/       Theme tokens, Typography, Icons, shared components, FoldView
   Signal/       BandProtocol (BLE wire format), BluetoothBand (real band), ToyBand (simulated), PhoneMic (iPhone mic), StreamStore, DSP, SpeechAnalyzer
-  Speech/       SpeechTranslator protocol, ClipTranslator + ClipRecognizer (demo recordings), VoiceOutput (Personal Voice aware)
+  Speech/       SpeechTranslator protocol, ClipTranslator + ClipRecognizer (demo recordings), AppleSpeech (Speech framework fallback), VoiceOutput (Personal Voice aware)
   Resources/DemoClips/  the ten demo recordings and their sentences (clips.json)
   Check/        Speech check tasks, TaskAnalysis (MPT, HNR, DDK, reading), check records + ToyCheckHistory, CheckStore
   Data/         SessionRecord, Metric, Measure (all measures, grouped by SpeechSystem), SessionStore + ToyHistory, Insights
@@ -122,16 +122,18 @@ firmware/       ESP32 band firmware (Arduino) and its flashing and wiring guide
 | 09 | severe, male | I will lead you. |
 | 10 | severe, female | Well, he is nearly ninety-three years old. |
 
-**To demo:** tap Speak, then play any clip from another device (a laptop is fine) close to the microphone. Without a connected band Fonos listens through the iPhone microphone; with one, through the band's throat mic. The sentence appears as soon as the clip is recognized, usually within 1 to 4.5 seconds. Listening ends after a short pause, and Fonos says the sentence aloud.
+**To demo:** tap Speak, then play any clip from another device (a laptop is fine) close to the microphone. Without a connected band Fonos listens through the iPhone microphone; with one, through the band's throat mic. Nothing is shown while listening. Listening ends about a second after the clip finishes (Fonos knows where in the clip it is), or when you tap; then "Translating…" shows for a moment, the sentence appears, and Fonos says it aloud. To get the files onto another device, use Settings › Demo recordings (Save to Files, AirDrop).
 
-**How it recognizes them** (`Speech/ClipRecognizer.swift`): audio fingerprinting, not speech recognition. Each clip's strongest time-frequency peaks are paired into hashes. A recording matches when many of its hashes line up at one time offset, and when it beats the runner-up by 2.5 times. Played from a MacBook speaker into its microphone, the right clip scored 34 to 407 votes, other clips at most 11, and room noise or other speech at most 6. Anything that isn't one of the ten clips gets "Fonos didn't recognize that."
+**Anything else** (ordinary English) is transcribed by Apple's Speech framework, on the device when the iPhone supports it. Listening ends after `autoStopSeconds` (3 s by default) with no new words or no voice. If neither the recordings nor Apple's recognizer make anything out, Fonos says "Fonos couldn't make out the words. Try again."
+
+**How it recognizes them** (`Speech/ClipRecognizer.swift`): audio fingerprinting, not speech recognition. Each clip's strongest time-frequency peaks are paired into hashes. A recording matches when many of its hashes line up at one time offset, and when it beats the runner-up by 2.5 times. Played from a MacBook speaker into its microphone, the right clip scored 34 to 407 votes, other clips at most 11, and room noise or other speech at most 6. Anything that isn't one of the ten clips goes to Apple's recognizer instead.
 
 ## Known limitations
 
 - The Bluetooth link and firmware are untested on hardware so far: the protocol is covered by unit tests, but nothing has been run against a real board (the iOS Simulator has no Bluetooth).
 - The band doesn't sense skin contact or measure its battery unless wired for it, so the app shows those as not reported.
-- The translator only knows the ten demo recordings: it matches them by their sound, so it doesn't understand anything else anyone says. Session and check histories are synthetic.
-- Clarity is the recognizer's confidence in the match, not a measure of the user's speech.
+- The translator knows the ten demo recordings by their sound; everything else relies on Apple's general English recognizer, which does poorly on dysarthric speech. Session and check histories are synthetic.
+- Clarity is the recognizer's confidence (the clip match, or Apple's word confidence), not a measure of the user's speech.
 - Recognition has been tested through the iOS Simulator with a MacBook's speaker and microphone, not yet on an iPhone or through the band's throat mic, which may pick up a nearby speaker poorly.
 - Pace and Pauses count the quiet gaps inside syllables, so their absolute values run higher than published articulation-rate and pause measures. They are meant for tracking change within one person. See the methods paper, Section 14. The check's reading rate removes only pauses of 250 ms or more, which avoids this for the passage.
 - Check results come from the simulated band performing each task, tuned to land near the end of the sample history. Real task recordings and their analysis on dysarthric speech are untested.

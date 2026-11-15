@@ -111,6 +111,8 @@ final class FonosEngine {
     @ObservationIgnored private var taskLastVoice = Date.distantPast
     @ObservationIgnored private var taskFloorDb: Float = 0
 
+    private static let log = Logger(subsystem: "com.fonos.app", category: "speak")
+
     static let defaultPhrases = [
         "Yes", "No", "Thank you", "Please wait, I'm still talking",
         "Could you repeat that?", "I need a moment", "I'm tired", "I need help",
@@ -136,13 +138,20 @@ final class FonosEngine {
                 return true
             }
             if !inTask { analyzer.ingest(frame) }
-            if source == .band { clips.append(mic: frame.mic) }
+            if source == .band {
+                clips.append(mic: frame.mic)
+                clips.appendSpeech(samples: frame.mic)
+            }
         }
         toy.onFrame = route
         phoneMic.onSamples = { samples in
             guard listening.withLock({ $0 }) == .phone else { return }
             streams.append(SensorFrame(mic: samples, left: [], right: []))
             clips.append(mic: samples)
+        }
+        phoneMic.onBuffer = { buffer in
+            guard listening.withLock({ $0 }) == .phone else { return }
+            clips.appendSpeech(buffer)
         }
         bluetooth.onFrame = route
         // A band connected before reconnects on its own.
@@ -256,10 +265,19 @@ final class FonosEngine {
         if voicing { listenVoiceSeen = true; listenLastVoice = .now }
         let quiet = Date.now.timeIntervalSince(listenLastVoice)
         let elapsed = Date.now.timeIntervalSince(listenStarted)
-        let confident = translator.isConfident
-        let limit = confident ? min(1.2, autoStopSeconds) : autoStopSeconds
-        // The demo clips are at most 10 s, so a recognized one is over by 14 s.
-        if (listenVoiceSeen && quiet > limit) || (confident && elapsed > 14) || elapsed > 25 {
+        // Room noise can keep the level up, so also stop once the recognizer
+        // has heard no new words for the same stretch.
+        let wordsDone = translator.lastWords.map { Date.now.timeIntervalSince($0) > autoStopSeconds } ?? false
+        let done: Bool
+        if translator.isConfident {
+            // A recognized demo recording: stop just after it finishes playing
+            // (they're at most 10 s, so 14 s is a safe cap).
+            done = translator.heardEnough || elapsed > 14
+        } else {
+            done = (listenVoiceSeen && quiet > autoStopSeconds) || wordsDone || elapsed > 25
+        }
+        if done {
+            Self.log.info("listening ends: clip done \(self.translator.heardEnough), no new words \(wordsDone), after \(elapsed, format: .fixed(precision: 1)) s")
             Task { await finishListening() }
         }
     }
@@ -282,6 +300,9 @@ final class FonosEngine {
         if !isStreaming { startStreaming() }
         // A connected band listens through its throat mic; otherwise the iPhone mic.
         let source: MicSource = bandMode == .bluetooth && bandConnected ? .band : .phone
+        // Apple's recognizer handles speech that isn't a demo recording; without
+        // permission only the demo recordings are understood.
+        _ = await AppleSpeech.requestAuthorization()
         do {
             try translator.begin()
             if source == .phone {
@@ -313,10 +334,16 @@ final class FonosEngine {
         guard speakState == .listening else { return }
         stopMic()
         speakState = .translating
-        guard let result = await translator.finish() else {
+        let started = Date.now
+        let result = await translator.finish()
+        // "Translating…" stays up for a moment, so the words don't just pop in.
+        let shown = Date.now.timeIntervalSince(started)
+        if shown < 0.7 { try? await Task.sleep(for: .seconds(0.7 - shown)) }
+        guard speakState == .translating else { return }
+        guard let result else {
             speakState = .idle
             partialText = ""
-            message = "Fonos didn't recognize that. Play one of the \(clips.clipCount) demo recordings close to the microphone."
+            message = "Fonos couldn't make out the words. Try again."
             return
         }
         analyzer.addClarity(result.confidence)

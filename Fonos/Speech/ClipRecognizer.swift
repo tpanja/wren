@@ -76,6 +76,9 @@ final class ClipRecognizer: @unchecked Sendable {
         let votes: Int
         /// 0...1, how clearly this clip beats the others.
         let confidence: Double
+        /// Seconds of the recording still to play after the end of the
+        /// matched audio (0 once it has finished).
+        let remaining: Double
     }
 
     static let sampleRate: Double = 8_000
@@ -92,6 +95,7 @@ final class ClipRecognizer: @unchecked Sendable {
     private let clips: [DemoClip]
     private var index: [UInt32: [Entry]] = [:]
     private var hashCounts: [Int] = []
+    private var clipSamples: [Int] = []
 
     /// Loads and fingerprints the bundled clips (about 60 ms).
     convenience init() {
@@ -107,6 +111,7 @@ final class ClipRecognizer: @unchecked Sendable {
         for (i, ref) in references.enumerated() {
             let hashes = Self.hashes(Self.peaks(ref.1))
             hashCounts.append(hashes.count)
+            clipSamples.append(ref.1.count)
             for h in hashes { index[h.hash, default: []].append(Entry(clip: i, time: h.time)) }
         }
     }
@@ -123,10 +128,12 @@ final class ClipRecognizer: @unchecked Sendable {
             guard let entries = index[q.hash] else { continue }
             for e in entries { votes[e.clip][(e.time - q.time) >> 1, default: 0] += 1 }
         }
-        let scores = votes.map { table -> Int in
-            // Best offset, plus its neighbours (a binning edge splits votes).
-            table.map { key, n in n + max(table[key - 1] ?? 0, table[key + 1] ?? 0) }.max() ?? 0
+        // Best offset per clip, plus its neighbours (a binning edge splits votes).
+        let peaksAt = votes.map { table -> (score: Int, offset: Int32) in
+            table.map { key, n in (n + max(table[key - 1] ?? 0, table[key + 1] ?? 0), key) }
+                .max { $0.0 < $1.0 } ?? (0, 0)
         }
+        let scores = peaksAt.map(\.score)
         let ranked = scores.enumerated().sorted { $0.element > $1.element }
         let best = ranked[0], second = ranked.count > 1 ? ranked[1].element : 0
         // Chance alignments give up to about a dozen votes; a clip played near
@@ -135,7 +142,13 @@ final class ClipRecognizer: @unchecked Sendable {
         let margin = 1 - Double(max(second, 5)) / Double(best.element)            // 0.6...1
         let coverage = min(Double(best.element) / Double(max(hashCounts[best.offset] / 6, 1)), 1)
         let confidence = min(0.62 + 0.28 * margin + 0.07 * coverage, 0.97)
-        return Match(clip: clips[best.offset], votes: best.element, confidence: confidence)
+        // The offset says which clip frame lines up with the query's first
+        // frame, so the end of the query sits this far into the clip.
+        let hopSeconds = Double(Self.hop) / Self.sampleRate
+        let clipSeconds = Double(clipSamples[best.offset]) / Self.sampleRate
+        let reached = Double(peaksAt[best.offset].offset * 2) * hopSeconds + Double(samples.count) / Self.sampleRate
+        return Match(clip: clips[best.offset], votes: best.element, confidence: confidence,
+                     remaining: max(0, clipSeconds - reached))
     }
 
     // MARK: Fingerprint
