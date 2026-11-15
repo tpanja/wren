@@ -37,7 +37,7 @@ xcodebuild -project Fonos.xcodeproj -scheme Fonos -destination 'platform=iOS Sim
 | **Clinic summary** (report icon on Progress, or Settings → Care team) | A two-page PDF for the neurologist or speech therapist. Page 1: a summary and every measure grouped by speech system, with baseline, period mean, change, slope per 30 days with a 95% confidence interval, and status. Page 2: a trend chart per measure, data quality (sessions and weekly checks), and methods. Covers everything since the last summary was shared. Optional name and date of birth stay on the phone. Shared through the system share sheet (Mail, Messages, Files, Print). |
 | **Settings** (sliders icon) | Voice and Personal Voice, speaking speed, when listening stops, whether to speak automatically, quick phrases, the clinic summary, and appearance (Light by default, Dark, or match iPhone). |
 
-The **Fold view** is the app's signature. The mic waveform runs along a midline, the left piezo's vibration rises above it, and the right piezo's falls below, at one shared scale. Balanced vibration draws a mirror image. A weaker side draws a visibly shorter half.
+The **Fold view** is the app's signature: one throat signal. The mic waveform runs along a midline inside a single vibration envelope (both piezos combined), mirrored above and below it. Left/right balance lives on the Band tab and the symmetry measure, not here.
 
 ## Measures
 

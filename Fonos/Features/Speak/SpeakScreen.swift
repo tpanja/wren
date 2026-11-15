@@ -70,17 +70,7 @@ struct SpeakScreen: View {
 
     private var foldCard: some View {
         VStack(alignment: .leading, spacing: 10) {
-            ViewThatFits(in: .horizontal) {
-                HStack {
-                    Text("Throat signal").cardTitle()
-                    Spacer()
-                    Legend(items: [("Left", Theme.left), ("Mic", Theme.mic), ("Right", Theme.right)])
-                }
-                VStack(alignment: .leading, spacing: 6) {
-                    Text("Throat signal").cardTitle()
-                    Legend(items: [("Left", Theme.left), ("Mic", Theme.mic), ("Right", Theme.right)])
-                }
-            }
+            Text("Throat signal").cardTitle()
             FoldView(streams: engine.streams)
                 .frame(height: 150)
             Text(engine.bandMode == .simulated ? "Sample signal from a simulated band"
@@ -283,21 +273,5 @@ struct PressScale: ButtonStyle {
             .scaleEffect(configuration.isPressed && !reduceMotion ? 0.95 : 1)
             .opacity(configuration.isPressed && reduceMotion ? 0.8 : 1)
             .animation(reduceMotion ? nil : .spring(response: 0.28, dampingFraction: 0.62), value: configuration.isPressed)
-    }
-}
-
-struct Legend: View {
-    let items: [(String, Color)]
-    var body: some View {
-        HStack(spacing: 12) {
-            ForEach(items, id: \.0) { item in
-                HStack(spacing: 5) {
-                    Capsule().fill(item.1).frame(width: 10, height: 4)
-                    Text(item.0).font(.ui(.caption, .medium)).foregroundStyle(Theme.inkSecondary)
-                        .fixedSize()
-                }
-            }
-        }
-        .accessibilityHidden(true)
     }
 }

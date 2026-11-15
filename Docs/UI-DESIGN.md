@@ -11,7 +11,7 @@ The screenshots supplied for inspiration set the look:
 - **From WHOOP:** three headline rings with rounded numerals, tracked uppercase card titles, a plain-language insight card, and the weekday check row.
 - **From Apple Health:** summary cards with a colored symbol and title, a large value with its unit, and a small trailing bar chart whose last bar carries the color.
 
-**Signature: the Fold view.** On the Speak screen, the contact-mic waveform runs along the midline. The left piezo's vibration rises above it in green and the right piezo's falls below it in blue, both at the same scale. When both sides vibrate equally the shape is a mirror image; when one side weakens the shape goes lopsided. Symmetry, one of the measures, can be seen without reading a number.
+**Signature: the Fold view.** On the Speak screen, one throat signal: the contact-mic waveform runs along the midline inside a single green vibration envelope (both piezos combined), mirrored above and below it. There are no left/right labels or legend; side-by-side balance lives on the Band tab and in the symmetry measure.
 
 ## Color
 
@@ -99,7 +99,7 @@ Fonos draws its own icon set rather than using SF Symbols: 22 SVG template image
 - **Targets.** The Speak button is 132 pt and quick phrases are 60 pt tall. Nothing is smaller than 44 pt.
 - **No precise gestures.** Every action is a single tap. Nothing requires holding, swiping, or timing.
 - **Dynamic Type.** All text uses text styles. At accessibility sizes the Speak button moves to the top of the screen so it stays in the first viewport, and the chart legend wraps under its title.
-- **VoiceOver.** The Fold view reads out the live left/right balance. Rings and cards are single elements with a label and value. Starting to listen posts a "Listening" announcement.
+- **VoiceOver.** The Fold view reads out whether voice is detected. Rings and cards are single elements with a label and value. Starting to listen posts a "Listening" announcement.
 - **Reduce Motion.** Ring fills, the listening pulse, and the status-pill pulse stop animating, and live charts redraw at 10 fps instead of 30.
 - **Large text on Progress.** At accessibility sizes, the three rings become full-width rows so their labels never split mid-word, and ring numerals stop growing at xxxLarge to stay inside the ring.
 - **Haptics** confirm each change of Speak state.

@@ -18,13 +18,11 @@ private struct LiveVisibility: ViewModifier {
     private func update() { visible = onScreen && phase == .active }
 }
 
-/// The signature view. The contact-mic waveform runs along the midline; the
-/// left piezo's vibration envelope rises above it and the right piezo's falls
-/// below it, so left/right throat symmetry reads as a shape: a mirror image
-/// when balanced, lopsided when one side vibrates less.
+/// The signature view: one throat signal. The contact-mic waveform runs along
+/// the midline inside a single vibration envelope (both piezos combined),
+/// mirrored above and below it.
 struct FoldView: View {
     let streams: StreamStore
-    var showsLabels = true
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.colorScheme) private var scheme
     @State private var visible = false
@@ -40,29 +38,21 @@ struct FoldView: View {
                 .accessibilityLabel("Live throat signal")
                 .accessibilityValue(summary(s))
         }
-        .overlay(alignment: .topLeading) { if showsLabels { sideLabel("Left", Theme.leftInk) } }
-        .overlay(alignment: .bottomLeading) { if showsLabels { sideLabel("Right", Theme.rightInk) } }
         .modifier(LiveVisibility(visible: $visible))
     }
 
-    private func sideLabel(_ text: String, _ color: Color) -> some View {
-        Text(text)
-            .font(.metric(.caption2, weight: .semibold))
-            .textCase(.uppercase)
-            .tracking(1.2)
-            .foregroundStyle(color)
-            .dynamicTypeSize(...DynamicTypeSize.xxLarge)
-            .padding(.horizontal, 8)
-            .padding(.vertical, 4)
-            .background(Theme.card.opacity(0.88), in: RoundedRectangle(cornerRadius: Theme.chipRadius, style: .continuous))
-            .accessibilityHidden(true)
+    private func summary(_ s: StreamStore.Fold) -> String {
+        let vibration = s.leftLevel.suffix(50).reduce(0, +) + s.rightLevel.suffix(50).reduce(0, +)
+        let mic = s.micWave.suffix(400).reduce(Float(0)) { max($0, abs($1)) }
+        return vibration > 0.01 || mic > 0.05 ? "Voice detected" : "Quiet"
     }
 
-    private func summary(_ s: StreamStore.Fold) -> String {
-        let l = s.leftLevel.suffix(50).reduce(0, +), r = s.rightLevel.suffix(50).reduce(0, +)
-        guard l + r > 0.01 else { return "Quiet" }
-        let balance = 1 - abs(l - r) / (l + r)
-        return "Voice detected. Left and right are \(Int(balance * 100)) percent balanced."
+    /// Both piezos averaged into one throat-vibration level.
+    private func combined(_ s: StreamStore.Fold) -> [Float] {
+        let n = min(s.leftLevel.count, s.rightLevel.count)
+        guard n > 0 else { return s.leftLevel.isEmpty ? s.rightLevel : s.leftLevel }
+        let l = s.leftLevel.suffix(n), r = s.rightLevel.suffix(n)
+        return zip(l, r).map { ($0 + $1) / 2 }
     }
 
     private func draw(_ s: StreamStore.Fold, in ctx: inout GraphicsContext, size: CGSize, light: Bool) {
@@ -73,12 +63,12 @@ struct FoldView: View {
         line.move(to: CGPoint(x: 0, y: mid)); line.addLine(to: CGPoint(x: size.width, y: mid))
         ctx.stroke(line, with: .color(Theme.hairline), style: StrokeStyle(lineWidth: 1, dash: [2, 4]))
 
-        // Shared gain so left and right are directly comparable.
-        let peak = max(s.leftLevel.max() ?? 0, s.rightLevel.max() ?? 0, 0.08)
+        let level = combined(s)
+        let peak = max(level.max() ?? 0, 0.08)
         let gain = Double(half) * 0.92 / Double(peak)
+        let smooth = DSP.movingAverage(level, width: 5)
 
-        func envelope(_ levels: [Float], up: Bool) -> Path {
-            let smooth = DSP.movingAverage(levels, width: 5)
+        func envelope(up: Bool) -> Path {
             var p = Path()
             let n = smooth.count
             guard n > 1 else { return p }
@@ -96,8 +86,8 @@ struct FoldView: View {
         }
 
         if s.hasPiezo {
-            let top = envelope(s.leftLevel, up: true)
-            let bottom = envelope(s.rightLevel, up: false)
+            let top = envelope(up: true)
+            let bottom = envelope(up: false)
             // Softer washes on white so the outline carries the shape.
             let outer = light ? 0.30 : 0.55, inner = light ? 0.03 : 0.12
             let edge = StrokeStyle(lineWidth: 1.6, lineCap: .round, lineJoin: .round)
@@ -105,10 +95,10 @@ struct FoldView: View {
                 Gradient(colors: [Theme.left.opacity(outer), Theme.left.opacity(inner)]),
                 startPoint: CGPoint(x: 0, y: 0), endPoint: CGPoint(x: 0, y: mid)))
             ctx.fill(bottom, with: .linearGradient(
-                Gradient(colors: [Theme.right.opacity(inner), Theme.right.opacity(outer)]),
+                Gradient(colors: [Theme.left.opacity(inner), Theme.left.opacity(outer)]),
                 startPoint: CGPoint(x: 0, y: mid), endPoint: CGPoint(x: 0, y: size.height)))
             ctx.stroke(top, with: .color(Theme.left), style: edge)
-            ctx.stroke(bottom, with: .color(Theme.right), style: edge)
+            ctx.stroke(bottom, with: .color(Theme.left), style: edge)
         }
 
         // Mic waveform: one min/max bar per 3 pt column, on top of the fold.
