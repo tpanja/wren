@@ -5,10 +5,11 @@ import SwiftUI
 /// neck band, mirrored lobes for symmetry). Template images, so they take
 /// the foreground color like text.
 enum Icon: String {
-    case speak, progress, band, settings
-    case clarity, strength, pace, symmetry, variation, pauses
-    case replay, stop, chevron, info, check, warning, plus
-    case mic, piezoLeft, piezoRight, slow, fast
+    case sing, speak, progress, band, settings
+    case tune, steady, range, vibrato, onset, breath, tone, strength, symmetry
+    case mic, accelLeft, accelRight
+    case siren, scale, sustained, arpeggio, song, drill
+    case stop, play, chevron, info, check, warning, plus
 
     var image: Image { Image("Icons/\(rawValue)") }
 }
