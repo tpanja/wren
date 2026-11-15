@@ -125,6 +125,11 @@ final class FonosEngine {
         bluetooth.onFrame = route
         // A band connected before reconnects on its own.
         if bandMode == .bluetooth { bluetooth.activate() }
+        // Always running, paused or not: band state (connecting, battery,
+        // signal) has to reach the screen even while the signal is paused.
+        pollTimer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { [weak self] _ in
+            MainActor.assumeIsolated { self?.poll() }
+        }
     }
 
     // MARK: Band
@@ -184,10 +189,6 @@ final class FonosEngine {
         analyzer.reset()
         sessionStart = .now
         phrasesThisSession = 0
-        pollTimer?.invalidate()
-        pollTimer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { [weak self] _ in
-            MainActor.assumeIsolated { self?.poll() }
-        }
     }
 
     func stopStreaming() {
@@ -195,7 +196,6 @@ final class FonosEngine {
         if case .recording = taskState { cancelTask() }
         band.stopStreaming()
         isStreaming = false
-        pollTimer?.invalidate()
         if let start = sessionStart,
            let record = analyzer.summary(started: start, isSample: bandMode == .simulated, phrases: phrasesThisSession) {
             store.add(record)
