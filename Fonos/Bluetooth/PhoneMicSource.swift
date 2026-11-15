@@ -32,7 +32,7 @@ final class PhoneMicSource: FrameSource, @unchecked Sendable {
 
     private func startEngine() {
         let session = AVAudioSession.sharedInstance()
-        try? session.setCategory(.playAndRecord, mode: .spokenAudio, options: [.defaultToSpeaker, .allowBluetoothHFP])
+        try? session.setCategory(.playAndRecord, mode: .spokenAudio, options: [.defaultToSpeaker])
         try? session.setActive(true)
 
         let input = engine.inputNode
