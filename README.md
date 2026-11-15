@@ -31,8 +31,8 @@ xcodebuild -project Fonos.xcodeproj -scheme Fonos -destination 'platform=iOS Sim
 | Screen | What it does |
 |---|---|
 | **Speak** | The live throat signal (the Fold view), a 132 pt Speak button, the translated phrase with a replay button and its clarity score, quick-phrase buttons, and phrases said today. |
-| **Progress** | Clarity, Strength, and Pace rings for the selected range (week, month, or 3 months), a plain-language insight against the user's own baseline, the weekly Speech check card, a voice-banking prompt once speech starts to change, and all 17 measures grouped by speech system (breathing, voice, articulation, rhythm and intelligibility, self-report). Each card opens a detail chart. |
-| **Speech check** (Progress → Start check) | A guided weekly check of about 3 minutes: a long “ahh”, “pa-pa-pa”, “pa-ta-ka”, and a read passage, then three optional questions about speech, saliva, and swallowing. Large Start and Skip buttons, instructions that can be read aloud, auto-stop on silence or time, and a results screen that compares with last week. |
+| **Progress** | Clarity, Strength, and Pace rings for the selected range (week, month, or 3 months), a plain-language insight against the user's own baseline, the weekly Speech check card, a voice-banking prompt once speech starts to change, and all 14 measures grouped by speech system (breathing, voice, articulation, rhythm and intelligibility). Each card opens a detail chart. |
+| **Speech check** (Progress → Start check) | A guided weekly check of about 3 minutes: a long “ahh”, “pa-pa-pa”, “pa-ta-ka”, and a read passage. Large Start and Skip buttons, instructions that can be read aloud, auto-stop on silence or time, and a results screen that compares with last week. |
 | **Band** | Band status and battery, a live trace and skin-contact state for each sensor, and the live left/right balance. |
 | **Clinic summary** (report icon on Progress, or Settings → Care team) | A two-page PDF for the neurologist or speech therapist. Page 1: a summary and every measure grouped by speech system, with baseline, period mean, change, slope per 30 days with a 95% confidence interval, and status. Page 2: a trend chart per measure, data quality (sessions and weekly checks), and methods. Covers everything since the last summary was shared. Optional name and date of birth stay on the phone. Shared through the system share sheet (Mail, Messages, Files, Print). |
 | **Settings** (sliders icon) | Voice and Personal Voice, speaking speed, when listening stops, whether to speak automatically, quick phrases, the clinic summary, and appearance (Dark by default, Light, or match iPhone). |
@@ -52,7 +52,7 @@ Six measures come from everyday conversation. They are computed per session from
 | **Pitch variation** | Mic | Mean change between consecutive 20 ms F0 estimates, as % of mean F0 |
 | **Clarity** | Translator | Mean translator confidence per phrase (a placeholder until a real translator exists) |
 
-Eleven more come from the **weekly Speech check**, whose fixed tasks make results comparable week to week. Their baseline is the mean of the first three checks.
+Eight more come from the **weekly Speech check**, whose fixed tasks make results comparable week to week. Their baseline is the mean of the first three checks.
 
 | Measure | Task | Definition |
 |---|---|---|
@@ -64,9 +64,8 @@ Eleven more come from the **weekly Speech check**, whose fixed tasks make result
 | **Reading rate** | Fixed passage | Syllables per second of speaking time, only pauses of 250 ms or more removed |
 | **Syllables per breath** | Fixed passage | Syllables ÷ (pauses of 250 ms or more + 1) |
 | **Reading stamina** | Fixed passage | Voiced level, last third minus first third, dB |
-| **Speech, saliva, swallowing** | Questions | Self-ratings 0–4, paraphrased from the ALSFRS-R bulbar items (not the official wording) |
 
-A change under 5% from baseline is reported as steady. Reading stamina and the self-ratings sit near zero or on a short scale, so they are compared by absolute difference instead (1 dB and half a point). The full derivation of every measure, with figures from the app's own analyzer, is in the [methods paper](https://claude.ai/artifact/PhYCk7ncK86W6gCAn5yFjg).
+A change under 5% from baseline is reported as steady. Reading stamina sits near zero, so it is compared by absolute difference instead (1 dB). The full derivation of every measure, with figures from the app's own analyzer, is in the [methods paper](https://claude.ai/artifact/PhYCk7ncK86W6gCAn5yFjg).
 
 ## Design
 

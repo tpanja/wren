@@ -34,7 +34,7 @@ While the Speak button is listening, `ToyBand.setTalking(true)` keeps the toy we
 
 ### Check history: `ToyCheckHistory`
 
-`Fonos/Check/SpeechCheckRecord.swift` seeds 13 weekly checks, the last one a week ago so a new check is due. Every task measure drifts slowly in the direction ALS speech changes, and the self-rated speech drops from 4 to 3 partway through. Labeled as sample data wherever shown.
+`Fonos/Check/SpeechCheckRecord.swift` seeds 13 weekly checks, the last one a week ago so a new check is due. Every task measure drifts slowly in the direction ALS speech changes. Labeled as sample data wherever shown.
 
 ### Translation: `ToyTranslator`
 
@@ -76,7 +76,7 @@ All measures are descriptive. They are shown against the patient's own **baselin
 
 **Weekly check measures** (`TaskAnalysis.swift`). Each task's voicing threshold is 12 dB above the 10th percentile of that task's own frame levels. Syllable peaks need 4 dB prominence; DDK peaks are at least 80 ms apart and refined to a fraction of a frame by a parabola, since a whole 10 ms frame is about 6% of a DDK interval. Baseline is the mean of the first three checks. See the README for the list.
 
-**Trend wording** (`Measure.swift`, `MeasureTrend`). A change under 5% from baseline is called "steady"; reading stamina and the 0–4 self-ratings use absolute bands of 1 dB and half a point. The Progress headline picks the largest change in the worse direction across all measures, scaling absolute changes so they rank alongside relative ones, and explains it in plain language, without diagnosing.
+**Trend wording** (`Measure.swift`, `MeasureTrend`). A change under 5% from baseline is called "steady"; reading stamina uses an absolute band of 1 dB. The Progress headline picks the largest change in the worse direction across all measures, scaling absolute changes so they rank alongside relative ones, and explains it in plain language, without diagnosing.
 
 ## Privacy
 
