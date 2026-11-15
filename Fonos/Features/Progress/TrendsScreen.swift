@@ -1,3 +1,4 @@
+import Charts
 import SwiftUI
 
 enum TrendRange: Int, CaseIterable, Identifiable {
@@ -10,24 +11,17 @@ enum TrendRange: Int, CaseIterable, Identifiable {
         case .quarter: "3 Months"
         }
     }
-    var caption: String {
-        switch self {
-        case .week: "this week"
-        case .month: "this month"
-        case .quarter: "last 3 months"
-        }
-    }
 }
 
 /// "Progress" tab. Named TrendsScreen to avoid clashing with SwiftUI.ProgressView.
 struct TrendsScreen: View {
-    @Environment(CoachEngine.self) private var engine
+    @Environment(FonosEngine.self) private var engine
     @Binding var showSettings: Bool
     @State private var range: TrendRange = .week
     @Environment(\.dynamicTypeSize) private var typeSize
 
-    private var store: TakeStore { engine.store }
-    private var technical: Bool { engine.profile.isTechnical }
+    private var sessions: [SessionRecord] { engine.store.visible }
+    private var baseline: Baseline? { engine.store.baseline }
 
     var body: some View {
         NavigationStack {
@@ -40,36 +34,28 @@ struct TrendsScreen: View {
 
                     rings
                     insight
-                    rangeCard
+                    SampleBanner()
 
-                    ForEach(MetricGroup.allCases) { group in
-                        let metrics = MetricID.allCases.filter {
-                            $0.group == group && $0 != .range && $0 != .speakingPitch && (technical || $0.isBeginner)
-                                && store.mean($0, days: max(range.rawValue, 30)) != nil
-                        }
-                        if !metrics.isEmpty {
-                            Text(group.title)
-                                .font(.metric(.title3, weight: .bold))
-                                .foregroundStyle(Theme.ink)
-                                .frame(maxWidth: .infinity, alignment: .leading)
-                                .padding(.top, 14)
-                                .accessibilityAddTraits(.isHeader)
-                            ForEach(metrics) { m in
-                                NavigationLink(value: m) { MeasureCard(metric: m, technical: technical) }
-                                    .buttonStyle(.plain)
-                            }
-                        }
+                    Text("All measures")
+                        .font(.metric(.title2, weight: .bold))
+                        .accessibilityAddTraits(.isHeader)
+                        .foregroundStyle(Theme.ink)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(.top, 16)
+
+                    ForEach(Metric.allCases) { m in
+                        NavigationLink(value: m) { MetricSummaryCard(metric: m, sessions: sessions, baseline: baseline) }
+                            .buttonStyle(.plain)
                     }
 
                     practiceCard.padding(.top, 8)
-                    SampleBanner()
                 }
                 .padding(.horizontal, Theme.gutter)
                 .padding(.bottom, 24)
             }
             .background(Theme.ground)
             .navigationTitle("Progress")
-            .navigationDestination(for: MetricID.self) { MetricDetailScreen(metric: $0) }
+            .navigationDestination(for: Metric.self) { MetricDetailScreen(metric: $0) }
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
                     Button { showSettings = true } label: {
@@ -85,25 +71,30 @@ struct TrendsScreen: View {
     // MARK: Rings
 
     private var rings: some View {
-        let values = Dictionary(uniqueKeysWithValues: MetricID.rings.map { ($0, store.mean($0, days: range.rawValue)) })
+        let values = Dictionary(uniqueKeysWithValues: Metric.rings.map {
+            ($0, Insights.mean($0, in: sessions, baseline: baseline, days: range.rawValue))
+        })
         return Group {
             if typeSize.isAccessibilitySize {
+                // Large text: one ring per row so labels never split mid-word.
                 VStack(spacing: 10) {
-                    ForEach(MetricID.rings) { m in ringLink(m, value: values[m] ?? nil, stacked: false) }
+                    ForEach(Metric.rings) { m in ringLink(m, value: values[m] ?? nil, stacked: false) }
                 }
             } else {
                 HStack(alignment: .top, spacing: 0) {
-                    ForEach(MetricID.rings) { m in ringLink(m, value: values[m] ?? nil, stacked: true) }
+                    ForEach(Metric.rings) { m in ringLink(m, value: values[m] ?? nil, stacked: true) }
                 }
             }
         }
         .padding(.vertical, 12)
     }
 
-    private func ringLink(_ m: MetricID, value: Double?, stacked: Bool) -> some View {
+    private func ringLink(_ m: Metric, value: Double?, stacked: Bool) -> some View {
         NavigationLink(value: m) {
             let label = HStack(spacing: 4) {
-                Text(m.ringTitle).cardTitle().lineLimit(1).minimumScaleFactor(0.6)
+                Text(m.title).cardTitle()
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.6)
                 FonosIcon(.chevron, size: 12, relativeTo: .caption2).foregroundStyle(Theme.inkSecondary)
             }
             if stacked {
@@ -117,57 +108,46 @@ struct TrendsScreen: View {
         .buttonStyle(.plain)
         .contentShape(Rectangle())
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel(m.ringTitle)
-        .accessibilityValue(value.map { "\(m.ringLabel($0).value) \(m.ringLabel($0).unit == "st" ? "semitones" : "percent")" } ?? "No data")
+        .accessibilityLabel(m.title)
+        .accessibilityValue(value.map { "\(m.format($0)) \(m.unit == "%" ? "percent" : m.unit == "syl/s" ? "syllables per second" : m.unit)" } ?? "No data")
         .accessibilityAddTraits(.isButton)
     }
 
     // MARK: Insight
 
     @ViewBuilder private var insight: some View {
-        if let w = Insights.weekly(store) {
+        let trends = Insights.trends(sessions, baseline: baseline)
+        if let h = Insights.headline(trends) {
             VStack(alignment: .leading, spacing: 8) {
-                Text(w.title).font(.ui(.headline)).foregroundStyle(Theme.ink)
-                Text(w.body).font(.ui(.body)).foregroundStyle(Theme.inkSecondary)
+                Text(h.title)
+                    .font(.ui(.headline))
+                    .foregroundStyle(Theme.ink)
+                Text(h.body)
+                    .font(.ui(.body))
+                    .foregroundStyle(Theme.inkSecondary)
                     .fixedSize(horizontal: false, vertical: true)
-                Text("Compared with your first sessions")
-                    .font(.ui(.footnote)).foregroundStyle(Theme.inkTertiary).padding(.top, 4)
+                if let since = baseline?.establishedOn {
+                    Text("Baseline from your first sessions, through \(since.formatted(date: .abbreviated, time: .omitted))")
+                        .font(.ui(.footnote))
+                        .foregroundStyle(Theme.inkTertiary)
+                        .padding(.top, 4)
+                }
             }
             .card(padding: 20)
             .accessibilityElement(children: .combine)
         }
     }
 
-    // MARK: Range
-
-    private var rangeCard: some View {
-        let now = store.rangeSpan(days: max(range.rawValue, 30))
-        let before = store.previousRangeSpan(days: 30)
-        return VStack(alignment: .leading, spacing: 12) {
-            CardHeader(title: "Voice range", icon: .range, color: Theme.rangeHue)
-            VoiceRangeStrip(low: now?.low, high: now?.high, previousLow: before?.low, previousHigh: before?.high)
-            if before != nil {
-                HStack(spacing: 6) {
-                    RoundedRectangle(cornerRadius: 2).stroke(Theme.inkSecondary, style: StrokeStyle(lineWidth: 1.2, dash: [3, 2]))
-                        .frame(width: 18, height: 10)
-                    Text("Outline: the month before").font(.ui(.caption)).foregroundStyle(Theme.inkSecondary)
-                }
-                .accessibilityHidden(true)
-            }
-        }
-        .card()
-    }
-
-    // MARK: Practice days (WHOOP weekday row)
+    // MARK: Practice days (WHOOP journal row)
 
     private var practiceCard: some View {
         let cal = Calendar.current
         let today = cal.startOfDay(for: .now)
         let days = (0..<7).reversed().map { cal.date(byAdding: .day, value: -$0, to: today)! }
-        let used = store.practicedDays
+        let used = Set(sessions.map { cal.startOfDay(for: $0.date) })
         return VStack(alignment: .leading, spacing: 14) {
             HStack {
-                Text("Days practiced").cardTitle()
+                Text("Days with sessions").cardTitle()
                 Spacer()
                 Text("\(days.filter(used.contains).count) of 7")
                     .font(.ui(.footnote, .semibold)).foregroundStyle(Theme.inkSecondary)
@@ -175,21 +155,25 @@ struct TrendsScreen: View {
             HStack {
                 ForEach(days, id: \.self) { d in
                     let on = used.contains(d)
+                    let isToday = d == today
                     VStack(spacing: 8) {
                         Text(d.formatted(.dateTime.weekday(.abbreviated)))
-                            .font(.metric(.caption, weight: .semibold))
+                            .font(.ui(.caption, .semibold))
                             .textCase(.uppercase)
-                            .foregroundStyle(d == today ? Theme.ink : Theme.inkSecondary)
-                        if on {
-                            CheckDisc(color: Theme.good, size: 26)
-                        } else {
-                            Circle().stroke(Theme.hairline, lineWidth: 1.5).frame(width: 26, height: 26)
+                            .foregroundStyle(isToday ? Theme.ink : Theme.inkSecondary)
+                        ZStack {
+                            Circle().fill(on ? Theme.good : Color.clear)
+                            Circle().stroke(on ? Color.clear : Theme.hairline, lineWidth: 1.5)
+                            if on {
+                                FonosIcon(.check, size: 15, relativeTo: .caption).foregroundStyle(Theme.ground)
+                            }
                         }
+                        .frame(width: 26, height: 26)
                     }
                     .frame(maxWidth: .infinity)
                     .accessibilityElement(children: .ignore)
                     .accessibilityLabel(d.formatted(.dateTime.weekday(.wide)))
-                    .accessibilityValue(on ? "Practiced" : "No practice")
+                    .accessibilityValue(on ? "Session recorded" : "No session")
                 }
             }
         }
@@ -197,43 +181,39 @@ struct TrendsScreen: View {
     }
 }
 
-// MARK: - Measure card (Apple Health style)
+// MARK: - Summary card (Apple Health style)
 
-struct MeasureCard: View {
-    let metric: MetricID
-    let technical: Bool
-    @Environment(CoachEngine.self) private var engine
+struct MetricSummaryCard: View {
+    let metric: Metric
+    let sessions: [SessionRecord]
+    let baseline: Baseline?
 
     var body: some View {
-        let store = engine.store
-        let recent = store.daily(metric, days: 30).suffix(7).map(\.value)
-        let latestTake = store.sorted.last { $0.value(metric) != nil }
+        let recent = sessions.suffix(7).compactMap { s in metric.value(s, baseline: baseline).map { (s.date, $0) } }
+        let latest = sessions.last
         VStack(alignment: .leading, spacing: 14) {
-            HStack(spacing: 8) {
-                CardHeader(title: metric.name(technical: technical), icon: metric.icon, color: metric.color,
-                           detail: latestTake.map { relative($0.date) }, chevron: true)
-            }
+            CardHeader(title: metric.title, icon: metric.icon, color: metric.color,
+                       detail: latest.map { relative($0.date) }, chevron: true)
             HStack(alignment: .bottom) {
-                VStack(alignment: .leading, spacing: 6) {
-                    if let v = recent.last {
-                        HStack(alignment: .firstTextBaseline, spacing: 4) {
-                            Text(metric.format(v))
-                                .font(.metric(.largeTitle, weight: .semibold))
-                                .foregroundStyle(Theme.ink)
-                            Text(metric.unit).font(.ui(.subheadline, .medium)).foregroundStyle(Theme.inkSecondary)
-                        }
+                if let v = recent.last?.1 {
+                    HStack(alignment: .firstTextBaseline, spacing: 4) {
+                        Text(metric.format(v))
+                            .font(.metric(.largeTitle, weight: .semibold))
+                            .foregroundStyle(Theme.ink)
+                        Text(metric.unit).font(.ui(.subheadline, .medium)).foregroundStyle(Theme.inkSecondary)
                     }
-                    if metric.status == .exploratory { ExploratoryTag() }
+                } else {
+                    Text("No data yet").font(.ui(.title3)).foregroundStyle(Theme.inkTertiary)
                 }
                 Spacer()
-                MiniBars(values: recent, color: metric.hasHue ? metric.color : Theme.action)
+                MiniBars(values: recent.map(\.1), color: metric.color, highlightLast: true)
                     .frame(width: 92, height: 44)
             }
         }
         .card()
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel(metric.name(technical: technical))
-        .accessibilityValue(recent.last.map { "Latest \(metric.format($0)) \(metric.unit)" } ?? "No data")
+        .accessibilityLabel(metric.title)
+        .accessibilityValue(recent.last.map { "Latest \(metric.format($0.1)) \(metric.unit)" } ?? "No data")
         .accessibilityHint("Shows the trend")
     }
 
@@ -247,14 +227,16 @@ struct MeasureCard: View {
 struct MiniBars: View {
     let values: [Double]
     let color: Color
+    var highlightLast = true
 
     var body: some View {
         let lo = (values.min() ?? 0) * 0.85
         let hi = max(values.max() ?? 1, lo + 0.0001)
         HStack(alignment: .bottom, spacing: 5) {
             ForEach(Array(values.enumerated()), id: \.offset) { i, v in
+                let isLast = i == values.count - 1
                 RoundedRectangle(cornerRadius: 2, style: .continuous)
-                    .fill(i == values.count - 1 ? color : Theme.hairline)
+                    .fill(isLast && highlightLast ? color : Theme.hairline)
                     .frame(maxWidth: 9)
                     .frame(height: max(4, 44 * CGFloat((v - lo) / (hi - lo))))
             }

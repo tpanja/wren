@@ -22,28 +22,31 @@ enum Theme {
     static let inkSecondary = Color(light: 0x4F5A63, dark: 0xA3ACB4)
     static let inkTertiary = Color(light: 0x6B7680, dark: 0x7D8790)
 
-    // MARK: Streams (sensor colors, used only for the sensors)
+    // MARK: Streams (fixed meaning app-wide)
 
-    /// Microphone.
+    /// Contact microphone.
     static let mic = Color(light: 0xB87700, dark: 0xF2B33D)
-    /// Left accelerometer.
+    /// Left piezo (patient's left side of the larynx).
     static let left = Color(light: 0x0A8A7A, dark: 0x3CC8B4)
-    /// Right accelerometer.
+    /// Right piezo.
     static let right = Color(light: 0x5B48C9, dark: 0x8E7CF0)
 
-    // MARK: Ring metrics
+    // MARK: Metrics
 
-    static let tune = Color(light: 0x1F6FB2, dark: 0x5AA9E6)
-    static let steady = Color(light: 0xB0456A, dark: 0xE77FA3)
-    static let rangeHue = Color(light: 0x5C7A1E, dark: 0xA6CE5C)
+    static let clarity = left
+    static let strength = mic
+    static let pace = Color(light: 0x1F6FB2, dark: 0x5AA9E6)
+    static let symmetry = right
+    static let steadiness = Color(light: 0xB0456A, dark: 0xE77FA3)
+    static let pauses = Color(light: 0x5C7A1E, dark: 0xA6CE5C)
 
-    // MARK: States (never borrowed from metric or stream hues)
+    // MARK: State
 
     static let good = Color(light: 0x1E8E4E, dark: 0x4CD787)
     static let caution = Color(light: 0xA36100, dark: 0xF5A524)
-    static let recording = Color(light: 0xC0342B, dark: 0xFF6B5E)
+    static let alert = Color(light: 0xC0342B, dark: 0xFF6B5E)
 
-    /// Primary action (the Sing button).
+    /// Primary action (the Speak button).
     static let action = Color(light: 0x0A8A7A, dark: 0x3CC8B4)
     static let onAction = Color(light: 0xFFFFFF, dark: 0x06201C)
 

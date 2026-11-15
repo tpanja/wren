@@ -44,33 +44,23 @@ struct CardHeader: View {
 
 // MARK: - Metric ring
 
-/// WHOOP-style ring: thick track, colored arc with a bright end cap, the
-/// value and its unit inside (every ring shows its unit).
+/// WHOOP-style ring: thick track, colored arc, value set in rounded numerals.
 struct MetricRing: View {
-    let metric: MetricID
+    let metric: Metric
     let value: Double?
     var diameter: CGFloat = 96
     var lineWidth: CGFloat = 9
-    var compact = false
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var drawn: Double = 0
 
     var body: some View {
-        let fill = value.map { metric.ringScore($0) / 100 } ?? 0
+        let fill = value.map(metric.ringFill) ?? 0
         ZStack {
             Circle().stroke(Theme.hairline, lineWidth: lineWidth)
             Circle()
                 .trim(from: 0, to: drawn)
                 .stroke(metric.color, style: StrokeStyle(lineWidth: lineWidth, lineCap: .round))
                 .rotationEffect(.degrees(-90))
-            // End cap marks where the value sits.
-            if drawn > 0.02 {
-                Circle()
-                    .fill(Theme.ink)
-                    .frame(width: lineWidth * 0.45, height: lineWidth * 0.45)
-                    .offset(y: -diameter / 2)
-                    .rotationEffect(.degrees(360 * drawn))
-            }
             valueText
         }
         .frame(width: diameter, height: diameter)
@@ -86,51 +76,22 @@ struct MetricRing: View {
 
     @ViewBuilder private var valueText: some View {
         if let value {
-            let label = metric.ringLabel(value)
             HStack(alignment: .firstTextBaseline, spacing: 1) {
-                Text(label.value)
-                    .font(.metric(compact ? .callout : .title, weight: .semibold))
+                Text(metric.format(value))
+                    .font(.metric(.title, weight: .semibold))
                     .foregroundStyle(Theme.ink)
-                Text(label.unit)
-                    .font(.metric(compact ? .caption2 : .footnote))
-                    .foregroundStyle(Theme.inkSecondary)
+                if metric.unit == "%" {
+                    Text("%").font(.metric(.footnote)).foregroundStyle(Theme.inkSecondary)
+                }
             }
-            .minimumScaleFactor(0.5)
+            .minimumScaleFactor(0.6)
             .lineLimit(1)
             // The ring is a fixed size; numerals stop growing at xxxLarge.
             .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
-            .padding(.horizontal, lineWidth + 3)
+            .padding(.horizontal, lineWidth + 4)
         } else {
-            Text("–").font(.metric(compact ? .callout : .title)).foregroundStyle(Theme.inkTertiary)
+            Text("–").font(.metric(.title)).foregroundStyle(Theme.inkTertiary)
         }
-    }
-}
-
-/// Small outlined tag for measures still being validated.
-struct ExploratoryTag: View {
-    var body: some View {
-        Text("Exploratory")
-            .font(.ui(.caption2, .semibold))
-            .foregroundStyle(Theme.inkSecondary)
-            .padding(.horizontal, 7).padding(.vertical, 3)
-            .overlay(Capsule().stroke(Theme.hairline, lineWidth: 1))
-            .accessibilityLabel("Exploratory measure")
-    }
-}
-
-/// Trend vs baseline in ink with an arrow glyph; never color alone.
-struct TrendText: View {
-    let text: String
-    let direction: Int // -1, 0, 1
-    var body: some View {
-        HStack(spacing: 4) {
-            if direction != 0 {
-                Text(direction > 0 ? "↑" : "↓").font(.metric(.subheadline, weight: .bold))
-            }
-            Text(text).font(.ui(.subheadline, .medium))
-        }
-        .foregroundStyle(Theme.ink)
-        .accessibilityElement(children: .combine)
     }
 }
 
@@ -232,7 +193,7 @@ extension ButtonStyle where Self == WellButtonStyle {
 
 /// Sample-data notice. Shown wherever toy data could be mistaken for a real measurement.
 struct SampleBanner: View {
-    var text = "Sample data from a simulated band and singer. Numbers show what Fonos will look like with a real band."
+    var text = "Sample data. These numbers show what Fonos will look like with a real band."
     var body: some View {
         Label { Text(text) } icon: { FonosIcon(.info, size: 18, relativeTo: .footnote) }
             .font(.ui(.footnote))

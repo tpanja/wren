@@ -1,18 +1,17 @@
 import SwiftUI
 
 struct RootView: View {
-    @Environment(CoachEngine.self) private var engine
-    @State private var tab: Tab = .sing
+    @Environment(FonosEngine.self) private var engine
+    @State private var tab: Tab = .speak
     @State private var showSettings = false
 
-    enum Tab: Hashable { case sing, progress, band }
+    enum Tab: Hashable { case speak, progress, band }
 
     var body: some View {
-        @Bindable var engine = engine
         TabView(selection: $tab) {
-            SingScreen(showSettings: $showSettings)
-                .tabItem { Label { Text("Sing") } icon: { Icon.sing.image } }
-                .tag(Tab.sing)
+            SpeakScreen(showSettings: $showSettings)
+                .tabItem { Label { Text("Speak") } icon: { Icon.speak.image } }
+                .tag(Tab.speak)
             TrendsScreen(showSettings: $showSettings)
                 .tabItem { Label { Text("Progress") } icon: { Icon.progress.image } }
                 .tag(Tab.progress)
@@ -20,12 +19,9 @@ struct RootView: View {
                 .tabItem { Label { Text("Band") } icon: { Icon.band.image } }
                 .tag(Tab.band)
         }
-        .sheet(isPresented: $showSettings) { SettingsScreen() }
-        .fullScreenCover(isPresented: $engine.takeIsPresented) { TakeFlowView() }
-        .fullScreenCover(isPresented: Binding(
-            get: { !engine.profile.onboarded },
-            set: { if !$0 { engine.profile.onboarded = true } }
-        )) { OnboardingView() }
+        .sheet(isPresented: $showSettings) {
+            SettingsScreen()
+        }
         .alert("Fonos", isPresented: Binding(
             get: { engine.message != nil },
             set: { if !$0 { engine.message = nil } }
